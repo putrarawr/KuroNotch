@@ -1,0 +1,39 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import Quickshell
+import "config"
+import "services"
+import "windows"
+
+ShellRoot {
+    id: root
+
+    settings.watchFiles: true
+
+    readonly property var targetScreen: {
+        const screens = Quickshell.screens;
+        if (!screens || screens.length === 0)
+            return null;
+
+        const focusedName = HyprContext.focusedMonitor?.name ?? "";
+        if (focusedName.length > 0) {
+            for (let i = 0; i < screens.length; i++) {
+                if (screens[i]?.name === focusedName)
+                    return screens[i];
+            }
+        }
+        return screens[0];
+    }
+
+    // Touch singletons at root boot so Config watch and IPC target "notch" register immediately
+    readonly property string _bootMode: Config.mode
+    readonly property string _bootState: NotchController.surfaceState
+
+    Loader {
+        active: root.targetScreen !== null && root.targetScreen !== undefined
+        sourceComponent: NotchWindow {
+            screen: root.targetScreen
+        }
+    }
+}
