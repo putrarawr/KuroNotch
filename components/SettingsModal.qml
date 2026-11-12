@@ -93,11 +93,12 @@ PopupWindow {
                 // Modal Header
                 RowLayout {
                     Layout.fillWidth: true
+                    Layout.preferredWidth: modalCard.width - 32
                     spacing: 10
 
                     Rectangle {
-                        width: 28
-                        height: 28
+                        Layout.preferredWidth: 28
+                        Layout.preferredHeight: 28
                         radius: 9
                         color: Config.activePalette.elevated
                         border.width: 1
@@ -117,6 +118,7 @@ PopupWindow {
                         spacing: 1
 
                         Text {
+                            Layout.fillWidth: true
                             text: "Notch Settings"
                             font.family: "Rubik"
                             font.pixelSize: 13
@@ -125,35 +127,52 @@ PopupWindow {
                         }
 
                         Text {
+                            Layout.fillWidth: true
                             text: "Layout mode, color palette, and widgets on/off"
+                            elide: Text.ElideRight
                             font.family: "Rubik"
                             font.pixelSize: 10
                             color: "#8e8e98"
                         }
                     }
 
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
                     Rectangle {
-                        Layout.preferredWidth: 26
-                        Layout.preferredHeight: 26
+                        id: closeBtn
+
+                        Layout.preferredWidth: 28
+                        Layout.preferredHeight: 28
+                        Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
+                        z: 10
                         radius: 8
-                        color: closeMouse.containsMouse ? "#1d1d26" : Config.activePalette.elevated
+                        color: closeMouse.containsMouse ? "#252532" : Config.activePalette.elevated
                         border.width: 1
-                        border.color: Qt.rgba(1, 1, 1, 0.10)
+                        border.color: closeMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.24) : Qt.rgba(1, 1, 1, 0.10)
+
+                        Behavior on color {
+                            ColorAnimation { duration: 110 }
+                        }
 
                         Text {
                             anchors.centerIn: parent
                             text: "close"
                             font.family: "Material Symbols Rounded"
-                            font.pixelSize: 15
-                            color: closeMouse.containsMouse ? "#f4f4f6" : "#8e8e98"
+                            font.pixelSize: 16
+                            color: closeMouse.containsMouse ? "#ffffff" : "#9e9eaa"
                         }
 
                         MouseArea {
                             id: closeMouse
 
                             anchors.fill: parent
+                            anchors.margins: -6
                             hoverEnabled: true
+                            preventStealing: true
                             cursorShape: Qt.PointingHandCursor
+                            onPressed: mouse => mouse.accepted = true
                             onClicked: root.closeModal()
                         }
                     }

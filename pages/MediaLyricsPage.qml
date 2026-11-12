@@ -702,14 +702,14 @@ Item {
                 anchors.fill: parent
                 anchors.leftMargin: 10
                 anchors.rightMargin: 10
-                anchors.topMargin: 8
+                anchors.topMargin: 24
                 anchors.bottomMargin: 8
                 visible: Config.lyrics.enabled && LyricsService.available
                 clip: true
                 spacing: 8
                 boundsBehavior: Flickable.StopAtBounds
 
-                header: Item { width: 1; height: 14 }
+                header: Item { width: 1; height: 6 }
                 footer: Item { width: 1; height: 20 }
 
                 model: LyricsService.lines
@@ -870,9 +870,10 @@ Item {
             Rectangle {
                 visible: lyricsListView.visible
                 anchors.top: parent.top
+                anchors.topMargin: 22
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: 18
+                height: 16
                 z: 3
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: lyricsPanel.edgeFadeColor }
