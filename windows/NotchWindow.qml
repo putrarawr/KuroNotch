@@ -7,6 +7,7 @@ import Quickshell.Wayland
 import "../config"
 import "../services"
 import "../components"
+import "../pages"
 
 PanelWindow {
     id: root
@@ -17,6 +18,28 @@ PanelWindow {
 
     readonly property bool bridgeActive: NotchController.expanded
         && (Config.mode !== "pill" || Boolean(HyprContext.windowContext?.autoHideActive))
+
+    readonly property var effectiveGeometry: {
+        const base = NotchController.geometry;
+        if (!NotchController.expanded
+            && (NotchController.surfaceState === "notch" || NotchController.surfaceState === "pill")
+            && MediaService.playing) {
+            const hasLyric = Config.lyrics.enabled
+                && Config.lyrics.showInCollapsed
+                && LyricsService.activeLineText.length > 0;
+            const widened = hasLyric ? 340 : 310;
+            const sw = width > 0 ? width : NotchController.screenWidth;
+            return {
+                x: Math.round((sw - widened) / 2),
+                y: base.y,
+                width: widened,
+                height: base.height,
+                topMargin: base.topMargin,
+                radius: base.radius
+            };
+        }
+        return base;
+    }
 
     WlrLayershell.namespace: "island-notch"
     WlrLayershell.layer: WlrLayer.Overlay
@@ -79,9 +102,82 @@ PanelWindow {
     Timer {
         interval: 15000
         repeat: true
+        triggeredOnStart: true
         running: !NotchController.expanded
             && (NotchController.surfaceState === "notch" || NotchController.surfaceState === "pill")
         onTriggered: root.clockText = Qt.formatTime(new Date(), "hh:mm")
+    }
+
+    // Hidden 16x16 Canvas inside PanelWindow scene graph to sample album art RGBA
+    Canvas {
+        id: artAccentCanvas
+
+        width: 16
+        height: 16
+        visible: false
+        property string pendingUrl: ""
+        property string loadedUrl: ""
+
+        function sampleUrl(url: string): void {
+            if (loadedUrl.length > 0 && loadedUrl !== url) {
+                unloadImage(loadedUrl);
+                loadedUrl = "";
+            }
+            if (!url || url.length === 0) {
+                pendingUrl = "";
+                MediaService.resetAccent();
+                return;
+            }
+            pendingUrl = url;
+            if (isImageLoaded(url)) {
+                loadedUrl = url;
+                requestPaint();
+            } else {
+                loadImage(url);
+            }
+        }
+
+        Connections {
+            target: MediaService
+
+            function onArtUrlChanged(): void {
+                artAccentCanvas.sampleUrl(MediaService.artUrl);
+            }
+        }
+
+        Component.onCompleted: {
+            if (MediaService.artUrl.length > 0)
+                sampleUrl(MediaService.artUrl);
+        }
+
+        onImageLoaded: {
+            const url = pendingUrl;
+            if (!url || !isImageLoaded(url) || isImageError(url)) {
+                MediaService.resetAccent();
+                return;
+            }
+            loadedUrl = url;
+            requestPaint();
+        }
+
+        onPaint: {
+            const url = pendingUrl;
+            if (!url || !isImageLoaded(url))
+                return;
+            try {
+                const ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+                ctx.drawImage(url, 0, 0, width, height);
+                const imgData = ctx.getImageData(0, 0, width, height);
+                if (!imgData || !imgData.data) {
+                    MediaService.resetAccent();
+                    return;
+                }
+                MediaService.updateAccentFromRgba(Array.from(imgData.data));
+            } catch (e) {
+                MediaService.resetAccent();
+            }
+        }
     }
 
     // Strict click-through hitbox wrapping ONLY the visible silhouette
@@ -138,6 +234,10 @@ PanelWindow {
         NotchSurface {
             id: notchSurface
 
+            targetGeometry: root.effectiveGeometry
+            accentColor: MediaService.playing ? MediaService.accentColor : "#f4f4f6"
+            accentActive: MediaService.playing
+
             HoverHandler {
                 id: surfaceHoverHandler
 
@@ -187,7 +287,7 @@ PanelWindow {
                 }
             }
 
-            // Collapsed / Peek Content Slot (Task 5 mounts CollapsedContent here)
+            // Collapsed / Peek Content Slot
             Item {
                 id: collapsedSlot
 
@@ -199,138 +299,11 @@ PanelWindow {
                     NumberAnimation { duration: 140 }
                 }
 
-                // Micro-strip minimal hairline indicator (180x14)
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 6
-                    visible: NotchController.surfaceState === "strip"
+                CollapsedContent {
+                    id: collapsedContent
 
-                    Rectangle {
-                        width: 28
-                        height: 3
-                        radius: 1.5
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: "#8e8e98"
-                    }
-
-                    Rectangle {
-                        visible: Config.dnd || Config.pinned
-                        width: 4
-                        height: 4
-                        radius: 2
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: Config.dnd ? "#d4845a" : "#f4f4f6"
-                    }
-                }
-
-                // Peek alert readout (280x40)
-                RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 14
-                    anchors.rightMargin: 14
-                    spacing: 8
-                    visible: NotchController.surfaceState === "peek"
-
-                    Text {
-                        Layout.alignment: Qt.AlignVCenter
-                        text: NotchController.peekAlert?.kind === "notif" ? "notifications" : "tune"
-                        font.family: "Material Symbols Rounded"
-                        font.pixelSize: 16
-                        color: "#f4f4f6"
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: 0
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: NotchController.peekAlert?.title || "Alert"
-                            elide: Text.ElideRight
-                            font.family: "Rubik"
-                            font.pixelSize: 11
-                            font.weight: Font.Medium
-                            color: "#f4f4f6"
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            visible: text.length > 0
-                            text: NotchController.peekAlert?.subtitle || ""
-                            elide: Text.ElideRight
-                            font.family: "Rubik"
-                            font.pixelSize: 10
-                            color: "#8e8e98"
-                        }
-                    }
-                }
-
-                // Default collapsed Notch / Pill status readout
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 16
-                    anchors.rightMargin: 16
-                    spacing: 8
-                    visible: NotchController.surfaceState === "notch" || NotchController.surfaceState === "pill"
-
-                    Row {
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: 6
-
-                        Rectangle {
-                            width: 6
-                            height: 6
-                            radius: 3
-                            anchors.verticalCenter: parent.verticalCenter
-                            color: Config.dnd ? "#d4845a" : "#8e8e98"
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "Island"
-                            font.family: "Rubik"
-                            font.pixelSize: 11
-                            font.weight: Font.Medium
-                            color: "#f4f4f6"
-                        }
-                    }
-
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
-                    Row {
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: 6
-
-                        Text {
-                            visible: Config.pinned
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "keep"
-                            font.family: "Material Symbols Rounded"
-                            font.pixelSize: 12
-                            color: "#8e8e98"
-                        }
-
-                        Text {
-                            visible: Config.dnd
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "notifications_off"
-                            font.family: "Material Symbols Rounded"
-                            font.pixelSize: 12
-                            color: "#d4845a"
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: root.clockText
-                            font.family: "Rubik"
-                            font.pixelSize: 11
-                            font.weight: Font.Medium
-                            color: "#8e8e98"
-                        }
-                    }
+                    clockText: root.clockText
                 }
             }
 
@@ -379,13 +352,9 @@ PanelWindow {
                         height: carouselViewport.height
 
                         // Page 0: Media + Sync Lyrics (Task 5)
-                        PlaceholderPage {
+                        MediaLyricsPage {
                             width: carouselViewport.width
                             height: carouselViewport.height
-                            iconName: "lyrics"
-                            title: "Media & Sync Lyrics"
-                            subtitle: "MPRIS deck, on-demand Cava visualizer, and click-to-seek lyrics"
-                            taskLabel: "Coming in Task 5"
                         }
 
                         // Page 1: Drag-and-Drop File Shelf (Task 7)
