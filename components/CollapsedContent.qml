@@ -155,21 +155,11 @@ Item {
         readonly property string notifSubtitle: NotchController.peekAlert?.subtitle ?? alertPayload?.body ?? ""
 
         function resolveIcon(str: string): string {
-            if (!str || str.length === 0)
-                return "";
-            if (str.startsWith("image://") || str.startsWith("file://"))
-                return str;
-            if (str.startsWith("/"))
-                return "file://" + str;
-            try {
-                const p = Quickshell.iconPath(str);
-                if (p && p.length > 0) {
-                    if (p.startsWith("image://") || p.startsWith("file://"))
-                        return p;
-                    return p.startsWith("/") ? ("file://" + p) : p;
-                }
-            } catch (e) {}
-            return "";
+            return NotificationService.resolveIconPath(
+                str,
+                notifImage,
+                NotchController.peekAlert?.payload?.appName ?? ""
+            );
         }
 
         anchors.fill: parent
@@ -373,11 +363,14 @@ Item {
 
                     Text {
                         anchors.centerIn: parent
-                        visible: peekNotifImg.status !== Image.Ready
-                        text: {
-                            const icon = peekPillContainer.notifIcon;
-                            return (icon.length > 0 && !icon.includes("/")) ? icon : (peekPillContainer.isNotifPeek ? "notifications" : "tune");
-                        }
+                        visible: peekNotifImg.source.toString().length === 0 || peekNotifImg.status !== Image.Ready
+                        text: peekPillContainer.isNotifPeek
+                            ? NotificationService.fallbackSymbol(
+                                peekPillContainer.notifIcon,
+                                peekPillContainer.alertPayload?.appName ?? "",
+                                peekPillContainer.notifTitle
+                            )
+                            : ((peekPillContainer.notifIcon.length > 0 && /^[a-z][a-z0-9_]*$/.test(peekPillContainer.notifIcon)) ? peekPillContainer.notifIcon : "tune")
                         font.family: "Material Symbols Rounded"
                         font.pixelSize: 15
                         color: "#f4f4f6"
@@ -619,11 +612,14 @@ Item {
 
                 Text {
                     anchors.centerIn: parent
-                    visible: peekNotifCompactImg.status !== Image.Ready
-                    text: {
-                        const icon = peekPillContainer.notifIcon;
-                        return (icon.length > 0 && !icon.includes("/")) ? icon : (peekPillContainer.isNotifPeek ? "notifications" : "tune");
-                    }
+                    visible: peekNotifCompactImg.source.toString().length === 0 || peekNotifCompactImg.status !== Image.Ready
+                    text: peekPillContainer.isNotifPeek
+                        ? NotificationService.fallbackSymbol(
+                            peekPillContainer.notifIcon,
+                            peekPillContainer.alertPayload?.appName ?? "",
+                            peekPillContainer.notifTitle
+                        )
+                        : ((peekPillContainer.notifIcon.length > 0 && /^[a-z][a-z0-9_]*$/.test(peekPillContainer.notifIcon)) ? peekPillContainer.notifIcon : "tune")
                     font.family: "Material Symbols Rounded"
                     font.pixelSize: 16
                     color: "#f4f4f6"

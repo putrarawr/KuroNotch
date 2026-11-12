@@ -222,4 +222,74 @@ Singleton {
             }
         }
     }
+
+    function _resolveSingleIcon(iconStr: string): string {
+        if (!iconStr || iconStr.length === 0)
+            return "";
+        if (iconStr.startsWith("image://") || iconStr.startsWith("file://"))
+            return iconStr;
+        if (iconStr.startsWith("/"))
+            return "file://" + iconStr;
+        try {
+            const p = Quickshell.iconPath(iconStr, true);
+            if (p && p.length > 0) {
+                if (p.startsWith("image://") || p.startsWith("file://"))
+                    return p;
+                return p.startsWith("/") ? ("file://" + p) : p;
+            }
+        } catch (e) {}
+        return "";
+    }
+
+    function resolveIconPath(iconStr: string, imageStr = "", appName = ""): string {
+        const direct = _resolveSingleIcon(iconStr);
+        if (direct.length > 0)
+            return direct;
+
+        const img = _resolveSingleIcon(imageStr);
+        if (img.length > 0)
+            return img;
+
+        if (appName && appName.length > 0) {
+            try {
+                const entry = DesktopEntries.heuristicLookup(appName);
+                if (entry?.icon) {
+                    const desktopResolved = _resolveSingleIcon(entry.icon);
+                    if (desktopResolved.length > 0)
+                        return desktopResolved;
+                }
+            } catch (e) {}
+        }
+        return "";
+    }
+
+    function fallbackSymbol(iconStr: string, appName = "", summary = ""): string {
+        const probe = `${iconStr || ""} ${appName || ""} ${summary || ""}`.toLowerCase();
+        if (probe.includes("camera") || probe.includes("screenshot") || probe.includes("snip"))
+            return "photo_camera";
+        if (probe.includes("warning") || probe.includes("caution"))
+            return "warning";
+        if (probe.includes("error") || probe.includes("fail"))
+            return "error";
+        if (probe.includes("info") || probe.includes("dialog-information"))
+            return "info";
+        if (probe.includes("volume") || probe.includes("audio") || probe.includes("sound"))
+            return "volume_up";
+        if (probe.includes("battery") || probe.includes("power"))
+            return "battery_std";
+        if (probe.includes("wifi") || probe.includes("network"))
+            return "wifi";
+        if (probe.includes("bluetooth"))
+            return "bluetooth";
+        if (probe.includes("mail") || probe.includes("message") || probe.includes("chat"))
+            return "chat";
+        if (probe.includes("download"))
+            return "download";
+        if (probe.includes("music") || probe.includes("spotify") || probe.includes("media"))
+            return "music_note";
+        // Only trust iconStr directly if it looks like a Material Symbol snake_case glyph
+        if (iconStr && /^[a-z][a-z0-9_]*$/.test(iconStr))
+            return iconStr;
+        return "notifications";
+    }
 }

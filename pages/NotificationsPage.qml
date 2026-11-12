@@ -11,21 +11,7 @@ Item {
     id: root
 
     function resolveIconPath(iconStr: string): string {
-        if (!iconStr || iconStr.length === 0)
-            return "";
-        if (iconStr.startsWith("image://") || iconStr.startsWith("file://"))
-            return iconStr;
-        if (iconStr.startsWith("/"))
-            return "file://" + iconStr;
-        try {
-            const p = Quickshell.iconPath(iconStr);
-            if (p && p.length > 0) {
-                if (p.startsWith("image://") || p.startsWith("file://"))
-                    return p;
-                return p.startsWith("/") ? ("file://" + p) : p;
-            }
-        } catch (e) {}
-        return "";
+        return NotificationService.resolveIconPath(iconStr);
     }
 
     ColumnLayout {
@@ -249,24 +235,29 @@ Item {
                             radius: 3
                             color: "transparent"
 
-                            readonly property string resolvedIcon: root.resolveIconPath(cardDelegate.modelData?.appIcon ?? "")
+                            readonly property string resolvedIcon: NotificationService.resolveIconPath(
+                                cardDelegate.modelData?.appIcon ?? "",
+                                cardDelegate.modelData?.image ?? "",
+                                cardDelegate.modelData?.appName ?? ""
+                            )
 
                             Image {
                                 id: cardNotifImg
                                 anchors.fill: parent
                                 source: parent.resolvedIcon
                                 fillMode: Image.PreserveAspectFit
-                                visible: status === Image.Ready
+                                visible: parent.resolvedIcon.length > 0 && status === Image.Ready
                                 asynchronous: true
                             }
 
                             Text {
                                 anchors.centerIn: parent
                                 visible: parent.resolvedIcon.length === 0 || cardNotifImg.status !== Image.Ready
-                                text: {
-                                    const icon = cardDelegate.modelData?.appIcon ?? "";
-                                    return (icon.length > 0 && !icon.includes("/")) ? icon : "notifications";
-                                }
+                                text: NotificationService.fallbackSymbol(
+                                    cardDelegate.modelData?.appIcon ?? "",
+                                    cardDelegate.modelData?.appName ?? "",
+                                    cardDelegate.modelData?.summary ?? ""
+                                )
                                 font.family: "Material Symbols Rounded"
                                 font.pixelSize: 13
                                 color: "#8e8e98"
