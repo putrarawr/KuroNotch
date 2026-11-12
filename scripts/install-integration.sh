@@ -162,8 +162,12 @@ if command -v systemctl >/dev/null 2>&1; then
     systemctl --user mask swaync.service 2>/dev/null || true
 fi
 
-# 5. Update hyprland.conf autostart and ensure wl-paste cliphist watchers are active
-echo "[5/5] Configuring Hyprland autostart in hyprland.conf..."
+# 5. Update hyprland.conf autostart, wallpaper restoration, and wl-paste watchers
+echo "[5/6] Configuring Hyprland autostart & wallpaper restore in hyprland.conf..."
+chmod +x "$REPO_DIR/scripts/restore-wallpaper"
+cp "$REPO_DIR/scripts/restore-wallpaper" "$BIN_DIR/restore-wallpaper"
+chmod +x "$BIN_DIR/restore-wallpaper"
+
 if [ -f "$HYPRLAND_CONF" ]; then
     cp "$HYPRLAND_CONF" "${HYPRLAND_CONF}.bak.${TIMESTAMP}"
     echo "  -> Backup created: ${HYPRLAND_CONF}.bak.${TIMESTAMP}"
@@ -175,8 +179,20 @@ path = os.path.expanduser("$HYPRLAND_CONF")
 with open(path, "r", encoding="utf-8") as f:
     lines = f.readlines()
 
+replaced_hyprpaper = False
+updated_lines = []
+for line in lines:
+    if line.strip() == "exec-once = hyprpaper":
+        updated_lines.append("exec-once = ~/.local/bin/restore-wallpaper\n")
+        replaced_hyprpaper = True
+    else:
+        updated_lines.append(line)
+
 new_entries = []
-text_content = "".join(lines)
+text_content = "".join(updated_lines)
+
+if "restore-wallpaper" not in text_content:
+    new_entries.append("exec-once = ~/.local/bin/restore-wallpaper\n")
 
 if "exec-once = ~/.local/bin/island-notch" not in text_content and "exec-once = $HOME/.local/bin/island-notch" not in text_content:
     new_entries.append("exec-once = ~/.local/bin/island-notch\n")
@@ -196,12 +212,14 @@ if "island-notch ipc call notch setPage 3" not in text_content:
 if "island-notch ipc call notch setPage 4" not in text_content:
     new_entries.append("bind = \$mainMod, N, exec, ~/.local/bin/island-notch ipc call notch setPage 4\n")
 
-if new_entries:
-    with open(path, "a", encoding="utf-8") as f:
-        f.write("\n# --- ISLAND NOTCH & CLIPBOARD AUTOSTART ---\n")
-        for entry in new_entries:
-            f.write(entry)
-    print(f"  -> Added {len(new_entries)} entries to hyprland.conf")
+if replaced_hyprpaper or new_entries:
+    with open(path, "w", encoding="utf-8") as f:
+        f.writelines(updated_lines)
+        if new_entries:
+            f.write("\n# --- ISLAND NOTCH & CLIPBOARD AUTOSTART ---\n")
+            for entry in new_entries:
+                f.write(entry)
+    print(f"  -> Updated hyprland.conf (replaced_hyprpaper={replaced_hyprpaper}, appended={len(new_entries)})")
 else:
     print("  -> Autostart & keybind entries already present in hyprland.conf (skipping)")
 EOF

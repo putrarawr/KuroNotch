@@ -10,7 +10,7 @@ import "../lib/notchState.js" as NotchState
 Singleton {
     id: root
 
-    readonly property int pageCount: 8
+    readonly property int pageCount: 9
 
     // Core surface and geometry state
     readonly property string surfaceState: NotchState.resolveSurfaceState({
@@ -65,6 +65,7 @@ Singleton {
     readonly property var enabledPages: {
         const list = [0]; // 0: Media & Lyrics
         if (Config.widgets.controls) list.push(5); // System & Controls
+        if (Config.widgets.wallpaper) list.push(8); // Wallpaper Switcher
         if (Config.widgets.pomodoro) list.push(2); // Focus & Quick Tools
         if (Config.widgets.calendar) list.push(6); // Calendar & To-Do
         if (Config.widgets.notes) list.push(7);    // Notes & Windows
@@ -80,6 +81,7 @@ Singleton {
         switch (pageId) {
         case 0: return { title: "Media & Lyrics", icon: "music_note" };
         case 5: return { title: "System & Controls", icon: "monitoring" };
+        case 8: return { title: "Wallpaper", icon: "wallpaper" };
         case 2: return { title: "Focus & Tools", icon: "timer" };
         case 6: return { title: "Calendar & To-Do", icon: "calendar_month" };
         case 7: return { title: "Notes & Windows", icon: "edit_note" };

@@ -45,7 +45,7 @@ PanelWindow {
                 ? (PrivacyService.recordingActive ? 292 : (NotchController.agentActive ? 288 : 272))
                 : (NotchController.companionVisible
                     ? ((Config.dnd || PrivacyService.micActive) ? 132 : 116)
-                    : Math.max(base.width, 268));
+                    : Math.max(base.width, WeatherService.ready ? 314 : 268));
             const targetWidth = idleTargetWidth;
             const sw = width > 0 ? width : NotchController.screenWidth;
             return {
@@ -532,6 +532,13 @@ PanelWindow {
                             // Page 5: System Monitor & Quick Control Center (System)
                             ControlMonitorPage {
                                 visible: Config.widgets.controls
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
+                            // Page 8: Wallpaper Switcher
+                            WallpaperPage {
+                                visible: Config.widgets.wallpaper
                                 width: carouselViewport.width
                                 height: carouselViewport.height
                             }

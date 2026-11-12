@@ -43,6 +43,8 @@ ShellRoot {
     readonly property int _bootCalendar: CalendarService.todayPendingCount
     readonly property bool _bootWeather: WeatherService.ready
     readonly property int _bootNotes: NotesService.charCount
+    readonly property string _bootWallpaper: WallpaperService.currentPath
+    readonly property int _bootWater: WaterService.count
 
     Loader {
         active: root.targetScreen !== null && root.targetScreen !== undefined

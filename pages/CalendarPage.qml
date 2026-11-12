@@ -319,9 +319,31 @@ Item {
 
                 Item { Layout.fillWidth: true }
 
+                Row {
+                    visible: WeatherService.ready
+                    spacing: 3
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: WeatherService.icon
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 12
+                        color: WeatherService.icon === "sunny" ? "#fde047" : "#7dd3fc"
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: `${WeatherService.tempC}°C`
+                        font.family: "Rubik"
+                        font.pixelSize: 10
+                        font.weight: Font.Medium
+                        color: "#c8c8d4"
+                    }
+                }
+
                 Text {
                     readonly property int count: root.selectedItems.length
-                    text: count === 0 ? "Kosong" : `${count} item`
+                    text: count === 0 ? "· Kosong" : `· ${count} item`
                     font.family: "Rubik"
                     font.pixelSize: 10
                     color: "#8e8e98"

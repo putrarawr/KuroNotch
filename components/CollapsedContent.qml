@@ -147,7 +147,11 @@ Item {
         readonly property var alertPayload: NotchController.peekAlert?.payload
         readonly property bool isGreetPeek: root.isPeek && (NotchController.peekAlert?.kind === "greet")
         readonly property bool isCalendarPeek: root.isPeek && (NotchController.peekAlert?.kind === "calendar")
-        readonly property bool isAgentPeek: root.isPeek && (NotchController.peekAlert?.kind === "agent" || NotchController.peekAlert?.kind === "calendar")
+        readonly property bool isWaterPeek: root.isPeek && (NotchController.peekAlert?.kind === "water")
+        readonly property bool isAgentPeek: root.isPeek
+            && (NotchController.peekAlert?.kind === "agent"
+                || NotchController.peekAlert?.kind === "calendar"
+                || NotchController.peekAlert?.kind === "water")
         readonly property bool isNotifPeek: root.isPeek && (NotchController.peekAlert?.kind === "notif")
         readonly property bool hasActions: Boolean(alertPayload?.actions && alertPayload.actions.length > 0)
         readonly property var notifActions: alertPayload?.actions ?? []
@@ -592,7 +596,8 @@ Item {
 
             readonly property bool isErr: NotchController.peekAlert?.payload?.phase === "error"
             readonly property bool isCal: peekPillContainer.isCalendarPeek
-            readonly property color badgeTone: isErr ? "#f87171" : (isCal ? "#38bdf8" : "#a78bfa")
+            readonly property bool isWater: peekPillContainer.isWaterPeek
+            readonly property color badgeTone: isErr ? "#f87171" : ((isCal || isWater) ? "#38bdf8" : "#a78bfa")
 
             anchors.fill: parent
             anchors.leftMargin: 12
@@ -611,7 +616,9 @@ Item {
 
                 Text {
                     anchors.centerIn: parent
-                    text: agentPeekLayout.isErr ? "error" : (agentPeekLayout.isCal ? "event_upcoming" : "auto_awesome")
+                    text: agentPeekLayout.isErr
+                        ? "error"
+                        : (agentPeekLayout.isWater ? "water_drop" : (agentPeekLayout.isCal ? "event_upcoming" : "auto_awesome"))
                     font.family: "Material Symbols Rounded"
                     font.pixelSize: 16
                     color: agentPeekLayout.badgeTone
@@ -651,7 +658,40 @@ Item {
                 }
             }
 
+            // Clickable +1 Gelas button when water reminder peeks
             Rectangle {
+                visible: agentPeekLayout.isWater
+                Layout.preferredHeight: 24
+                Layout.preferredWidth: waterDrinkTxt.implicitWidth + 14
+                Layout.alignment: Qt.AlignVCenter
+                radius: 12
+                color: waterDrinkMouse.containsMouse
+                    ? Qt.rgba(56 / 255, 189 / 255, 248 / 255, 0.30)
+                    : Qt.rgba(56 / 255, 189 / 255, 248 / 255, 0.18)
+                border.width: 1
+                border.color: Qt.rgba(56 / 255, 189 / 255, 248 / 255, 0.48)
+
+                Text {
+                    id: waterDrinkTxt
+                    anchors.centerIn: parent
+                    text: "+1 Gelas"
+                    font.family: "Rubik"
+                    font.pixelSize: 10
+                    font.weight: Font.DemiBold
+                    color: "#e0f2fe"
+                }
+
+                MouseArea {
+                    id: waterDrinkMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: WaterService.drinkOne()
+                }
+            }
+
+            Rectangle {
+                visible: !agentPeekLayout.isWater
                 Layout.preferredWidth: 26
                 Layout.preferredHeight: 26
                 Layout.alignment: Qt.AlignVCenter
@@ -1159,6 +1199,38 @@ Item {
                 font.family: "Material Symbols Rounded"
                 font.pixelSize: 12
                 color: "#d4845a"
+            }
+
+            Row {
+                visible: !root.recordingActive && !NotchController.agentActive && WeatherService.ready
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 3
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: WeatherService.icon
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 12
+                    color: WeatherService.icon === "sunny" ? "#fde047" : "#7dd3fc"
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: `${WeatherService.tempC}°`
+                    font.family: "Rubik"
+                    font.pixelSize: 10
+                    font.weight: Font.Medium
+                    color: "#c8c8d4"
+                }
+            }
+
+            Text {
+                visible: !root.recordingActive && !NotchController.agentActive && WeatherService.ready && root.dateText.length > 0
+                anchors.verticalCenter: parent.verticalCenter
+                text: "·"
+                font.family: "Rubik"
+                font.pixelSize: 10
+                color: "#5c5c68"
             }
 
             Text {

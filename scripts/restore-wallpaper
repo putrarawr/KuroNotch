@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ARG_WALL="${1:-}"
+STATE_FILE="$HOME/.local/state/caelestia/wallpaper/path.txt"
+SWWW_CACHE_DIR="$HOME/.cache/swww"
+WALL_DIR="$HOME/wallpapers"
+
+resolve_wallpaper() {
+    if [[ -n "$ARG_WALL" && -f "$ARG_WALL" ]]; then
+        printf '%s\n' "$ARG_WALL"
+        return 0
+    fi
+
+    if [[ -f "$STATE_FILE" ]]; then
+        local saved
+        saved="$(tr -d '\r\n' < "$STATE_FILE" || true)"
+        if [[ -n "$saved" && -f "$saved" ]]; then
+            printf '%s\n' "$saved"
+            return 0
+        fi
+    fi
+
+    if [[ -d "$SWWW_CACHE_DIR" ]]; then
+        local f line
+        for f in "$SWWW_CACHE_DIR"/*; do
+            [[ -f "$f" ]] || continue
+            line="$(awk 'NF && $0 !~ /^Lanczos/ && $0 !~ /^filter/ { print; exit }' "$f" || true)"
+            if [[ -n "$line" && -f "$line" ]]; then
+                printf '%s\n' "$line"
+                return 0
+            fi
+        done
+    fi
+
+    if [[ -d "$WALL_DIR" ]]; then
+        local img
+        for img in "$WALL_DIR"/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP}; do
+            [[ -f "$img" ]] || continue
+            printf '%s\n' "$img"
+            return 0
+        done
+    fi
+
+    return 1
+}
+
+# Stop hyprpaper so it doesn't fight swww-daemon or flash default wallpaper
+pkill -x hyprpaper >/dev/null 2>&1 || true
+
+# Start swww-daemon if not already running
+if ! pgrep -x swww-daemon >/dev/null 2>&1; then
+    nohup swww-daemon >/dev/null 2>&1 &
+fi
+
+# Wait up to 3s for swww socket readiness
+for _ in $(seq 1 30); do
+    if swww query >/dev/null 2>&1; then
+        break
+    fi
+    sleep 0.1
+done
+
+WALL="$(resolve_wallpaper || true)"
+if [[ -n "${WALL:-}" && -f "$WALL" ]]; then
+    mkdir -p "$(dirname "$STATE_FILE")"
+    printf '%s\n' "$WALL" > "$STATE_FILE"
+    swww img "$WALL" --transition-type fade --transition-duration 0.5 >/dev/null 2>&1 || true
+fi

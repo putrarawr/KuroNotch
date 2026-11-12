@@ -30,6 +30,8 @@ PopupWindow {
             return Config.widgets.calendar;
         if (previewWidget === "notes")
             return Config.widgets.notes;
+        if (previewWidget === "wallpaper")
+            return Config.widgets.wallpaper;
         if (previewWidget === "lyrics")
             return Config.lyrics.enabled;
         return Config.companion.enabled;
@@ -505,6 +507,7 @@ PopupWindow {
                                         if (root.previewWidget === "controls") return "PREVIEW · CONTROL & MONITOR";
                                         if (root.previewWidget === "calendar") return "PREVIEW · MINI CALENDAR";
                                         if (root.previewWidget === "notes") return "PREVIEW · NOTES & WINDOWS";
+                                        if (root.previewWidget === "wallpaper") return "PREVIEW · WALLPAPER SWITCHER";
                                         if (root.previewWidget === "lyrics") return "PREVIEW · SYNC LYRICS";
                                         return "PREVIEW · COMPANION EYES";
                                     }
@@ -1034,6 +1037,53 @@ PopupWindow {
                                         }
                                     }
                                 }
+
+                                // 10. Wallpaper Switcher Preview
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 8
+                                    visible: root.previewWidget === "wallpaper"
+
+                                    Repeater {
+                                        model: [
+                                            { lbl: "Noir", c: "#a78bfa" },
+                                            { lbl: "Spider", c: "#38bdf8" },
+                                            { lbl: "Random", c: "#34d399" }
+                                        ]
+
+                                        delegate: Rectangle {
+                                            required property var modelData
+                                            width: 82
+                                            height: 36
+                                            radius: 8
+                                            color: "#111119"
+                                            border.width: 1
+                                            border.color: Qt.rgba(Qt.color(modelData.c).r, Qt.color(modelData.c).g, Qt.color(modelData.c).b, 0.4)
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 4
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: modelData.lbl === "Random" ? "shuffle" : "wallpaper"
+                                                    font.family: "Material Symbols Rounded"
+                                                    font.pixelSize: 13
+                                                    color: modelData.c
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: modelData.lbl
+                                                    font.family: "Rubik"
+                                                    font.pixelSize: 9
+                                                    font.weight: Font.Medium
+                                                    color: "#e4e4ec"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -1070,6 +1120,20 @@ PopupWindow {
                             onToggled: {
                                 root.previewWidget = "controls";
                                 Config.widgets.controls = !Config.widgets.controls;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Wallpaper Switcher"
+                            subtitle: "Switch ~/wallpapers thumbnails, random shuffle & auto swww sync"
+                            iconName: "wallpaper"
+                            checked: Config.widgets.wallpaper
+                            selected: root.previewWidget === "wallpaper"
+                            onHovered: root.previewWidget = "wallpaper"
+                            onToggled: {
+                                root.previewWidget = "wallpaper";
+                                Config.widgets.wallpaper = !Config.widgets.wallpaper;
                                 Config.save();
                             }
                         }
