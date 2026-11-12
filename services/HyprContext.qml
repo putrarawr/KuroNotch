@@ -79,6 +79,7 @@ Singleton {
             } else if (["workspace", "moveworkspace", "activespecial", "focusedmon"].indexOf(n) !== -1) {
                 Hyprland.refreshWorkspaces();
                 Hyprland.refreshMonitors();
+                Hyprland.refreshToplevels();
             } else if (["openwindow", "closewindow", "movewindow"].indexOf(n) !== -1) {
                 Hyprland.refreshToplevels();
                 Hyprland.refreshWorkspaces();

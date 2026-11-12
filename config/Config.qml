@@ -20,6 +20,7 @@ Singleton {
             "google-chrome",
             "chromium",
             "firefox",
+            "firefox_firefox",
             "brave-browser",
             "zen",
             "zen-browser",

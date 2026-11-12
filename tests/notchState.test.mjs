@@ -56,6 +56,16 @@ describe("notchState.js - Pure State Machine", () => {
         assert.equal(classifyWindowContext({}, 0).isBrowser, false);
     });
 
+    it("matches wrapped/reverse-domain browser classes (firefox_firefox, org.mozilla.firefox) without matching non-browsers", () => {
+        assert.deepEqual(classifyWindowContext("firefox_firefox", 0, ["firefox"]), {
+            isBrowser: true,
+            isTrueFullscreen: false,
+            autoHideActive: true,
+        });
+        assert.equal(classifyWindowContext("org.mozilla.firefox", 0, ["firefox"]).autoHideActive, true);
+        assert.equal(classifyWindowContext("antigravity", 0, ["firefox"]).autoHideActive, false);
+    });
+
     it("4. allows OSD and normal notifications to peek during browser auto-hide", () => {
         const browserContext = { isBrowser: true, isTrueFullscreen: false, autoHideActive: true };
         assert.equal(shouldPeekAlert("osd", 1, browserContext), true);
