@@ -25,10 +25,13 @@ Item {
     readonly property real shapePadX: 16
     readonly property real bezierK: 0.55228475
 
+    readonly property real safeWidth: Math.max(0, width)
+    readonly property real safeHeight: Math.max(0, height)
+
     // Clamped silhouette radii keep paths non-self-intersecting mid-spring (e.g. 4px sensor <-> 245px card)
-    readonly property real effEar: Math.min(earWidth, Math.max(0, height * 0.4))
-    readonly property real effTopR: Math.min(topRadius, height / 2, width / 2)
-    readonly property real effBottomR: Math.min(bottomRadius, Math.max(0, height - effTopR - effEar), width / 2)
+    readonly property real effEar: Math.max(0, Math.min(earWidth, safeHeight * 0.4))
+    readonly property real effTopR: Math.max(0, Math.min(topRadius, safeHeight / 2, safeWidth / 2))
+    readonly property real effBottomR: Math.max(0, Math.min(bottomRadius, Math.max(0, safeHeight - effTopR - effEar), safeWidth / 2))
 
     property real earWidth: targetEarWidth
     property real topRadius: targetTopRadius
@@ -133,40 +136,40 @@ Item {
         startY: 0
 
         PathLine {
-            x: root.shapePadX + root.width - root.effTopR + root.effEar
+            x: root.shapePadX + root.safeWidth - root.effTopR + root.effEar
             y: 0
         }
         PathCubic {
-            control1X: root.shapePadX + root.width - (1 - root.bezierK) * (root.effTopR - root.effEar)
+            control1X: root.shapePadX + root.safeWidth - (1 - root.bezierK) * (root.effTopR - root.effEar)
             control1Y: 0
-            control2X: root.shapePadX + root.width
+            control2X: root.shapePadX + root.safeWidth
             control2Y: (root.effTopR + root.effEar) * (1 - root.bezierK)
-            x: root.shapePadX + root.width
+            x: root.shapePadX + root.safeWidth
             y: root.effTopR + root.effEar
         }
         PathLine {
-            x: root.shapePadX + root.width
-            y: root.height - root.effBottomR
+            x: root.shapePadX + root.safeWidth
+            y: root.safeHeight - root.effBottomR
         }
         PathCubic {
-            control1X: root.shapePadX + root.width
-            control1Y: root.height - root.effBottomR * (1 - root.bezierK)
-            control2X: root.shapePadX + root.width - root.effBottomR * (1 - root.bezierK)
-            control2Y: root.height
-            x: root.shapePadX + root.width - root.effBottomR
-            y: root.height
+            control1X: root.shapePadX + root.safeWidth
+            control1Y: root.safeHeight - root.effBottomR * (1 - root.bezierK)
+            control2X: root.shapePadX + root.safeWidth - root.effBottomR * (1 - root.bezierK)
+            control2Y: root.safeHeight
+            x: root.shapePadX + root.safeWidth - root.effBottomR
+            y: root.safeHeight
         }
         PathLine {
             x: root.shapePadX + root.effBottomR
-            y: root.height
+            y: root.safeHeight
         }
         PathCubic {
             control1X: root.shapePadX + root.effBottomR * (1 - root.bezierK)
-            control1Y: root.height
+            control1Y: root.safeHeight
             control2X: root.shapePadX
-            control2Y: root.height - root.effBottomR * (1 - root.bezierK)
+            control2Y: root.safeHeight - root.effBottomR * (1 - root.bezierK)
             x: root.shapePadX
-            y: root.height - root.effBottomR
+            y: root.safeHeight - root.effBottomR
         }
         PathLine {
             x: root.shapePadX
@@ -186,16 +189,16 @@ Item {
         id: silhouetteShape
 
         readonly property real leftEdge: root.shapePadX + 0.5
-        readonly property real rightEdge: root.shapePadX + root.width - 0.5
+        readonly property real rightEdge: Math.max(leftEdge, root.shapePadX + root.safeWidth - 0.5)
         readonly property real topEdge: 0.5
-        readonly property real botEdge: Math.max(0.5, root.height - 0.5)
-        readonly property real rimBotR: Math.max(0, root.effBottomR - 0.5)
+        readonly property real botEdge: Math.max(0.5, root.safeHeight - 0.5)
+        readonly property real rimBotR: Math.max(0, Math.min(root.effBottomR - 0.5, (botEdge - topEdge) / 2))
         readonly property real rimTopSpanY: Math.min(botEdge, Math.max(topEdge, root.effTopR + root.effEar))
 
         x: -root.shapePadX
         y: 0
-        width: root.width + root.shapePadX * 2
-        height: root.height + 2
+        width: root.safeWidth + root.shapePadX * 2
+        height: root.safeHeight + 2
         preferredRendererType: Shape.CurveRenderer
         antialiasing: true
 
@@ -207,11 +210,11 @@ Item {
         // 2. Adaptive ambient halo clipped cleanly inside the silhouette
         SilhouettePath {
             fillGradient: RadialGradient {
-                centerX: root.shapePadX + root.width * 0.24
-                centerY: root.height * 0.34
+                centerX: root.shapePadX + root.safeWidth * 0.24
+                centerY: root.safeHeight * 0.34
                 focalX: centerX
                 focalY: centerY
-                centerRadius: Math.max(60, Math.max(root.width, root.height) * 0.68)
+                centerRadius: Math.max(60, Math.max(root.safeWidth, root.safeHeight) * 0.68)
 
                 GradientStop {
                     position: 0.0

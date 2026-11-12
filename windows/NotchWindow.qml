@@ -371,27 +371,6 @@ PanelWindow {
                     }
 
                     // Review Focus #3: vertical mouse wheel inside page bodies MUST NOT switch pages
-                    WheelHandler {
-                        id: carouselWheel
-
-                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                        grabPermissions: PointerHandler.TakeOverForbidden
-                        onWheel: event => {
-                            const shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
-                            const horizontal = Math.abs(event.angleDelta.x) > Math.abs(event.angleDelta.y)
-                                && Math.abs(event.angleDelta.x) > 0;
-                            if (!shiftHeld && !horizontal) {
-                                event.accepted = false;
-                                return;
-                            }
-                            event.accepted = true;
-                            const raw = horizontal
-                                ? event.angleDelta.x
-                                : (event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x);
-                            root.handleCarouselWheel(raw);
-                        }
-                    }
-
                     Row {
                         id: pageStrip
 
@@ -447,6 +426,31 @@ PanelWindow {
                             title: "Notification Island"
                             subtitle: "Interactive desktop notifications, actions, and Do Not Disturb"
                             taskLabel: "Coming in Task 9"
+                        }
+                    }
+
+                    // Stacked above pageStrip so Shift+Wheel & horizontal swipes intercept before child Flickables
+                    MouseArea {
+                        id: carouselWheelOverlay
+
+                        anchors.fill: parent
+                        z: 10
+                        acceptedButtons: Qt.NoButton
+                        hoverEnabled: false
+
+                        onWheel: event => {
+                            const shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
+                            const horizontal = Math.abs(event.angleDelta.x) > Math.abs(event.angleDelta.y)
+                                && Math.abs(event.angleDelta.x) > 0;
+                            if (!shiftHeld && !horizontal) {
+                                event.accepted = false;
+                                return;
+                            }
+                            event.accepted = true;
+                            const raw = horizontal
+                                ? event.angleDelta.x
+                                : (event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x);
+                            root.handleCarouselWheel(raw);
                         }
                     }
                 }
