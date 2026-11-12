@@ -51,6 +51,48 @@ Item {
 
                     Item { Layout.fillWidth: true }
 
+                    // Compact Weather Chip (click to refresh)
+                    Rectangle {
+                        visible: WeatherService.ready
+                        height: 18
+                        width: weatherRow.implicitWidth + 10
+                        radius: 6
+                        color: weatherMouse.containsMouse ? "#1c1c26" : "#15151d"
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.08)
+
+                        Row {
+                            id: weatherRow
+                            anchors.centerIn: parent
+                            spacing: 3
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: WeatherService.icon
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 11
+                                color: "#fde047"
+                            }
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: `${WeatherService.tempC}°C`
+                                font.family: "Rubik"
+                                font.pixelSize: 10
+                                font.weight: Font.Medium
+                                color: "#d4d4de"
+                            }
+                        }
+
+                        MouseArea {
+                            id: weatherMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: WeatherService.refresh()
+                        }
+                    }
+
                     // Live CPU Temperature chip
                     Rectangle {
                         visible: SystemService.cpuTempC > 0
@@ -105,6 +147,56 @@ Item {
                     valueText: `${SystemService.memUsedText} / ${SystemService.memTotalText}`
                     ratio: SystemService.memPercent / 100.0
                     barColor: SystemService.memPercent >= 85 ? "#fb923c" : "#a78bfa"
+                }
+
+                // Compact Battery Wattage/ETA & Weather summary line
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 5
+                    visible: SystemService.batteryPercent >= 0 || WeatherService.ready
+
+                    Text {
+                        visible: SystemService.batteryPercent >= 0
+                        text: SystemService.batteryStatus === "Charging"
+                            ? "battery_charging_full"
+                            : (SystemService.batteryPercent <= 20 ? "battery_alert" : "battery_std")
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 12
+                        color: SystemService.batteryStatus === "Charging"
+                            ? "#4ade80"
+                            : (SystemService.batteryPercent <= 20 ? "#f87171" : "#a0a0ae")
+                    }
+
+                    Text {
+                        visible: SystemService.batteryPercent >= 0
+                        text: {
+                            const parts = [`${SystemService.batteryPercent}%`];
+                            if (SystemService.batteryWattsText.length > 0)
+                                parts.push(SystemService.batteryWattsText);
+                            if (SystemService.batteryEtaText.length > 0)
+                                parts.push(SystemService.batteryEtaText);
+                            else if (SystemService.batteryStatus === "Full")
+                                parts.push("Full");
+                            return parts.join(" · ");
+                        }
+                        font.family: "Rubik"
+                        font.pixelSize: 9
+                        color: "#9a9aa6"
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Text {
+                        visible: WeatherService.ready && WeatherService.condition.length > 0
+                        Layout.maximumWidth: 112
+                        elide: Text.ElideRight
+                        text: WeatherService.city.length > 0
+                            ? `${WeatherService.city} · ${WeatherService.condition}`
+                            : WeatherService.condition
+                        font.family: "Rubik"
+                        font.pixelSize: 9
+                        color: "#7e7e8a"
+                    }
                 }
 
                 Item { Layout.fillHeight: true }

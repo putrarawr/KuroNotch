@@ -28,6 +28,8 @@ PopupWindow {
             return Config.widgets.controls;
         if (previewWidget === "calendar")
             return Config.widgets.calendar;
+        if (previewWidget === "notes")
+            return Config.widgets.notes;
         if (previewWidget === "lyrics")
             return Config.lyrics.enabled;
         return Config.companion.enabled;
@@ -502,6 +504,7 @@ PopupWindow {
                                         if (root.previewWidget === "notifications") return "PREVIEW · NOTIFICATION ISLAND";
                                         if (root.previewWidget === "controls") return "PREVIEW · CONTROL & MONITOR";
                                         if (root.previewWidget === "calendar") return "PREVIEW · MINI CALENDAR";
+                                        if (root.previewWidget === "notes") return "PREVIEW · NOTES & WINDOWS";
                                         if (root.previewWidget === "lyrics") return "PREVIEW · SYNC LYRICS";
                                         return "PREVIEW · COMPANION EYES";
                                     }
@@ -985,6 +988,52 @@ PopupWindow {
                                         }
                                     }
                                 }
+
+                                // 9. Quick Notes & Windows Preview
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 10
+                                    visible: root.previewWidget === "notes"
+
+                                    Repeater {
+                                        model: [
+                                            { icon: "edit_note", lbl: "Scratchpad", c: "#a78bfa" },
+                                            { icon: "desktop_windows", lbl: "3 Windows", c: "#38bdf8" }
+                                        ]
+
+                                        delegate: Rectangle {
+                                            required property var modelData
+                                            width: 126
+                                            height: 36
+                                            radius: 9
+                                            color: "#111119"
+                                            border.width: 1
+                                            border.color: Qt.rgba(Qt.color(modelData.c).r, Qt.color(modelData.c).g, Qt.color(modelData.c).b, 0.35)
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 5
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: modelData.icon
+                                                    font.family: "Material Symbols Rounded"
+                                                    font.pixelSize: 14
+                                                    color: modelData.c
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: modelData.lbl
+                                                    font.family: "Rubik"
+                                                    font.pixelSize: 10
+                                                    font.weight: Font.Medium
+                                                    color: "#e4e4ec"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -1013,7 +1062,7 @@ PopupWindow {
 
                         SettingToggleRow {
                             label: "Control Center & Monitor"
-                            subtitle: "CPU, RAM, Temp, Power Profile, Volume/Brightness & BT"
+                            subtitle: "CPU, RAM, Temp, Weather, Battery Watt & Controls"
                             iconName: "monitoring"
                             checked: Config.widgets.controls
                             selected: root.previewWidget === "controls"
@@ -1027,7 +1076,7 @@ PopupWindow {
 
                         SettingToggleRow {
                             label: "Pomodoro & Quick Tools"
-                            subtitle: "Timer, screenshot, color picker, Caffeine, Night Light"
+                            subtitle: "Timer, ambient sound, screenshot, color picker, Night Light"
                             iconName: "timer"
                             checked: Config.widgets.pomodoro
                             selected: root.previewWidget === "pomodoro"
@@ -1049,6 +1098,20 @@ PopupWindow {
                             onToggled: {
                                 root.previewWidget = "calendar";
                                 Config.widgets.calendar = !Config.widgets.calendar;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Quick Notes & Open Windows"
+                            subtitle: "Auto-saved scratchpad & Hyprland window switcher"
+                            iconName: "edit_note"
+                            checked: Config.widgets.notes
+                            selected: root.previewWidget === "notes"
+                            onHovered: root.previewWidget = "notes"
+                            onToggled: {
+                                root.previewWidget = "notes";
+                                Config.widgets.notes = !Config.widgets.notes;
                                 Config.save();
                             }
                         }

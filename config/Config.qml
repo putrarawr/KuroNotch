@@ -88,6 +88,7 @@ Singleton {
         property bool notifications: true
         property bool controls: true
         property bool calendar: true
+        property bool notes: true
     }
 
     readonly property string wallpaperSchemePath: `${Quickshell.env("HOME")}/.local/state/caelestia/scheme.json`
@@ -180,7 +181,8 @@ Singleton {
                 "clipboard": root.widgets.clipboard,
                 "notifications": root.widgets.notifications,
                 "controls": root.widgets.controls,
-                "calendar": root.widgets.calendar
+                "calendar": root.widgets.calendar,
+                "notes": root.widgets.notes
             }
         };
     }
@@ -258,6 +260,7 @@ Singleton {
             if (typeof data.widgets.notifications === "boolean") root.widgets.notifications = data.widgets.notifications;
             if (typeof data.widgets.controls === "boolean") root.widgets.controls = data.widgets.controls;
             if (typeof data.widgets.calendar === "boolean") root.widgets.calendar = data.widgets.calendar;
+            if (typeof data.widgets.notes === "boolean") root.widgets.notes = data.widgets.notes;
         }
     }
 

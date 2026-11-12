@@ -13,6 +13,11 @@ Singleton {
     property int memPercent: 0
     property string memUsedText: "0.0 GB"
     property string memTotalText: "0.0 GB"
+    property int batteryPercent: -1
+    property string batteryStatus: ""
+    property string batteryWattsText: ""
+    property string batteryEtaText: ""
+    property int batteryCycles: 0
     property string powerProfile: "balanced"
     property bool micMuted: false
     property var audioSinks: [] // Array<{ name, description, isDefault }>
@@ -150,6 +155,62 @@ except Exception:
 out["tempC"] = temp_c
 
 try:
+    bats = sorted(glob.glob("/sys/class/power_supply/BAT*"))
+    if bats:
+        b = bats[0]
+        def rint(name):
+            try:
+                return int(open(b + "/" + name).read().strip())
+            except Exception:
+                return None
+        def rstr(name):
+            try:
+                return open(b + "/" + name).read().strip()
+            except Exception:
+                return ""
+        cap = rint("capacity")
+        st = rstr("status")
+        cur_ua = rint("current_now")
+        volt_uv = rint("voltage_now")
+        chg_now = rint("charge_now")
+        chg_full = rint("charge_full")
+        pwr_uw = rint("power_now")
+        eng_now = rint("energy_now")
+        eng_full = rint("energy_full")
+        cyc = rint("cycle_count") or 0
+        watts = 0.0
+        if pwr_uw is not None and pwr_uw > 0:
+            watts = pwr_uw / 1e6
+        elif cur_ua is not None and volt_uv is not None and cur_ua > 0 and volt_uv > 0:
+            watts = (cur_ua * volt_uv) / 1e12
+        eta = ""
+        if st == "Discharging":
+            hrs = None
+            if pwr_uw and eng_now and pwr_uw > 0:
+                hrs = eng_now / pwr_uw
+            elif cur_ua and chg_now and cur_ua > 0:
+                hrs = chg_now / cur_ua
+            if hrs is not None and hrs < 48:
+                mins = int(round(hrs * 60))
+                eta = f"{mins // 60}j {mins % 60}m" if mins >= 60 else f"{mins}m"
+        elif st == "Charging":
+            hrs = None
+            if pwr_uw and eng_now is not None and eng_full and pwr_uw > 0:
+                hrs = max(0, eng_full - eng_now) / pwr_uw
+            elif cur_ua and chg_now is not None and chg_full and cur_ua > 0:
+                hrs = max(0, chg_full - chg_now) / cur_ua
+            if hrs is not None and hrs < 48:
+                mins = int(round(hrs * 60))
+                eta = f"{mins // 60}j {mins % 60}m" if mins >= 60 else f"{mins}m"
+        out["batPct"] = cap if cap is not None else -1
+        out["batStatus"] = st
+        out["batWatts"] = f"{watts:.1f}W" if watts >= 0.2 else ""
+        out["batEta"] = eta
+        out["batCycles"] = cyc
+except Exception:
+    pass
+
+try:
     out["power"] = subprocess.check_output(["powerprofilesctl", "get"], text=True, stderr=subprocess.DEVNULL).strip()
 except Exception:
     out["power"] = "balanced"
@@ -219,6 +280,16 @@ print(json.dumps(out))`
                         root.memTotalText = data.memTotalGb;
                     if (typeof data.tempC === "number")
                         root.cpuTempC = data.tempC;
+                    if (typeof data.batPct === "number")
+                        root.batteryPercent = data.batPct;
+                    if (typeof data.batStatus === "string")
+                        root.batteryStatus = data.batStatus;
+                    if (typeof data.batWatts === "string")
+                        root.batteryWattsText = data.batWatts;
+                    if (typeof data.batEta === "string")
+                        root.batteryEtaText = data.batEta;
+                    if (typeof data.batCycles === "number")
+                        root.batteryCycles = data.batCycles;
                     if (typeof data.power === "string" && data.power.length > 0)
                         root.powerProfile = data.power;
                     if (typeof data.micMuted === "boolean")

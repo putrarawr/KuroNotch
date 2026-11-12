@@ -96,6 +96,55 @@ Item {
 
                     Item { Layout.fillWidth: true }
 
+                    // Focus Ambient Sound toggle (Off -> Rain -> Warm)
+                    Rectangle {
+                        height: 22
+                        width: ambientRow.implicitWidth + 10
+                        radius: 7
+                        color: PomodoroService.ambientRunning
+                            ? Qt.rgba(root.phaseColor.r, root.phaseColor.g, root.phaseColor.b, 0.18)
+                            : (ambientMouse.containsMouse ? "#1e1e29" : "#15151d")
+                        border.width: 1
+                        border.color: PomodoroService.ambientRunning
+                            ? Qt.rgba(root.phaseColor.r, root.phaseColor.g, root.phaseColor.b, 0.42)
+                            : Qt.rgba(1, 1, 1, 0.08)
+
+                        Row {
+                            id: ambientRow
+                            anchors.centerIn: parent
+                            spacing: 3
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: PomodoroService.ambientMode === "rain"
+                                    ? "water_drop"
+                                    : (PomodoroService.ambientMode === "warm" ? "graphic_eq" : "headphones")
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 12
+                                color: PomodoroService.ambientRunning ? root.phaseColor : "#7e7e8a"
+                            }
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: PomodoroService.ambientMode === "rain"
+                                    ? "Rain"
+                                    : (PomodoroService.ambientMode === "warm" ? "Warm" : "Sound")
+                                font.family: "Rubik"
+                                font.pixelSize: 9
+                                font.weight: Font.Medium
+                                color: PomodoroService.ambientRunning ? "#f4f4f6" : "#8e8e98"
+                            }
+                        }
+
+                        MouseArea {
+                            id: ambientMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: PomodoroService.cycleAmbient()
+                        }
+                    }
+
                     // Chime audio mute/unmute toggle
                     Rectangle {
                         width: 22

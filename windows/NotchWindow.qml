@@ -550,6 +550,13 @@ PanelWindow {
                                 height: carouselViewport.height
                             }
 
+                            // Page 7: Quick Notes & Open Windows Switcher (Workspace)
+                            NotesWindowsPage {
+                                visible: Config.widgets.notes
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
                             // Page 1: Drag-and-Drop File Shelf (Workspace Stash)
                             FileShelfPage {
                                 visible: Config.widgets.shelf

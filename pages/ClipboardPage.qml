@@ -4,9 +4,34 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../services"
+import "../lib/qrMatrix.js" as QrMatrix
 
 Item {
     id: root
+
+    property string qrEntryId: ""
+    property string qrText: ""
+    property var qrData: null
+    readonly property bool qrOpen: root.qrText.length > 0 && Boolean(root.qrData?.ok)
+
+    function openQr(entryId: string, previewText: string): void {
+        const txt = String(previewText || "").trim();
+        if (txt.length === 0)
+            return;
+        const res = QrMatrix.generateQrMatrix(txt);
+        if (!res || !res.ok)
+            return;
+        root.qrEntryId = String(entryId || "");
+        root.qrText = txt;
+        root.qrData = res;
+        qrCanvas.requestPaint();
+    }
+
+    function closeQr(): void {
+        root.qrEntryId = "";
+        root.qrText = "";
+        root.qrData = null;
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -179,7 +204,7 @@ Item {
         ListView {
             id: clipList
 
-            visible: ClipboardService.filteredEntries && ClipboardService.filteredEntries.length > 0
+            visible: !root.qrOpen && ClipboardService.filteredEntries && ClipboardService.filteredEntries.length > 0
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
@@ -285,6 +310,31 @@ Item {
                         color: "#f4f4f6"
                     }
 
+                    // QR Share Action Button (for text/URL entries)
+                    Rectangle {
+                        visible: !itemDelegate.modelData.isImage
+                        width: 24
+                        height: 24
+                        radius: 5
+                        color: qrBtnMouse.containsMouse ? "#242432" : "transparent"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "qr_code_2"
+                            font.family: "Material Symbols Rounded"
+                            font.pixelSize: 14
+                            color: qrBtnMouse.containsMouse ? "#f4f4f6" : "#8e8e98"
+                        }
+
+                        MouseArea {
+                            id: qrBtnMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.openQr(itemDelegate.modelData.id, itemDelegate.modelData.preview)
+                        }
+                    }
+
                     // Copy Action Button
                     Rectangle {
                         width: 24
@@ -345,9 +395,137 @@ Item {
             }
         }
 
+        // Inline QR Code Share View
+        RowLayout {
+            visible: root.qrOpen
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            spacing: 14
+
+            Rectangle {
+                Layout.preferredWidth: 118
+                Layout.preferredHeight: 118
+                Layout.alignment: Qt.AlignVCenter
+                radius: 9
+                color: "#ffffff"
+
+                Canvas {
+                    id: qrCanvas
+
+                    anchors.fill: parent
+                    anchors.margins: 7
+
+                    onPaint: {
+                        const ctx = getContext("2d");
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillRect(0, 0, width, height);
+                        const data = root.qrData;
+                        if (!data || !data.ok || !Array.isArray(data.modules))
+                            return;
+                        const n = data.size;
+                        const cell = Math.floor(Math.min(width, height) / n);
+                        if (cell <= 0)
+                            return;
+                        const ox = Math.floor((width - cell * n) / 2);
+                        const oy = Math.floor((height - cell * n) / 2);
+                        ctx.fillStyle = "#050507";
+                        for (let r = 0; r < n; r++) {
+                            const row = data.modules[r];
+                            for (let c = 0; c < n; c++) {
+                                if (row[c]) {
+                                    ctx.fillRect(ox + c * cell, oy + r * cell, cell, cell);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: 6
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Text {
+                        text: "Scan ke HP / Perangkat Lain"
+                        font.family: "Rubik"
+                        font.pixelSize: 11
+                        font.weight: Font.DemiBold
+                        color: "#f4f4f6"
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Rectangle {
+                        height: 20
+                        width: qrCloseRow.implicitWidth + 10
+                        radius: 6
+                        color: qrCloseMouse.containsMouse ? "#242432" : "#15151d"
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.1)
+
+                        Row {
+                            id: qrCloseRow
+                            anchors.centerIn: parent
+                            spacing: 3
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "arrow_back"
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 12
+                                color: "#f4f4f6"
+                            }
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "Kembali"
+                                font.family: "Rubik"
+                                font.pixelSize: 9
+                                font.weight: Font.Medium
+                                color: "#f4f4f6"
+                            }
+                        }
+
+                        MouseArea {
+                            id: qrCloseMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.closeQr()
+                        }
+                    }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    text: root.qrText
+                    wrapMode: Text.WrapAnywhere
+                    maximumLineCount: 4
+                    elide: Text.ElideRight
+                    font.family: "Rubik"
+                    font.pixelSize: 10
+                    color: "#a8a8b6"
+                }
+
+                Text {
+                    text: root.qrData
+                        ? `QR v${root.qrData.version} · ${root.qrData.size}×${root.qrData.size}${root.qrData.truncated ? " (dipotong 271 byte)" : ""}`
+                        : ""
+                    font.family: "Rubik"
+                    font.pixelSize: 9
+                    color: "#6c6c78"
+                }
+            }
+        }
+
         // Empty State
         Item {
-            visible: !ClipboardService.filteredEntries || ClipboardService.filteredEntries.length === 0
+            visible: !root.qrOpen && (!ClipboardService.filteredEntries || ClipboardService.filteredEntries.length === 0)
             Layout.fillWidth: true
             Layout.fillHeight: true
 
@@ -383,6 +561,7 @@ Item {
                     searchField.focus = false;
                 }
                 NotchController.inputFocused = false;
+                root.closeQr();
             } else if (NotchController.activePage === 3) {
                 ClipboardService.refresh();
             }
@@ -394,6 +573,7 @@ Item {
                     searchField.focus = false;
                 }
                 NotchController.inputFocused = false;
+                root.closeQr();
             } else if (NotchController.expanded) {
                 ClipboardService.refresh();
             }
