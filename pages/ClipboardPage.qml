@@ -238,10 +238,12 @@ Item {
                         Image {
                             anchors.fill: parent
                             fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            source: itemDelegate.modelData.isImage
-                                ? ("file://" + ClipboardService.decodePreview(itemDelegate.modelData.id, itemDelegate.modelData.imageFormat))
-                                : ""
+                            source: {
+                                if (!itemDelegate.modelData.isImage)
+                                    return "";
+                                const p = ClipboardService.decodePreview(itemDelegate.modelData.id, itemDelegate.modelData.imageFormat);
+                                return p && p.length > 0 ? ("file://" + p) : "";
+                            }
                         }
                     }
 
