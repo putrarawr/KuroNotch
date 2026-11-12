@@ -511,6 +511,7 @@ Item {
                 model: LyricsService.lines
                 currentIndex: LyricsService.synced ? LyricsService.activeIndex : -1
 
+                highlightFollowsCurrentItem: !lyricsPanel.userScrolling
                 highlightRangeMode: (!lyricsPanel.userScrolling && LyricsService.synced && currentIndex >= 0)
                     ? ListView.ApplyRange
                     : ListView.NoHighlightRange
