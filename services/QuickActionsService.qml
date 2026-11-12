@@ -134,9 +134,10 @@ Singleton {
         onTriggered: {
             Quickshell.execDetached([
                 "sh", "-c",
-                'dir="$1"; mkdir -p "$dir" || exit 1; out="$dir/recording_$(date +%Y%m%d-%H%M%S).mp4"; sink=$(pactl get-default-sink 2>/dev/null); vf="scale=in_range=full:out_range=tv:out_color_matrix=bt709,format=yuv420p"; xopts="fullrange=off:colorprim=bt709:transfer=bt709:colormatrix=bt709"; if [ -n "$sink" ] && pactl list short sources 2>/dev/null | grep -Fq "${sink}.monitor"; then exec wf-recorder --audio="${sink}.monitor" -c libx264 -x yuv420p -p crf=18 -p preset=veryfast -p x264-params="$xopts" -F "$vf" -f "$out"; fi; exec wf-recorder -c libx264 -x yuv420p -p crf=18 -p preset=veryfast -p x264-params="$xopts" -F "$vf" -f "$out"',
+                'dir="$1"; vf="$2"; mkdir -p "$dir" || exit 1; out="$dir/recording_$(date +%Y%m%d-%H%M%S).mp4"; sink=$(pactl get-default-sink 2>/dev/null); xopts="fullrange=off:colorprim=bt709:transfer=bt709:colormatrix=bt709"; if [ -n "$sink" ] && pactl list short sources 2>/dev/null | grep -Fq "${sink}.monitor"; then exec wf-recorder --audio="${sink}.monitor" -c libx264 -x yuv420p -p crf=18 -p preset=veryfast -p x264-params="$xopts" -F "$vf" -f "$out"; fi; exec wf-recorder -c libx264 -x yuv420p -p crf=18 -p preset=veryfast -p x264-params="$xopts" -F "$vf" -f "$out"',
                 "sh",
-                Config.paths.recordingDir
+                Config.paths.recordingDir,
+                "curves=all='0/0 0.5/0.44 1/0.90',scale=in_range=full:out_range=tv:out_color_matrix=bt709,format=yuv420p"
             ]);
             recRefreshTimer.restart();
             NotchController.triggerPeek("osd", 1, {
