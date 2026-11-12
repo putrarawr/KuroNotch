@@ -56,6 +56,35 @@ Singleton {
         property string recordingDir: `${Quickshell.env("HOME")}/Videos/Recordings`
     }
 
+    property QtObject theme: QtObject {
+        property string palette: "obsidian" // "obsidian" | "midnight" | "forest" | "crimson" | "amber" | "violet"
+        property bool adaptiveAlbumAccent: true
+    }
+
+    property QtObject widgets: QtObject {
+        property bool shelf: true
+        property bool pomodoro: true
+        property bool clipboard: true
+        property bool notifications: true
+    }
+
+    readonly property var palettePresets: [
+        { id: "obsidian", label: "Obsidian", surface: "#050507", elevated: "#0d0d11", rim: "#ffffff", accent: "#f4f4f6" },
+        { id: "midnight", label: "Midnight", surface: "#070a14", elevated: "#0e1424", rim: "#93c5fd", accent: "#60a5fa" },
+        { id: "forest", label: "Forest", surface: "#050d09", elevated: "#0c1912", rim: "#86efac", accent: "#4ade80" },
+        { id: "crimson", label: "Crimson", surface: "#110609", elevated: "#1b0b10", rim: "#fca5a5", accent: "#f87171" },
+        { id: "amber", label: "Amber", surface: "#100a05", elevated: "#1c1209", rim: "#fcd34d", accent: "#fbbf24" },
+        { id: "violet", label: "Violet", surface: "#0c0714", elevated: "#150e24", rim: "#d8b4fe", accent: "#c084fc" }
+    ]
+
+    readonly property var activePalette: {
+        for (let i = 0; i < palettePresets.length; i++) {
+            if (palettePresets[i].id === theme.palette)
+                return palettePresets[i];
+        }
+        return palettePresets[0];
+    }
+
     property bool isSaving: false
     property bool _dirReady: false
     property string _pendingSaveText: ""
@@ -103,6 +132,16 @@ Singleton {
             "paths": {
                 "screenshotDir": root.paths.screenshotDir,
                 "recordingDir": root.paths.recordingDir
+            },
+            "theme": {
+                "palette": root.theme.palette,
+                "adaptiveAlbumAccent": root.theme.adaptiveAlbumAccent
+            },
+            "widgets": {
+                "shelf": root.widgets.shelf,
+                "pomodoro": root.widgets.pomodoro,
+                "clipboard": root.widgets.clipboard,
+                "notifications": root.widgets.notifications
             }
         };
     }
@@ -148,6 +187,37 @@ Singleton {
         if (data.paths && typeof data.paths === "object") {
             if (typeof data.paths.screenshotDir === "string") root.paths.screenshotDir = data.paths.screenshotDir;
             if (typeof data.paths.recordingDir === "string") root.paths.recordingDir = data.paths.recordingDir;
+        }
+
+        if (data.theme && typeof data.theme === "object") {
+            if (typeof data.theme.palette === "string") {
+                for (let i = 0; i < root.palettePresets.length; i++) {
+                    if (root.palettePresets[i].id === data.theme.palette) {
+                        root.theme.palette = data.theme.palette;
+                        break;
+                    }
+                }
+            }
+            if (typeof data.theme.adaptiveAlbumAccent === "boolean") {
+                root.theme.adaptiveAlbumAccent = data.theme.adaptiveAlbumAccent;
+            }
+        }
+
+        if (data.widgets && typeof data.widgets === "object") {
+            if (typeof data.widgets.shelf === "boolean") root.widgets.shelf = data.widgets.shelf;
+            if (typeof data.widgets.pomodoro === "boolean") root.widgets.pomodoro = data.widgets.pomodoro;
+            if (typeof data.widgets.clipboard === "boolean") root.widgets.clipboard = data.widgets.clipboard;
+            if (typeof data.widgets.notifications === "boolean") root.widgets.notifications = data.widgets.notifications;
+        }
+    }
+
+    function setPalette(paletteId) {
+        for (let i = 0; i < root.palettePresets.length; i++) {
+            if (root.palettePresets[i].id === paletteId) {
+                root.theme.palette = paletteId;
+                root.save();
+                return;
+            }
         }
     }
 

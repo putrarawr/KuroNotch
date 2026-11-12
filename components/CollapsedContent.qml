@@ -39,6 +39,10 @@ Item {
         return t.length > 0 ? t : "Playing";
     }
 
+    readonly property color activeAccent: (MediaService.playing && Config.theme.adaptiveAlbumAccent)
+        ? MediaService.accentColor
+        : Config.activePalette.accent
+
     readonly property var miniCavaIndices: [0, 2, 5, 8, 10, 13]
 
     HoverHandler {
@@ -60,7 +64,7 @@ Item {
             height: 3
             radius: 1.5
             anchors.verticalCenter: parent.verticalCenter
-            color: MediaService.playing ? MediaService.accentColor : "#8e8e98"
+            color: MediaService.playing ? root.activeAccent : (Config.theme.palette !== "obsidian" ? Config.activePalette.accent : "#8e8e98")
 
             Behavior on color {
                 ColorAnimation { duration: 180 }
@@ -81,7 +85,7 @@ Item {
                 height: parent.height
                 radius: 1.5
                 width: Math.max(2, Math.min(parent.width, parent.width * (MediaService.position / Math.max(1, MediaService.length))))
-                color: MediaService.accentColor
+                color: root.activeAccent
             }
         }
 
@@ -635,7 +639,7 @@ Item {
                 text: "music_note"
                 font.family: "Material Symbols Rounded"
                 font.pixelSize: 12
-                color: MediaService.accentColor
+                color: root.activeAccent
             }
         }
 
@@ -697,7 +701,7 @@ Item {
                     radius: 1
                     anchors.verticalCenter: parent.verticalCenter
                     height: Math.round(3 + rawVal * 11)
-                    color: MediaService.accentColor
+                    color: root.activeAccent
 
                     Behavior on height {
                         NumberAnimation { duration: 70 }

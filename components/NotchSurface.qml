@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Shapes
+import "../config"
 import "../services"
 
 Item {
@@ -7,8 +8,12 @@ Item {
 
     property string surfaceState: NotchController.surfaceState
     property var targetGeometry: NotchController.geometry
-    property color accentColor: "#f4f4f6"
+    property color accentColor: Config.activePalette.accent
     property bool accentActive: false
+
+    Behavior on accentColor {
+        ColorAnimation { duration: 240 }
+    }
 
     default property alias contentData: contentLayer.data
 
@@ -37,16 +42,19 @@ Item {
     property real topRadius: targetTopRadius
     property real bottomRadius: targetBottomRadius
 
-    readonly property color targetFillColor: surfaceState === "sensor" ? "#0d0d12" : "#050507"
+    readonly property color paletteRimBase: Config.activePalette.rim
+    readonly property color targetFillColor: surfaceState === "sensor" ? Config.activePalette.elevated : Config.activePalette.surface
     readonly property color targetRimColor: surfaceState === "sensor"
-        ? Qt.rgba(1, 1, 1, 0.24)
-        : Qt.rgba(1, 1, 1, 0.10)
+        ? Qt.rgba(paletteRimBase.r, paletteRimBase.g, paletteRimBase.b, 0.24)
+        : Qt.rgba(paletteRimBase.r, paletteRimBase.g, paletteRimBase.b, 0.11)
     readonly property color targetTopRimColor: isTopFlush ? Qt.rgba(1, 1, 1, 0) : targetRimColor
     readonly property real targetGlowOpacity: {
         if (surfaceState === "sensor" || surfaceState === "strip")
             return 0.0;
         if (accentActive)
-            return surfaceState === "expanded" ? 0.16 : 0.12;
+            return surfaceState === "expanded" ? 0.17 : 0.12;
+        if (Config.theme.palette !== "obsidian")
+            return surfaceState === "expanded" ? 0.09 : 0.05;
         return surfaceState === "expanded" ? 0.035 : 0.0;
     }
 

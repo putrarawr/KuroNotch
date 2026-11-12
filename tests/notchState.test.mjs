@@ -176,12 +176,13 @@ describe("notchState.js - Pure State Machine", () => {
         );
     });
 
-    it("7. guards auto-collapse: returns false if menuOpen, dragActive, inputFocused, or pinned is true", () => {
-        assert.equal(canAutoCollapse({ menuOpen: false, dragActive: false, inputFocused: false, pinned: false }), true);
-        assert.equal(canAutoCollapse({ menuOpen: true, dragActive: false, inputFocused: false, pinned: false }), false);
-        assert.equal(canAutoCollapse({ menuOpen: false, dragActive: true, inputFocused: false, pinned: false }), false);
-        assert.equal(canAutoCollapse({ menuOpen: false, dragActive: false, inputFocused: true, pinned: false }), false);
-        assert.equal(canAutoCollapse({ menuOpen: false, dragActive: false, inputFocused: false, pinned: true }), false);
+    it("7. guards auto-collapse: returns false if menuOpen, settingsOpen, dragActive, inputFocused, or pinned is true", () => {
+        assert.equal(canAutoCollapse({ menuOpen: false, settingsOpen: false, dragActive: false, inputFocused: false, pinned: false }), true);
+        assert.equal(canAutoCollapse({ menuOpen: true, settingsOpen: false, dragActive: false, inputFocused: false, pinned: false }), false);
+        assert.equal(canAutoCollapse({ menuOpen: false, settingsOpen: true, dragActive: false, inputFocused: false, pinned: false }), false);
+        assert.equal(canAutoCollapse({ menuOpen: false, settingsOpen: false, dragActive: true, inputFocused: false, pinned: false }), false);
+        assert.equal(canAutoCollapse({ menuOpen: false, settingsOpen: false, dragActive: false, inputFocused: true, pinned: false }), false);
+        assert.equal(canAutoCollapse({ menuOpen: false, settingsOpen: false, dragActive: false, inputFocused: false, pinned: true }), false);
     });
 
     it("8. gates companion display: true only in notch/pill when idle threshold passed with no media, timer, recording, or alert", () => {

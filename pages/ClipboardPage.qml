@@ -236,13 +236,31 @@ Item {
                         clip: true
 
                         Image {
+                            id: clipThumbImg
+
                             anchors.fill: parent
                             fillMode: Image.PreserveAspectCrop
                             source: {
                                 if (!itemDelegate.modelData.isImage)
                                     return "";
-                                const p = ClipboardService.decodePreview(itemDelegate.modelData.id, itemDelegate.modelData.imageFormat);
-                                return p && p.length > 0 ? ("file://" + p) : "";
+                                const key = String(itemDelegate.modelData.id || "").trim();
+                                const p = ClipboardService.previewCache[key];
+                                return (typeof p === "string" && p.length > 0) ? ("file://" + p) : "";
+                            }
+
+                            function ensureDecoded(): void {
+                                if (itemDelegate.modelData?.isImage)
+                                    ClipboardService.decodePreview(itemDelegate.modelData.id, itemDelegate.modelData.imageFormat);
+                            }
+
+                            Component.onCompleted: ensureDecoded()
+
+                            Connections {
+                                target: itemDelegate
+
+                                function onModelDataChanged(): void {
+                                    clipThumbImg.ensureDecoded();
+                                }
                             }
                         }
                     }

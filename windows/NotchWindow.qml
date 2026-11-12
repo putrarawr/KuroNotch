@@ -42,10 +42,12 @@ PanelWindow {
         return base;
     }
 
+    property bool _recentDragMotion: false
+
     WlrLayershell.namespace: "island-notch"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.keyboardFocus: (NotchController.inputFocused || NotchController.menuOpen)
+    WlrLayershell.keyboardFocus: (NotchController.inputFocused || NotchController.menuOpen || NotchController.settingsOpen)
         ? WlrKeyboardFocus.OnDemand
         : WlrKeyboardFocus.None
 
@@ -113,26 +115,40 @@ PanelWindow {
         return false;
     }
 
+    function markDragPulse(): void {
+        root._recentDragMotion = true;
+        dragMotionPulseTimer.restart();
+    }
+
     function handleExternalDragEnter(dragEvent: var): void {
         if (!isExternalFileDrag(dragEvent)) {
             dragEvent.accepted = false;
             return;
         }
         dragLeaveTimer.stop();
+        root.markDragPulse();
         dragEvent.accept(Qt.CopyAction);
         NotchController.setDragActive(true);
     }
 
+    function handleExternalDragPosition(dragEvent: var): void {
+        if (!isExternalFileDrag(dragEvent))
+            return;
+        dragLeaveTimer.stop();
+        root.markDragPulse();
+        dragEvent.accept(Qt.CopyAction);
+    }
+
     function handleExternalDragExit(): void {
-        if (!sensorDropArea.containsDrag && !notchDropArea.containsDrag)
-            dragLeaveTimer.restart();
+        root._recentDragMotion = false;
+        dragLeaveTimer.restart();
     }
 
     function handleExternalDrop(dropEvent: var): void {
+        root._recentDragMotion = false;
         if (!isExternalFileDrag(dropEvent)) {
             dropEvent.accepted = false;
-            if (NotchController.dragActive && !sensorDropArea.containsDrag && !notchDropArea.containsDrag)
-                dragLeaveTimer.restart();
+            dragLeaveTimer.restart();
             return;
         }
         dragLeaveTimer.stop();
@@ -154,8 +170,24 @@ PanelWindow {
         } else {
             dropEvent.accepted = false;
         }
-        // Brief settle avoids collapse bounce before Wayland restores wl_pointer hover after drop
         dragLeaveTimer.restart();
+    }
+
+    function clearStaleDrag(): void {
+        if (!NotchController.dragActive)
+            return;
+        root._recentDragMotion = false;
+        dragLeaveTimer.stop();
+        NotchController.setDragActive(false);
+        NotchController.collapseIfAllowed();
+    }
+
+    Timer {
+        id: dragMotionPulseTimer
+
+        interval: 220
+        repeat: false
+        onTriggered: root._recentDragMotion = false
     }
 
     Timer {
@@ -164,8 +196,26 @@ PanelWindow {
         interval: 180
         repeat: false
         onTriggered: {
-            if (!sensorDropArea.containsDrag && !notchDropArea.containsDrag)
-                NotchController.setDragActive(false);
+            if (!notchDropArea.containsDrag || !root._recentDragMotion)
+                root.clearStaleDrag();
+        }
+    }
+
+    // Safety net when Wayland aborts wl_data_device grab (e.g. Esc or rapid exit) without firing DropArea.onExited
+    Timer {
+        id: dragWatchdogTimer
+
+        interval: 450
+        repeat: true
+        running: NotchController.dragActive
+        onTriggered: {
+            if (!notchDropArea.containsDrag && !root._recentDragMotion) {
+                root.clearStaleDrag();
+                return;
+            }
+            if (!surfaceHoverHandler.hovered && !sensorHoverHandler.hovered && !root._recentDragMotion) {
+                root.clearStaleDrag();
+            }
         }
     }
 
@@ -274,16 +324,20 @@ PanelWindow {
         id: rootFocusItem
 
         anchors.fill: parent
-        focus: NotchController.menuOpen
+        focus: NotchController.menuOpen || NotchController.settingsOpen
 
         Keys.onEscapePressed: {
-            if (NotchController.menuOpen)
+            if (NotchController.settingsOpen)
+                NotchController.closeSettings();
+            else if (NotchController.menuOpen)
                 contextMenu.closeMenu();
             else if (NotchController.inputFocused)
                 NotchController.inputFocused = false;
+            else if (NotchController.dragActive)
+                root.clearStaleDrag();
         }
 
-        // Top-edge sensor HoverHandler + DropArea (120x4 at y=0 in auto-hide, or topBridge while expanded)
+        // Top-edge sensor HoverHandler (120x4 at y=0 in auto-hide, or topBridge while expanded)
         Item {
             id: sensorZone
 
@@ -299,29 +353,31 @@ PanelWindow {
                 enabled: sensorZone.width > 0 && sensorZone.height > 0
                 onHoveredChanged: NotchController.setSensorHovered(hovered)
             }
-
-            DropArea {
-                id: sensorDropArea
-
-                anchors.fill: parent
-                enabled: sensorZone.width > 0 && sensorZone.height > 0
-                onEntered: drag => root.handleExternalDragEnter(drag)
-                onExited: root.handleExternalDragExit()
-                onDropped: drop => root.handleExternalDrop(drop)
-            }
         }
 
         NotchSurface {
             id: notchSurface
 
             targetGeometry: root.effectiveGeometry
-            accentColor: MediaService.playing ? MediaService.accentColor : "#f4f4f6"
-            accentActive: MediaService.playing
+            accentColor: (MediaService.playing && Config.theme.adaptiveAlbumAccent)
+                ? MediaService.accentColor
+                : Config.activePalette.accent
+            accentActive: MediaService.playing && Config.theme.adaptiveAlbumAccent
 
             HoverHandler {
                 id: surfaceHoverHandler
 
-                onHoveredChanged: NotchController.setHovered(hovered)
+                onHoveredChanged: {
+                    if (!hovered && NotchController.dragActive && !root._recentDragMotion)
+                        root.clearStaleDrag();
+                    NotchController.setHovered(hovered);
+                }
+
+                onPointChanged: {
+                    // Normal wl_pointer motion resumes only after Wayland DnD grab ends/cancels
+                    if (NotchController.dragActive && !root._recentDragMotion)
+                        root.clearStaleDrag();
+                }
             }
 
             // Right-click opens context menu under cursor
@@ -352,12 +408,13 @@ PanelWindow {
                 }
             }
 
-            // Drag-and-drop entry onto notch / pill / strip / expanded card
+            // Unified Drag-and-drop entry onto sensor / notch / pill / strip / expanded card
             DropArea {
                 id: notchDropArea
 
                 anchors.fill: parent
                 onEntered: drag => root.handleExternalDragEnter(drag)
+                onPositionChanged: drag => root.handleExternalDragPosition(drag)
                 onExited: root.handleExternalDragExit()
                 onDropped: drop => root.handleExternalDrop(drop)
             }
@@ -403,82 +460,166 @@ PanelWindow {
                 }
 
                 Item {
-                    id: carouselViewport
+                    id: carouselFrame
 
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    clip: true
 
-                    property real animatedPageIndex: NotchController.activePage
-
-                    Behavior on animatedPageIndex {
-                        NumberAnimation {
-                            duration: 240
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
-                    // Review Focus #3: vertical mouse wheel inside page bodies MUST NOT switch pages
-                    Row {
-                        id: pageStrip
-
-                        x: -carouselViewport.animatedPageIndex * carouselViewport.width
-                        y: 0
-                        height: carouselViewport.height
-
-                        // Page 0: Media + Sync Lyrics (Task 5)
-                        MediaLyricsPage {
-                            width: carouselViewport.width
-                            height: carouselViewport.height
-                        }
-
-                        // Page 1: Drag-and-Drop File Shelf (Task 7)
-                        FileShelfPage {
-                            width: carouselViewport.width
-                            height: carouselViewport.height
-                        }
-
-                        // Page 2: Pomodoro & Quick Tools (Task 8)
-                        PomodoroToolsPage {
-                            width: carouselViewport.width
-                            height: carouselViewport.height
-                        }
-
-                        // Page 3: Clipboard Stash (Task 8)
-                        ClipboardPage {
-                            width: carouselViewport.width
-                            height: carouselViewport.height
-                        }
-
-                        // Page 4: Notification Island (Task 9)
-                        NotificationsPage {
-                            width: carouselViewport.width
-                            height: carouselViewport.height
-                        }
-                    }
-
-                    // Stacked above pageStrip so Shift+Wheel & horizontal swipes intercept before child Flickables
-                    MouseArea {
-                        id: carouselWheelOverlay
+                    Item {
+                        id: carouselViewport
 
                         anchors.fill: parent
-                        z: 10
-                        acceptedButtons: Qt.NoButton
-                        hoverEnabled: false
+                        anchors.leftMargin: 22
+                        anchors.rightMargin: 22
+                        clip: true
 
-                        onWheel: event => {
-                            const shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
-                            const horizontal = Math.abs(event.angleDelta.x) > Math.abs(event.angleDelta.y)
-                                && Math.abs(event.angleDelta.x) > 0;
-                            if (!shiftHeld && !horizontal) {
-                                event.accepted = false;
-                                return;
+                        property real animatedPageIndex: NotchController.activePage
+
+                        Behavior on animatedPageIndex {
+                            NumberAnimation {
+                                duration: 240
+                                easing.type: Easing.OutCubic
                             }
-                            event.accepted = true;
-                            const raw = horizontal
-                                ? event.angleDelta.x
-                                : (event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x);
-                            root.handleCarouselWheel(raw);
+                        }
+
+                        // Review Focus #3: vertical mouse wheel inside page bodies MUST NOT switch pages
+                        Row {
+                            id: pageStrip
+
+                            x: -carouselViewport.animatedPageIndex * carouselViewport.width
+                            y: 0
+                            height: carouselViewport.height
+
+                            // Page 0: Media + Sync Lyrics (Task 5)
+                            MediaLyricsPage {
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
+                            // Page 1: Drag-and-Drop File Shelf (Task 7)
+                            FileShelfPage {
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
+                            // Page 2: Pomodoro & Quick Tools (Task 8)
+                            PomodoroToolsPage {
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
+                            // Page 3: Clipboard Stash (Task 8)
+                            ClipboardPage {
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
+                            // Page 4: Notification Island (Task 9)
+                            NotificationsPage {
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+                        }
+
+                        // Stacked above pageStrip so Shift+Wheel & horizontal swipes intercept before child Flickables
+                        MouseArea {
+                            id: carouselWheelOverlay
+
+                            anchors.fill: parent
+                            z: 10
+                            acceptedButtons: Qt.NoButton
+                            hoverEnabled: false
+
+                            onWheel: event => {
+                                const shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
+                                const horizontal = Math.abs(event.angleDelta.x) > Math.abs(event.angleDelta.y)
+                                    && Math.abs(event.angleDelta.x) > 0;
+                                if (!shiftHeld && !horizontal) {
+                                    event.accepted = false;
+                                    return;
+                                }
+                                event.accepted = true;
+                                const raw = horizontal
+                                    ? event.angleDelta.x
+                                    : (event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x);
+                                root.handleCarouselWheel(raw);
+                            }
+                        }
+                    }
+
+                    // Inner Left Carousel Edge Arrow
+                    Rectangle {
+                        id: leftEdgeNav
+
+                        visible: NotchController.enabledPages.length > 1
+                        anchors.left: parent.left
+                        anchors.leftMargin: 3
+                        anchors.verticalCenter: parent.verticalCenter
+                        z: 25
+                        width: 20
+                        height: 52
+                        radius: 10
+                        color: leftNavMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.11) : Qt.rgba(1, 1, 1, 0.03)
+                        border.width: leftNavMouse.containsMouse ? 1 : 0
+                        border.color: Qt.rgba(1, 1, 1, 0.16)
+
+                        Behavior on color {
+                            ColorAnimation { duration: 120 }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "chevron_left"
+                            font.family: "Material Symbols Rounded"
+                            font.pixelSize: 17
+                            color: leftNavMouse.containsMouse ? "#ffffff" : "#7e7e8a"
+                        }
+
+                        MouseArea {
+                            id: leftNavMouse
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: NotchController.stepPage(-1)
+                        }
+                    }
+
+                    // Inner Right Carousel Edge Arrow
+                    Rectangle {
+                        id: rightEdgeNav
+
+                        visible: NotchController.enabledPages.length > 1
+                        anchors.right: parent.right
+                        anchors.rightMargin: 3
+                        anchors.verticalCenter: parent.verticalCenter
+                        z: 25
+                        width: 20
+                        height: 52
+                        radius: 10
+                        color: rightNavMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.11) : Qt.rgba(1, 1, 1, 0.03)
+                        border.width: rightNavMouse.containsMouse ? 1 : 0
+                        border.color: Qt.rgba(1, 1, 1, 0.16)
+
+                        Behavior on color {
+                            ColorAnimation { duration: 120 }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "chevron_right"
+                            font.family: "Material Symbols Rounded"
+                            font.pixelSize: 17
+                            color: rightNavMouse.containsMouse ? "#ffffff" : "#7e7e8a"
+                        }
+
+                        MouseArea {
+                            id: rightNavMouse
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: NotchController.stepPage(1)
                         }
                     }
                 }
@@ -488,6 +629,12 @@ PanelWindow {
 
     ContextMenu {
         id: contextMenu
+
+        parentWindow: root
+    }
+
+    SettingsModal {
+        id: settingsModal
 
         parentWindow: root
     }

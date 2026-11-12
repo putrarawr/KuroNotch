@@ -56,9 +56,24 @@ Singleton {
     property bool expanded: Boolean(Config.pinned)
     property bool dragActive: false
     property bool menuOpen: false
+    property bool settingsOpen: false
     property bool inputFocused: false
     property bool peekInteracting: false
     property int activePage: 0
+
+    readonly property var enabledPages: {
+        const list = [0]; // Media + Sync Lyrics is always available
+        if (Config.widgets.shelf) list.push(1);
+        if (Config.widgets.pomodoro) list.push(2);
+        if (Config.widgets.clipboard) list.push(3);
+        if (Config.widgets.notifications) list.push(4);
+        return list;
+    }
+
+    onEnabledPagesChanged: {
+        if (enabledPages.indexOf(root.activePage) === -1)
+            root.activePage = 0;
+    }
 
     readonly property bool osdPeekActive: Boolean(root.peekAlert?.active)
         && root.peekAlert.kind === "osd"
@@ -110,6 +125,7 @@ Singleton {
     function canCollapse(): bool {
         return NotchState.canAutoCollapse({
             menuOpen: root.menuOpen,
+            settingsOpen: root.settingsOpen,
             dragActive: root.dragActive,
             inputFocused: root.inputFocused,
             pinned: Config.pinned
@@ -118,7 +134,7 @@ Singleton {
 
     function enterExpandedFromInteraction(): void {
         if (root.peekAlert?.active && root.peekAlert.kind === "notif") {
-            root.setPage(4);
+            root.setPage(Config.widgets.notifications ? 4 : 0);
             root.dismissPeek();
         }
         root.expanded = true;
@@ -208,11 +224,22 @@ Singleton {
         root.dragActive = Boolean(v);
     }
 
+    function openSettings(): void {
+        root.menuOpen = false;
+        root.expanded = true;
+        root.settingsOpen = true;
+    }
+
+    function closeSettings(): void {
+        root.settingsOpen = false;
+    }
+
     function setPage(idx: int): void {
         if (typeof idx !== "number" || isNaN(idx))
             return;
         const clamped = Math.max(0, Math.min(root.pageCount - 1, Math.trunc(idx)));
-        root.activePage = clamped;
+        const pages = root.enabledPages;
+        root.activePage = (pages.indexOf(clamped) !== -1) ? clamped : 0;
     }
 
     function stepPage(delta: int): void {
@@ -221,7 +248,14 @@ Singleton {
         const step = Math.trunc(delta);
         if (step === 0)
             return;
-        root.activePage = ((root.activePage + step) % root.pageCount + root.pageCount) % root.pageCount;
+        const pages = root.enabledPages;
+        if (!pages || pages.length <= 1) {
+            root.activePage = 0;
+            return;
+        }
+        const curPos = Math.max(0, pages.indexOf(root.activePage));
+        const nextPos = ((curPos + step) % pages.length + pages.length) % pages.length;
+        root.activePage = pages[nextPos];
     }
 
     function triggerPeek(kind: string, urgency: int, payload: var): void {
@@ -306,6 +340,8 @@ Singleton {
                 Config.save();
             }
             root.menuOpen = false;
+            root.settingsOpen = false;
+            root.dragActive = false;
             root.inputFocused = false;
             root.expanded = false;
             root.sensorReady = false;
@@ -335,6 +371,10 @@ Singleton {
 
     onDragActiveChanged: {
         if (root.dragActive) {
+            if (!Config.widgets.shelf) {
+                Config.widgets.shelf = true;
+                Config.save();
+            }
             root.setPage(1); // File Shelf
             root.expanded = true;
         } else {
@@ -344,6 +384,11 @@ Singleton {
 
     onMenuOpenChanged: {
         if (!root.menuOpen)
+            root.collapseIfAllowed();
+    }
+
+    onSettingsOpenChanged: {
+        if (!root.settingsOpen)
             root.collapseIfAllowed();
     }
 

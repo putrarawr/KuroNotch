@@ -11,7 +11,9 @@ Item {
     id: root
 
     readonly property bool hasPlayer: Boolean(MediaService.player)
-    readonly property color activeAccent: MediaService.playing ? MediaService.accentColor : "#d4d4de"
+    readonly property color activeAccent: (MediaService.playing && Config.theme.adaptiveAlbumAccent)
+        ? MediaService.accentColor
+        : Config.activePalette.accent
 
     // Empty state when no MPRIS player is registered
     Rectangle {
@@ -20,7 +22,7 @@ Item {
         width: Math.min(parent.width - 28, 460)
         implicitHeight: emptyCol.implicitHeight + 28
         radius: 14
-        color: "#0d0d11"
+        color: Config.activePalette.elevated
         border.width: 1
         border.color: Qt.rgba(1, 1, 1, 0.08)
 
@@ -48,7 +50,7 @@ Item {
                         text: "music_note"
                         font.family: "Material Symbols Rounded"
                         font.pixelSize: 20
-                        color: "#f4f4f6"
+                        color: root.activeAccent
                     }
                 }
 
@@ -92,14 +94,17 @@ Item {
     RowLayout {
         visible: root.hasPlayer
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 12
+        anchors.leftMargin: 6
+        anchors.rightMargin: 6
+        anchors.topMargin: 8
+        anchors.bottomMargin: 10
+        spacing: 10
 
         // Left Column: Album Art, Track Info, Cava Bars, Scrub Bar, Transport + Sink Switcher
         ColumnLayout {
-            Layout.preferredWidth: 258
-            Layout.minimumWidth: 240
-            Layout.maximumWidth: 266
+            Layout.preferredWidth: 234
+            Layout.minimumWidth: 220
+            Layout.maximumWidth: 244
             Layout.fillHeight: true
             spacing: 8
 
@@ -205,7 +210,7 @@ Item {
                                 radius: 1.5
                                 anchors.bottom: parent.bottom
                                 height: MediaService.playing ? Math.round(3 + val * 13) : 3
-                                color: MediaService.playing ? MediaService.accentColor : "#383844"
+                                color: MediaService.playing ? root.activeAccent : "#383844"
 
                                 Behavior on height {
                                     NumberAnimation { duration: 70 }
@@ -395,22 +400,32 @@ Item {
                 }
 
                 SinkSwitcherPill {
-                    Layout.maximumWidth: 132
+                    Layout.maximumWidth: 118
                 }
             }
         }
 
-        // Right Column: Auto-centering Interactive Sync Lyrics ListView
+        // Right Column: Spotify-style Auto-centering Interactive Sync Lyrics
         Rectangle {
             id: lyricsPanel
 
+            readonly property color tintBgTop: Qt.rgba(root.activeAccent.r * 0.24, root.activeAccent.g * 0.24, root.activeAccent.b * 0.24, 1.0)
+            readonly property color tintBgBottom: Config.activePalette.elevated
+
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: 12
-            color: "#0d0d11"
+            radius: 14
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.08)
+            border.color: LyricsService.available && LyricsService.synced
+                ? Qt.rgba(root.activeAccent.r, root.activeAccent.g, root.activeAccent.b, 0.24)
+                : Qt.rgba(1, 1, 1, 0.08)
             clip: true
+
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: lyricsPanel.tintBgTop }
+                GradientStop { position: 0.55; color: lyricsPanel.tintBgBottom }
+                GradientStop { position: 1.0; color: Config.activePalette.surface }
+            }
 
             property bool userScrolling: false
 
@@ -466,8 +481,8 @@ Item {
                         ? "lyrics"
                         : (LyricsService.loading ? "hourglass_top" : "music_note")
                     font.family: "Material Symbols Rounded"
-                    font.pixelSize: 20
-                    color: "#6c6c78"
+                    font.pixelSize: 22
+                    color: "#8e8e98"
                 }
 
                 Text {
@@ -477,9 +492,9 @@ Item {
                         ? "Lyrics Disabled"
                         : (LyricsService.loading ? "Fetching lyrics..." : "No Lyrics Found")
                     font.family: "Rubik"
-                    font.pixelSize: 11
+                    font.pixelSize: 12
                     font.weight: Font.Medium
-                    color: "#a8a8b4"
+                    color: "#d4d4de"
                 }
 
                 Text {
@@ -490,23 +505,26 @@ Item {
                     text: "Instrumental or unavailable"
                     font.family: "Rubik"
                     font.pixelSize: 10
-                    color: "#6c6c78"
+                    color: "#8e8e98"
                 }
             }
 
-            // Scrollable + Click-to-Seek Lyrics ListView
+            // Scrollable + Click-to-Seek Spotify-style Lyrics ListView
             ListView {
                 id: lyricsListView
 
                 anchors.fill: parent
-                anchors.leftMargin: 8
-                anchors.rightMargin: 8
-                anchors.topMargin: 6
-                anchors.bottomMargin: 6
+                anchors.leftMargin: 10
+                anchors.rightMargin: 10
+                anchors.topMargin: 8
+                anchors.bottomMargin: 8
                 visible: Config.lyrics.enabled && LyricsService.available
                 clip: true
-                spacing: 4
+                spacing: 8
                 boundsBehavior: Flickable.StopAtBounds
+
+                header: Item { width: 1; height: 14 }
+                footer: Item { width: 1; height: 20 }
 
                 model: LyricsService.lines
                 currentIndex: LyricsService.synced ? LyricsService.activeIndex : -1
@@ -515,9 +533,9 @@ Item {
                 highlightRangeMode: (!lyricsPanel.userScrolling && LyricsService.synced && currentIndex >= 0)
                     ? ListView.ApplyRange
                     : ListView.NoHighlightRange
-                preferredHighlightBegin: Math.max(0, (height - 26) * 0.42)
-                preferredHighlightEnd: Math.max(26, (height + 26) * 0.58)
-                highlightMoveDuration: 300
+                preferredHighlightBegin: Math.max(0, (height - 32) * 0.40)
+                preferredHighlightEnd: Math.max(32, (height + 32) * 0.60)
+                highlightMoveDuration: 360
                 highlightMoveVelocity: -1
 
                 onModelChanged: {
@@ -543,41 +561,106 @@ Item {
 
                     readonly property bool isActive: LyricsService.synced && index === LyricsService.activeIndex
                     readonly property bool isPast: LyricsService.synced && LyricsService.activeIndex >= 0 && index < LyricsService.activeIndex
+                    readonly property int distance: LyricsService.activeIndex >= 0 ? Math.abs(index - LyricsService.activeIndex) : 1
+                    readonly property string lineContent: (modelData?.text ?? "").trim()
+                    readonly property bool isInterlude: lineContent.length === 0
 
                     width: ListView.view ? ListView.view.width : 0
-                    height: Math.max(24, lyricText.implicitHeight + 8)
-                    radius: 7
-                    color: isActive
-                        ? Qt.rgba(root.activeAccent.r, root.activeAccent.g, root.activeAccent.b, 0.14)
-                        : (lineMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : "transparent")
+                    height: isInterlude ? 24 : Math.max(24, lyricText.implicitHeight + 8)
+                    radius: 8
+                    color: lineMouse.containsMouse
+                        ? Qt.rgba(1, 1, 1, 0.08)
+                        : "transparent"
 
                     Behavior on color {
-                        ColorAnimation { duration: 140 }
+                        ColorAnimation { duration: 130 }
                     }
 
+                    // Subtle glowing accent bar beside active Spotify lyric line
+                    Rectangle {
+                        visible: lyricDelegate.isActive
+                        anchors.left: parent.left
+                        anchors.leftMargin: 2
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 3
+                        height: Math.max(14, parent.height - 10)
+                        radius: 1.5
+                        color: root.activeAccent
+                    }
+
+                    // Regular lyric text
                     Text {
                         id: lyricText
 
+                        visible: !lyricDelegate.isInterlude
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
-                        text: (lyricDelegate.modelData?.text ?? "").length > 0
-                            ? lyricDelegate.modelData.text
-                            : "♪ • • •"
+                        anchors.leftMargin: lyricDelegate.isActive ? 11 : 8
+                        anchors.rightMargin: 6
+                        text: lyricDelegate.lineContent
                         wrapMode: Text.WordWrap
                         font.family: "Rubik"
-                        font.pixelSize: lyricDelegate.isActive ? 12 : 11
-                        font.weight: lyricDelegate.isActive ? Font.DemiBold : Font.Normal
-                        color: lyricDelegate.isActive
-                            ? "#f4f4f6"
-                            : (lineMouse.containsMouse
-                                ? "#d4d4de"
-                                : (lyricDelegate.isPast ? "#646470" : "#92929e"))
+                        font.pixelSize: lyricDelegate.isActive ? 14 : 11
+                        font.weight: lyricDelegate.isActive
+                            ? Font.Bold
+                            : (lyricDelegate.isPast ? Font.Normal : Font.Medium)
+                        lineHeight: 1.18
+                        color: {
+                            if (lyricDelegate.isActive)
+                                return "#ffffff";
+                            if (lineMouse.containsMouse)
+                                return Qt.rgba(1, 1, 1, 0.88);
+                            if (lyricDelegate.isPast)
+                                return Qt.rgba(1, 1, 1, 0.25);
+                            return lyricDelegate.distance <= 2
+                                ? Qt.rgba(1, 1, 1, 0.56)
+                                : Qt.rgba(1, 1, 1, 0.35);
+                        }
+
+                        Behavior on anchors.leftMargin {
+                            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                        }
+
+                        Behavior on font.pixelSize {
+                            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                        }
 
                         Behavior on color {
-                            ColorAnimation { duration: 160 }
+                            ColorAnimation { duration: 200 }
+                        }
+                    }
+
+                    // Animated 3-dot Spotify interlude indicator for instrumental breaks
+                    Row {
+                        visible: lyricDelegate.isInterlude
+                        anchors.left: parent.left
+                        anchors.leftMargin: lyricDelegate.isActive ? 11 : 8
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 5
+                        opacity: lyricDelegate.isActive ? 1.0 : (lyricDelegate.isPast ? 0.22 : 0.42)
+
+                        Repeater {
+                            model: 3
+
+                            delegate: Rectangle {
+                                required property int index
+
+                                width: lyricDelegate.isActive ? 6 : 4
+                                height: width
+                                radius: width / 2
+                                color: lyricDelegate.isActive ? root.activeAccent : "#c8c8d4"
+                                opacity: 0.45
+
+                                SequentialAnimation on opacity {
+                                    running: lyricDelegate.isActive && NotchController.expanded && MediaService.playing
+                                    loops: Animation.Infinite
+                                    PauseAnimation { duration: index * 180 }
+                                    NumberAnimation { to: 1.0; duration: 420; easing.type: Easing.InOutSine }
+                                    NumberAnimation { to: 0.35; duration: 420; easing.type: Easing.InOutSine }
+                                    PauseAnimation { duration: Math.max(0, (2 - index) * 180) }
+                                }
+                            }
                         }
                     }
 
@@ -590,23 +673,23 @@ Item {
                         onClicked: {
                             if (!LyricsService.synced)
                                 return;
-                            lyricsPanel.resumeAutoCenterNow();
                             LyricsService.seekToLine(lyricDelegate.index);
+                            lyricsPanel.resumeAutoCenterNow();
                         }
                     }
                 }
             }
 
-            // Subtle top & bottom gradient feathering over scrollable lyrics
+            // Smooth top & bottom gradient feathering matching lyrics panel tint
             Rectangle {
                 visible: lyricsListView.visible
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: 14
+                height: 22
                 z: 3
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: "#0d0d11" }
+                    GradientStop { position: 0.0; color: lyricsPanel.tintBgTop }
                     GradientStop { position: 1.0; color: "transparent" }
                 }
             }
@@ -616,27 +699,27 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: 14
+                height: 24
                 z: 3
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 1.0; color: "#0d0d11" }
+                    GradientStop { position: 1.0; color: Config.activePalette.surface }
                 }
             }
 
-            // Sync mode micro-badge
+            // Minimal Spotify-style SYNC / PLAIN glass micro-badge
             Rectangle {
                 visible: lyricsListView.visible
                 anchors.top: parent.top
                 anchors.right: parent.right
-                anchors.margins: 6
+                anchors.margins: 7
                 z: 4
-                height: 16
+                height: 15
                 width: syncBadgeLabel.implicitWidth + 10
-                radius: 5
-                color: "#15151e"
+                radius: 7.5
+                color: Qt.rgba(0, 0, 0, 0.36)
                 border.width: 1
-                border.color: Qt.rgba(1, 1, 1, 0.09)
+                border.color: Qt.rgba(1, 1, 1, 0.12)
 
                 Text {
                     id: syncBadgeLabel
@@ -645,8 +728,8 @@ Item {
                     text: LyricsService.synced ? "SYNC" : "PLAIN"
                     font.family: "Rubik"
                     font.pixelSize: 8
-                    font.weight: Font.Medium
-                    color: LyricsService.synced ? root.activeAccent : "#8e8e98"
+                    font.weight: Font.DemiBold
+                    color: LyricsService.synced ? root.activeAccent : "#9e9eaa"
                 }
             }
         }

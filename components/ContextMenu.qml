@@ -56,6 +56,10 @@ PopupWindow {
         case "toggle_dnd":
             NotchController.toggleDnd();
             break;
+        case "open_settings":
+            root.closeMenu();
+            Qt.callLater(() => NotchController.openSettings());
+            return;
         case "reload":
             root.closeMenu();
             Qt.callLater(() => Quickshell.reload(true));
@@ -73,6 +77,7 @@ PopupWindow {
         { type: "item", id: "toggle_autohide", label: "Auto-Hide", icon: "visibility_off", kind: "toggle", active: Config.autoHide.enabled },
         { type: "item", id: "toggle_dnd", label: "DND", icon: "notifications_off", kind: "toggle", active: Config.dnd },
         { type: "divider", id: "div_2", label: "", icon: "", kind: "", active: false },
+        { type: "item", id: "open_settings", label: "Settings...", icon: "tune", kind: "action", active: false },
         { type: "item", id: "reload", label: "Reload", icon: "refresh", kind: "action", active: false }
     ]
 
