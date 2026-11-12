@@ -606,13 +606,6 @@ Item {
         Item {
             id: lyricsPanel
 
-            readonly property color edgeFadeColor: Qt.rgba(
-                Qt.color(Config.activePalette.surface).r,
-                Qt.color(Config.activePalette.surface).g,
-                Qt.color(Config.activePalette.surface).b,
-                0.90
-            )
-
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
@@ -699,6 +692,21 @@ Item {
                 }
             }
 
+            // Invisible gradient mask used by MultiEffect for true alpha edge-feathering
+            Rectangle {
+                id: lyricsAlphaMask
+
+                anchors.fill: lyricsListView
+                visible: false
+                layer.enabled: true
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: "transparent" }
+                    GradientStop { position: 0.10; color: "#ffffff" }
+                    GradientStop { position: 0.86; color: "#ffffff" }
+                    GradientStop { position: 1.0; color: "transparent" }
+                }
+            }
+
             // Scrollable + Click-to-Seek Spotify-style Lyrics ListView
             ListView {
                 id: lyricsListView
@@ -712,6 +720,11 @@ Item {
                 clip: true
                 spacing: 8
                 boundsBehavior: Flickable.StopAtBounds
+                layer.enabled: visible && width > 0 && height > 0
+                layer.effect: MultiEffect {
+                    maskEnabled: true
+                    maskSource: lyricsAlphaMask
+                }
 
                 header: Item { width: 1; height: 6 }
                 footer: Item { width: 1; height: 20 }
@@ -867,34 +880,6 @@ Item {
                             lyricsPanel.resumeAutoCenterNow();
                         }
                     }
-                }
-            }
-
-            // Smooth top & bottom gradient feathering blending seamlessly into transparent panel
-            Rectangle {
-                visible: lyricsListView.visible
-                anchors.top: parent.top
-                anchors.topMargin: 22
-                anchors.left: parent.left
-                anchors.right: parent.right
-                height: 16
-                z: 3
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: lyricsPanel.edgeFadeColor }
-                    GradientStop { position: 1.0; color: "transparent" }
-                }
-            }
-
-            Rectangle {
-                visible: lyricsListView.visible
-                anchors.bottom: parent.bottom
-                anchors.left: parent.left
-                anchors.right: parent.right
-                height: 20
-                z: 3
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 1.0; color: lyricsPanel.edgeFadeColor }
                 }
             }
 
