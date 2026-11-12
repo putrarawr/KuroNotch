@@ -8,7 +8,12 @@ import "../services"
 Item {
     id: root
 
-    readonly property color accentColor: MediaService.playing ? MediaService.accentColor : "#f4f4f6"
+    readonly property color accentColor: MediaService.playing ? MediaService.accentColor : Config.activePalette.accent
+    readonly property int totalDurationSec: Math.max(1, (PomodoroService.phase === "focus" ? PomodoroService.focusMin : PomodoroService.breakMin) * 60)
+    readonly property real sessionProgress: Math.max(0.0, Math.min(1.0, 1.0 - (PomodoroService.remainingSec / totalDurationSec)))
+    readonly property color phaseColor: PomodoroService.phase === "focus"
+        ? (Config.theme.palette === "obsidian" ? "#818cf8" : Config.activePalette.accent)
+        : "#34d399"
 
     RowLayout {
         anchors.fill: parent
@@ -16,16 +21,22 @@ Item {
         spacing: 10
 
         // ==========================================
-        // Left Card: Pomodoro Timer
+        // Left Card: Pomodoro Focus Timer
         // ==========================================
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredWidth: 320
+            Layout.preferredWidth: 230
             radius: 12
-            color: "#0d0d11"
+            color: Config.activePalette.elevated
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.08)
+            border.color: PomodoroService.running
+                ? Qt.rgba(root.phaseColor.r, root.phaseColor.g, root.phaseColor.b, 0.34)
+                : Qt.rgba(1, 1, 1, 0.08)
+
+            Behavior on border.color {
+                ColorAnimation { duration: 200 }
+            }
 
             ColumnLayout {
                 anchors.fill: parent
@@ -37,15 +48,37 @@ Item {
                     Layout.fillWidth: true
                     spacing: 6
 
-                    Text {
-                        text: PomodoroService.phase === "focus" ? "timer" : "local_cafe"
-                        font.family: "Material Symbols Rounded"
-                        font.pixelSize: 15
-                        color: PomodoroService.phase === "focus" ? "#f4f4f6" : "#6ee7b7"
+                    Item {
+                        width: 18
+                        height: 18
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 18
+                            height: 18
+                            radius: 9
+                            color: root.phaseColor
+                            opacity: PomodoroService.running ? 0.22 : 0.10
+
+                            SequentialAnimation on opacity {
+                                running: PomodoroService.running
+                                loops: Animation.Infinite
+                                NumberAnimation { to: 0.12; duration: 1100; easing.type: Easing.InOutSine }
+                                NumberAnimation { to: 0.32; duration: 1100; easing.type: Easing.InOutSine }
+                            }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: PomodoroService.phase === "focus" ? "timer" : "local_cafe"
+                            font.family: "Material Symbols Rounded"
+                            font.pixelSize: 13
+                            color: root.phaseColor
+                        }
                     }
 
                     Text {
-                        text: PomodoroService.phase === "focus" ? "Focus Session" : "Break Time"
+                        text: PomodoroService.phase === "focus" ? "Focus" : "Break"
                         font.family: "Rubik"
                         font.pixelSize: 12
                         font.weight: Font.DemiBold
@@ -55,7 +88,7 @@ Item {
                     Rectangle {
                         height: 18
                         width: cycleLabel.implicitWidth + 10
-                        radius: 5
+                        radius: 6
                         color: "#15151d"
                         border.width: 1
                         border.color: Qt.rgba(1, 1, 1, 0.08)
@@ -63,7 +96,7 @@ Item {
                         Text {
                             id: cycleLabel
                             anchors.centerIn: parent
-                            text: `Cycle #${PomodoroService.cycle}`
+                            text: `#${PomodoroService.cycle}`
                             font.family: "Rubik"
                             font.pixelSize: 10
                             font.weight: Font.Medium
@@ -77,8 +110,8 @@ Item {
                     Rectangle {
                         width: 22
                         height: 22
-                        radius: 6
-                        color: chimeMouse.containsMouse ? "#1c1c26" : "#15151d"
+                        radius: 7
+                        color: chimeMouse.containsMouse ? "#1e1e29" : "#15151d"
                         border.width: 1
                         border.color: Qt.rgba(1, 1, 1, 0.08)
 
@@ -109,35 +142,42 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
-                    spacing: 12
+                    spacing: 8
 
                     Text {
                         text: PomodoroService.formattedRemaining
                         font.family: "Rubik"
-                        font.pixelSize: 32
+                        font.pixelSize: 30
                         font.weight: Font.DemiBold
-                        font.letterSpacing: 1.0
-                        color: PomodoroService.running
-                            ? (PomodoroService.phase === "focus" ? "#f4f4f6" : "#6ee7b7")
-                            : "#8e8e98"
+                        font.letterSpacing: 0.8
+                        color: PomodoroService.running ? "#f4f4f6" : "#a8a8b4"
                     }
 
                     Item { Layout.fillWidth: true }
 
                     // Play / Pause Button
                     Rectangle {
-                        width: 36
-                        height: 36
-                        radius: 18
-                        color: playMouse.containsMouse
-                            ? (PomodoroService.running ? "#e0e0e4" : Qt.rgba(1, 1, 1, 0.18))
-                            : (PomodoroService.running ? "#f4f4f6" : Qt.rgba(1, 1, 1, 0.12))
+                        width: 34
+                        height: 34
+                        radius: 17
+                        color: PomodoroService.running
+                            ? (playMouse.containsMouse ? "#ffffff" : "#f4f4f6")
+                            : (playMouse.containsMouse ? Qt.rgba(root.phaseColor.r, root.phaseColor.g, root.phaseColor.b, 0.28) : Qt.rgba(root.phaseColor.r, root.phaseColor.g, root.phaseColor.b, 0.18))
+                        border.width: 1
+                        border.color: PomodoroService.running
+                            ? "transparent"
+                            : Qt.rgba(root.phaseColor.r, root.phaseColor.g, root.phaseColor.b, 0.42)
+                        scale: playMouse.pressed ? 0.92 : (playMouse.containsMouse ? 1.05 : 1.0)
+
+                        Behavior on scale {
+                            NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                        }
 
                         Text {
                             anchors.centerIn: parent
                             text: PomodoroService.running ? "pause" : "play_arrow"
                             font.family: "Material Symbols Rounded"
-                            font.pixelSize: 20
+                            font.pixelSize: 19
                             color: PomodoroService.running ? "#050507" : "#f4f4f6"
                         }
 
@@ -152,18 +192,23 @@ Item {
 
                     // Reset Button
                     Rectangle {
-                        width: 32
-                        height: 32
-                        radius: 16
-                        color: resetMouse.containsMouse ? "#1c1c26" : "#15151d"
+                        width: 30
+                        height: 30
+                        radius: 15
+                        color: resetMouse.containsMouse ? "#1e1e29" : "#15151d"
                         border.width: 1
                         border.color: Qt.rgba(1, 1, 1, 0.08)
+                        scale: resetMouse.pressed ? 0.92 : (resetMouse.containsMouse ? 1.05 : 1.0)
+
+                        Behavior on scale {
+                            NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                        }
 
                         Text {
                             anchors.centerIn: parent
                             text: "restart_alt"
                             font.family: "Material Symbols Rounded"
-                            font.pixelSize: 17
+                            font.pixelSize: 16
                             color: resetMouse.containsMouse ? "#f4f4f6" : "#8e8e98"
                         }
 
@@ -177,30 +222,49 @@ Item {
                     }
                 }
 
+                // Slim Session Progress Track
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 3
+                    radius: 1.5
+                    color: Qt.rgba(1, 1, 1, 0.08)
+
+                    Rectangle {
+                        height: parent.height
+                        radius: 1.5
+                        width: Math.max(PomodoroService.running ? 4 : 0, parent.width * root.sessionProgress)
+                        color: root.phaseColor
+
+                        Behavior on width {
+                            NumberAnimation { duration: 350; easing.type: Easing.OutCubic }
+                        }
+                    }
+                }
+
                 Item { Layout.fillHeight: true }
 
                 // Bottom Row: Presets & Adjustments
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: 5
 
                     // Preset: 25 / 5
                     Rectangle {
                         height: 22
-                        width: p25Label.implicitWidth + 14
+                        width: p25Label.implicitWidth + 12
                         radius: 6
                         color: PomodoroService.preset === "25/5"
-                            ? Qt.rgba(1, 1, 1, 0.15)
+                            ? Qt.rgba(root.phaseColor.r, root.phaseColor.g, root.phaseColor.b, 0.2)
                             : (p25Mouse.containsMouse ? "#1c1c26" : "#15151d")
                         border.width: 1
                         border.color: PomodoroService.preset === "25/5"
-                            ? Qt.rgba(1, 1, 1, 0.25)
+                            ? Qt.rgba(root.phaseColor.r, root.phaseColor.g, root.phaseColor.b, 0.45)
                             : Qt.rgba(1, 1, 1, 0.08)
 
                         Text {
                             id: p25Label
                             anchors.centerIn: parent
-                            text: "25 / 5"
+                            text: "25/5"
                             font.family: "Rubik"
                             font.pixelSize: 10
                             font.weight: Font.Medium
@@ -219,20 +283,20 @@ Item {
                     // Preset: 50 / 10
                     Rectangle {
                         height: 22
-                        width: p50Label.implicitWidth + 14
+                        width: p50Label.implicitWidth + 12
                         radius: 6
                         color: PomodoroService.preset === "50/10"
-                            ? Qt.rgba(1, 1, 1, 0.15)
+                            ? Qt.rgba(root.phaseColor.r, root.phaseColor.g, root.phaseColor.b, 0.2)
                             : (p50Mouse.containsMouse ? "#1c1c26" : "#15151d")
                         border.width: 1
                         border.color: PomodoroService.preset === "50/10"
-                            ? Qt.rgba(1, 1, 1, 0.25)
+                            ? Qt.rgba(root.phaseColor.r, root.phaseColor.g, root.phaseColor.b, 0.45)
                             : Qt.rgba(1, 1, 1, 0.08)
 
                         Text {
                             id: p50Label
                             anchors.centerIn: parent
-                            text: "50 / 10"
+                            text: "50/10"
                             font.family: "Rubik"
                             font.pixelSize: 10
                             font.weight: Font.Medium
@@ -253,7 +317,7 @@ Item {
                     // Nudge -5m
                     Rectangle {
                         height: 22
-                        width: 32
+                        width: 30
                         radius: 6
                         color: minusMouse.containsMouse ? "#1c1c26" : "#15151d"
                         border.width: 1
@@ -280,7 +344,7 @@ Item {
                     // Nudge +5m
                     Rectangle {
                         height: 22
-                        width: 32
+                        width: 30
                         radius: 6
                         color: plusMouse.containsMouse ? "#1c1c26" : "#15151d"
                         border.width: 1
@@ -308,14 +372,14 @@ Item {
         }
 
         // ==========================================
-        // Right Card: Quick Actions
+        // Right Card: Spacious Horizontal Quick Actions
         // ==========================================
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredWidth: 200
+            Layout.preferredWidth: 266
             radius: 12
-            color: "#0d0d11"
+            color: Config.activePalette.elevated
             border.width: 1
             border.color: Qt.rgba(1, 1, 1, 0.08)
 
@@ -333,7 +397,7 @@ Item {
                         text: "bolt"
                         font.family: "Material Symbols Rounded"
                         font.pixelSize: 15
-                        color: "#f4f4f6"
+                        color: "#fbbf24"
                     }
 
                     Text {
@@ -343,269 +407,180 @@ Item {
                         font.weight: Font.DemiBold
                         color: "#f4f4f6"
                     }
+
+                    Item { Layout.fillWidth: true }
+
+                    Rectangle {
+                        readonly property bool anyModeActive: NotchController.recordingActive
+                            || QuickActionsService.caffeineActive
+                            || QuickActionsService.nightLightActive
+                        visible: anyModeActive
+                        height: 16
+                        width: activeModeTxt.implicitWidth + 10
+                        radius: 8
+                        color: NotchController.recordingActive
+                            ? Qt.rgba(239 / 255, 68 / 255, 68 / 255, 0.2)
+                            : Qt.rgba(251 / 255, 191 / 255, 36 / 255, 0.16)
+                        border.width: 1
+                        border.color: NotchController.recordingActive
+                            ? Qt.rgba(239 / 255, 68 / 255, 68 / 255, 0.45)
+                            : Qt.rgba(251 / 255, 191 / 255, 36 / 255, 0.35)
+
+                        Text {
+                            id: activeModeTxt
+                            anchors.centerIn: parent
+                            text: NotchController.recordingActive
+                                ? "REC"
+                                : (QuickActionsService.caffeineActive ? "AWAKE" : "4200K")
+                            font.family: "Rubik"
+                            font.pixelSize: 9
+                            font.weight: Font.DemiBold
+                            color: NotchController.recordingActive ? "#fca5a5" : "#fde68a"
+                        }
+                    }
                 }
 
-                // 2x2 Grid of Actions
+                // Spacious 2-Column Horizontal Badge Pills
                 GridLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     columns: 2
-                    rowSpacing: 6
-                    columnSpacing: 6
+                    rowSpacing: 7
+                    columnSpacing: 7
 
-                    // Action 1: Region Snip
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: 8
-                        color: snipMouse.containsMouse ? "#1c1c26" : "#15151d"
-                        border.width: 1
-                        border.color: Qt.rgba(1, 1, 1, 0.08)
-
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: 2
-
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "crop"
-                                font.family: "Material Symbols Rounded"
-                                font.pixelSize: 17
-                                color: snipMouse.containsMouse ? "#f4f4f6" : "#c8c8d4"
-                            }
-
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "Snip"
-                                font.family: "Rubik"
-                                font.pixelSize: 10
-                                font.weight: Font.Medium
-                                color: "#f4f4f6"
-                            }
-                        }
-
-                        MouseArea {
-                            id: snipMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: QuickActionsService.screenshotRegion()
-                        }
+                    QuickActionPill {
+                        label: "Area Snip"
+                        iconName: "crop"
+                        toneColor: "#a78bfa"
+                        onTriggered: QuickActionsService.screenshotRegion()
                     }
 
-                    // Action 2: Fullscreen Screenshot
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: 8
-                        color: fullMouse.containsMouse ? "#1c1c26" : "#15151d"
-                        border.width: 1
-                        border.color: Qt.rgba(1, 1, 1, 0.08)
-
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: 2
-
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "fullscreen"
-                                font.family: "Material Symbols Rounded"
-                                font.pixelSize: 17
-                                color: fullMouse.containsMouse ? "#f4f4f6" : "#c8c8d4"
-                            }
-
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "Screen"
-                                font.family: "Rubik"
-                                font.pixelSize: 10
-                                font.weight: Font.Medium
-                                color: "#f4f4f6"
-                            }
-                        }
-
-                        MouseArea {
-                            id: fullMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: QuickActionsService.screenshotFull()
-                        }
+                    QuickActionPill {
+                        label: "Full Shot"
+                        iconName: "fullscreen"
+                        toneColor: "#38bdf8"
+                        onTriggered: QuickActionsService.screenshotFull()
                     }
 
-                    // Action 3: Color Picker
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: 8
-                        color: colorMouse.containsMouse ? "#1c1c26" : "#15151d"
-                        border.width: 1
-                        border.color: Qt.rgba(1, 1, 1, 0.08)
-
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: 2
-
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "colorize"
-                                font.family: "Material Symbols Rounded"
-                                font.pixelSize: 17
-                                color: colorMouse.containsMouse ? "#f4f4f6" : "#c8c8d4"
-                            }
-
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "Color"
-                                font.family: "Rubik"
-                                font.pixelSize: 10
-                                font.weight: Font.Medium
-                                color: "#f4f4f6"
-                            }
-                        }
-
-                        MouseArea {
-                            id: colorMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: QuickActionsService.pickColor()
-                        }
+                    QuickActionPill {
+                        label: "Eyedropper"
+                        iconName: "colorize"
+                        toneColor: "#f472b6"
+                        onTriggered: QuickActionsService.pickColor()
                     }
 
-                    // Action 4: Screen Record Toggle
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: 8
-                        color: NotchController.recordingActive
-                            ? (recMouse.containsMouse ? Qt.rgba(0.93, 0.27, 0.27, 0.3) : Qt.rgba(0.93, 0.27, 0.27, 0.2))
-                            : (recMouse.containsMouse ? "#1c1c26" : "#15151d")
-                        border.width: 1
-                        border.color: NotchController.recordingActive
-                            ? Qt.rgba(0.93, 0.27, 0.27, 0.4)
-                            : Qt.rgba(1, 1, 1, 0.08)
-
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: 2
-
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: NotchController.recordingActive ? "stop_circle" : "videocam"
-                                font.family: "Material Symbols Rounded"
-                                font.pixelSize: 16
-                                color: NotchController.recordingActive ? "#ef4444" : (recMouse.containsMouse ? "#f4f4f6" : "#c8c8d4")
-                            }
-
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: NotchController.recordingActive ? "Stop" : "Record"
-                                font.family: "Rubik"
-                                font.pixelSize: 10
-                                font.weight: Font.Medium
-                                color: NotchController.recordingActive ? "#ef4444" : "#f4f4f6"
-                            }
-                        }
-
-                        MouseArea {
-                            id: recMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: QuickActionsService.toggleRecord()
-                        }
+                    QuickActionPill {
+                        label: NotchController.recordingActive ? "Stop Rec" : "Record"
+                        iconName: NotchController.recordingActive ? "stop_circle" : "videocam"
+                        toneColor: "#ef4444"
+                        active: NotchController.recordingActive
+                        toggleable: true
+                        onTriggered: QuickActionsService.toggleRecord()
                     }
 
-                    // Action 5: Caffeine (Keep Awake)
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: 8
-                        color: QuickActionsService.caffeineActive
-                            ? Qt.rgba(0.98, 0.75, 0.14, 0.18)
-                            : (cafMouse.containsMouse ? "#1c1c26" : "#15151d")
-                        border.width: 1
-                        border.color: QuickActionsService.caffeineActive
-                            ? Qt.rgba(0.98, 0.75, 0.14, 0.42)
-                            : Qt.rgba(1, 1, 1, 0.08)
-
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: 2
-
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "coffee"
-                                font.family: "Material Symbols Rounded"
-                                font.pixelSize: 16
-                                color: QuickActionsService.caffeineActive ? "#fbbf24" : (cafMouse.containsMouse ? "#f4f4f6" : "#c8c8d4")
-                            }
-
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: QuickActionsService.caffeineActive ? "Awake" : "Caffeine"
-                                font.family: "Rubik"
-                                font.pixelSize: 10
-                                font.weight: Font.Medium
-                                color: QuickActionsService.caffeineActive ? "#fde68a" : "#f4f4f6"
-                            }
-                        }
-
-                        MouseArea {
-                            id: cafMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: QuickActionsService.toggleCaffeine()
-                        }
+                    QuickActionPill {
+                        label: QuickActionsService.caffeineActive ? "Awake" : "Caffeine"
+                        iconName: "coffee"
+                        toneColor: "#fbbf24"
+                        active: QuickActionsService.caffeineActive
+                        toggleable: true
+                        onTriggered: QuickActionsService.toggleCaffeine()
                     }
 
-                    // Action 6: Night Light (hyprsunset 4200K)
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: 8
-                        color: QuickActionsService.nightLightActive
-                            ? Qt.rgba(0.96, 0.62, 0.34, 0.18)
-                            : (nightMouse.containsMouse ? "#1c1c26" : "#15151d")
-                        border.width: 1
-                        border.color: QuickActionsService.nightLightActive
-                            ? Qt.rgba(0.96, 0.62, 0.34, 0.42)
-                            : Qt.rgba(1, 1, 1, 0.08)
-
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: 2
-
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "bedtime"
-                                font.family: "Material Symbols Rounded"
-                                font.pixelSize: 16
-                                color: QuickActionsService.nightLightActive ? "#fb923c" : (nightMouse.containsMouse ? "#f4f4f6" : "#c8c8d4")
-                            }
-
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: QuickActionsService.nightLightActive ? "Warm" : "Night"
-                                font.family: "Rubik"
-                                font.pixelSize: 10
-                                font.weight: Font.Medium
-                                color: QuickActionsService.nightLightActive ? "#fed7aa" : "#f4f4f6"
-                            }
-                        }
-
-                        MouseArea {
-                            id: nightMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: QuickActionsService.toggleNightLight()
-                        }
+                    QuickActionPill {
+                        label: QuickActionsService.nightLightActive ? "Warm 4200K" : "Night Light"
+                        iconName: "bedtime"
+                        toneColor: "#fb923c"
+                        active: QuickActionsService.nightLightActive
+                        toggleable: true
+                        onTriggered: QuickActionsService.toggleNightLight()
                     }
                 }
             }
+        }
+    }
+
+    component QuickActionPill: Rectangle {
+        id: pillRoot
+
+        required property string label
+        required property string iconName
+        required property color toneColor
+        property bool active: false
+        property bool toggleable: false
+        signal triggered()
+
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        radius: 10
+        color: active
+            ? Qt.rgba(toneColor.r, toneColor.g, toneColor.b, pillMouse.containsMouse ? 0.24 : 0.16)
+            : (pillMouse.containsMouse ? "#1b1b26" : "#14141c")
+        border.width: 1
+        border.color: active
+            ? Qt.rgba(toneColor.r, toneColor.g, toneColor.b, 0.5)
+            : (pillMouse.containsMouse ? Qt.rgba(toneColor.r, toneColor.g, toneColor.b, 0.32) : Qt.rgba(1, 1, 1, 0.08))
+        scale: pillMouse.pressed ? 0.96 : (pillMouse.containsMouse ? 1.02 : 1.0)
+
+        Behavior on color {
+            ColorAnimation { duration: 120 }
+        }
+        Behavior on border.color {
+            ColorAnimation { duration: 120 }
+        }
+        Behavior on scale {
+            NumberAnimation { duration: 110; easing.type: Easing.OutCubic }
+        }
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 8
+            anchors.rightMargin: 8
+            spacing: 7
+
+            Rectangle {
+                Layout.preferredWidth: 22
+                Layout.preferredHeight: 22
+                Layout.alignment: Qt.AlignVCenter
+                radius: 7
+                color: Qt.rgba(pillRoot.toneColor.r, pillRoot.toneColor.g, pillRoot.toneColor.b, pillRoot.active ? 0.28 : 0.14)
+
+                Text {
+                    anchors.centerIn: parent
+                    text: pillRoot.iconName
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 13
+                    color: pillRoot.active || pillMouse.containsMouse ? pillRoot.toneColor : Qt.lighter(pillRoot.toneColor, 1.15)
+                }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
+                text: pillRoot.label
+                font.family: "Rubik"
+                font.pixelSize: 11
+                font.weight: pillRoot.active ? Font.DemiBold : Font.Medium
+                color: pillRoot.active ? "#ffffff" : (pillMouse.containsMouse ? "#f4f4f6" : "#d4d4de")
+                elide: Text.ElideRight
+            }
+
+            Rectangle {
+                visible: pillRoot.toggleable
+                Layout.preferredWidth: 5
+                Layout.preferredHeight: 5
+                Layout.alignment: Qt.AlignVCenter
+                radius: 2.5
+                color: pillRoot.active ? pillRoot.toneColor : "#3a3a46"
+            }
+        }
+
+        MouseArea {
+            id: pillMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: pillRoot.triggered()
         }
     }
 }

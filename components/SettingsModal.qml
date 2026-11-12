@@ -13,6 +13,21 @@ PopupWindow {
     required property var parentWindow
 
     property int activeTab: 0 // 0: Appearance, 1: Widgets, 2: Behavior
+    property string previewWidget: "companion"
+
+    readonly property bool previewEnabled: {
+        if (previewWidget === "shelf")
+            return Config.widgets.shelf;
+        if (previewWidget === "pomodoro")
+            return Config.widgets.pomodoro;
+        if (previewWidget === "clipboard")
+            return Config.widgets.clipboard;
+        if (previewWidget === "notifications")
+            return Config.widgets.notifications;
+        if (previewWidget === "lyrics")
+            return Config.lyrics.enabled;
+        return Config.companion.enabled;
+    }
 
     readonly property var tabs: [
         { id: 0, label: "Appearance", icon: "palette" },
@@ -29,7 +44,7 @@ PopupWindow {
     visible: NotchController.settingsOpen
     color: "transparent"
     implicitWidth: 448
-    implicitHeight: 392
+    implicitHeight: 430
 
     anchor.window: root.parentWindow
     anchor.rect: Qt.rect(
@@ -434,7 +449,7 @@ PopupWindow {
                         }
                     }
 
-                    // TAB 1: Widgets On / Off
+                    // TAB 1: Widgets On / Off + Live Preview
                     ColumnLayout {
                         id: widgetsCol
 
@@ -442,8 +457,417 @@ PopupWindow {
                         width: parent.width
                         spacing: 6
 
+                        // Live Interactive Widget Preview Stage
+                        Rectangle {
+                            id: previewStage
+
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 84
+                            radius: 12
+                            color: "#050507"
+                            border.width: 1
+                            border.color: root.previewEnabled
+                                ? Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.36)
+                                : Qt.rgba(1, 1, 1, 0.08)
+                            clip: true
+
+                            // Subtle radial accent wash inside preview stage
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: parent.radius
+                                opacity: root.previewEnabled ? 0.14 : 0.04
+                                gradient: Gradient {
+                                    GradientStop { position: 0.0; color: Config.activePalette.accent }
+                                    GradientStop { position: 0.85; color: "transparent" }
+                                }
+                            }
+
+                            // Top-left "PREVIEW" pill & top-right ON/OFF pill
+                            RowLayout {
+                                anchors.top: parent.top
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.margins: 7
+                                z: 2
+
+                                Text {
+                                    text: {
+                                        if (root.previewWidget === "shelf") return "PREVIEW · FILE SHELF";
+                                        if (root.previewWidget === "pomodoro") return "PREVIEW · FOCUS & QUICK ACTIONS";
+                                        if (root.previewWidget === "clipboard") return "PREVIEW · CLIPBOARD STASH";
+                                        if (root.previewWidget === "notifications") return "PREVIEW · NOTIFICATION ISLAND";
+                                        if (root.previewWidget === "lyrics") return "PREVIEW · SYNC LYRICS";
+                                        return "PREVIEW · COMPANION EYES";
+                                    }
+                                    font.family: "Rubik"
+                                    font.pixelSize: 9
+                                    font.weight: Font.DemiBold
+                                    font.letterSpacing: 0.6
+                                    color: "#8e8e98"
+                                }
+
+                                Item { Layout.fillWidth: true }
+
+                                Rectangle {
+                                    height: 15
+                                    width: statusLbl.implicitWidth + 10
+                                    radius: 7.5
+                                    color: root.previewEnabled
+                                        ? Qt.rgba(52 / 255, 211 / 255, 153 / 255, 0.16)
+                                        : Qt.rgba(239 / 255, 68 / 255, 68 / 255, 0.14)
+                                    border.width: 1
+                                    border.color: root.previewEnabled
+                                        ? Qt.rgba(52 / 255, 211 / 255, 153 / 255, 0.4)
+                                        : Qt.rgba(239 / 255, 68 / 255, 68 / 255, 0.32)
+
+                                    Text {
+                                        id: statusLbl
+                                        anchors.centerIn: parent
+                                        text: root.previewEnabled ? "ACTIVE" : "OFF"
+                                        font.family: "Rubik"
+                                        font.pixelSize: 8
+                                        font.weight: Font.DemiBold
+                                        color: root.previewEnabled ? "#6ee7b7" : "#fca5a5"
+                                    }
+                                }
+                            }
+
+                            // Center Miniature Widget Renderers
+                            Item {
+                                anchors.fill: parent
+                                anchors.topMargin: 18
+                                opacity: root.previewEnabled ? 1.0 : 0.38
+
+                                Behavior on opacity {
+                                    NumberAnimation { duration: 160 }
+                                }
+
+                                // 1. Live Companion Eyes Preview
+                                Item {
+                                    anchors.centerIn: parent
+                                    width: 170
+                                    height: 36
+                                    visible: root.previewWidget === "companion"
+
+                                    Rectangle {
+                                        anchors.centerIn: parent
+                                        width: 132
+                                        height: 30
+                                        radius: 15
+                                        color: "#0d0d14"
+                                        border.width: 1
+                                        border.color: Qt.rgba(1, 1, 1, 0.14)
+
+                                        IdleCompanionEyes {
+                                            anchors.centerIn: parent
+                                            active: root.visible && root.activeTab === 1 && root.previewWidget === "companion"
+                                            pointerActive: false
+                                        }
+                                    }
+                                }
+
+                                // 2. File Shelf Preview
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 8
+                                    visible: root.previewWidget === "shelf"
+
+                                    Repeater {
+                                        model: [
+                                            { icon: "image", name: "preview.png", tint: "#38bdf8" },
+                                            { icon: "description", name: "notes.pdf", tint: "#a78bfa" },
+                                            { icon: "drive_folder_upload", name: "Drop here", tint: "#34d399" }
+                                        ]
+
+                                        delegate: Rectangle {
+                                            required property var modelData
+                                            width: 102
+                                            height: 36
+                                            radius: 9
+                                            color: "#111119"
+                                            border.width: 1
+                                            border.color: Qt.rgba(Qt.color(modelData.tint).r, Qt.color(modelData.tint).g, Qt.color(modelData.tint).b, 0.35)
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 5
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: modelData.icon
+                                                    font.family: "Material Symbols Rounded"
+                                                    font.pixelSize: 14
+                                                    color: modelData.tint
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: modelData.name
+                                                    font.family: "Rubik"
+                                                    font.pixelSize: 10
+                                                    font.weight: Font.Medium
+                                                    color: "#e4e4ec"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // 3. Pomodoro & Quick Actions Preview
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 10
+                                    visible: root.previewWidget === "pomodoro"
+
+                                    Rectangle {
+                                        width: 118
+                                        height: 38
+                                        radius: 9
+                                        color: "#111119"
+                                        border.width: 1
+                                        border.color: Qt.rgba(129 / 255, 140 / 255, 248 / 255, 0.38)
+
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 6
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "timer"
+                                                font.family: "Material Symbols Rounded"
+                                                font.pixelSize: 15
+                                                color: "#818cf8"
+                                            }
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "25:00"
+                                                font.family: "Rubik"
+                                                font.pixelSize: 14
+                                                font.weight: Font.DemiBold
+                                                color: "#f4f4f6"
+                                            }
+                                        }
+                                    }
+
+                                    Row {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 6
+
+                                        Repeater {
+                                            model: [
+                                                { icon: "crop", lbl: "Snip", c: "#a78bfa" },
+                                                { icon: "colorize", lbl: "Color", c: "#f472b6" },
+                                                { icon: "bedtime", lbl: "Night", c: "#fb923c" }
+                                            ]
+
+                                            delegate: Rectangle {
+                                                required property var modelData
+                                                width: 62
+                                                height: 30
+                                                radius: 8
+                                                color: "#13131c"
+                                                border.width: 1
+                                                border.color: Qt.rgba(Qt.color(modelData.c).r, Qt.color(modelData.c).g, Qt.color(modelData.c).b, 0.32)
+
+                                                Row {
+                                                    anchors.centerIn: parent
+                                                    spacing: 4
+
+                                                    Text {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        text: modelData.icon
+                                                        font.family: "Material Symbols Rounded"
+                                                        font.pixelSize: 12
+                                                        color: modelData.c
+                                                    }
+
+                                                    Text {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        text: modelData.lbl
+                                                        font.family: "Rubik"
+                                                        font.pixelSize: 10
+                                                        color: "#e4e4ec"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // 4. Clipboard Stash Preview
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 4
+                                    visible: root.previewWidget === "clipboard"
+
+                                    Repeater {
+                                        model: [
+                                            { icon: "image", text: "Screenshot 1920x1080 PNG", c: "#38bdf8" },
+                                            { icon: "content_paste", text: "https://github.com/...", c: "#a5b4fc" }
+                                        ]
+
+                                        delegate: Rectangle {
+                                            required property var modelData
+                                            width: 280
+                                            height: 20
+                                            radius: 6
+                                            color: "#111119"
+                                            border.width: 1
+                                            border.color: Qt.rgba(1, 1, 1, 0.08)
+
+                                            Row {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                anchors.left: parent.left
+                                                anchors.leftMargin: 8
+                                                spacing: 6
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: modelData.icon
+                                                    font.family: "Material Symbols Rounded"
+                                                    font.pixelSize: 11
+                                                    color: modelData.c
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: modelData.text
+                                                    font.family: "Rubik"
+                                                    font.pixelSize: 10
+                                                    color: "#d4d4de"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // 5. Notification Island Preview
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: 310
+                                    height: 40
+                                    radius: 12
+                                    visible: root.previewWidget === "notifications"
+                                    color: "#111119"
+                                    border.width: 1
+                                    border.color: Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.34)
+
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 10
+                                        anchors.rightMargin: 10
+                                        spacing: 8
+
+                                        Rectangle {
+                                            width: 24
+                                            height: 24
+                                            radius: 7
+                                            color: Qt.rgba(56 / 255, 189 / 255, 248 / 255, 0.16)
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "photo_camera"
+                                                font.family: "Material Symbols Rounded"
+                                                font.pixelSize: 14
+                                                color: "#38bdf8"
+                                            }
+                                        }
+
+                                        Column {
+                                            Layout.fillWidth: true
+                                            spacing: 1
+
+                                            Text {
+                                                text: "Screenshot Saved"
+                                                font.family: "Rubik"
+                                                font.pixelSize: 10
+                                                font.weight: Font.DemiBold
+                                                color: "#f4f4f6"
+                                            }
+
+                                            Text {
+                                                text: "Copied to clipboard cleanly"
+                                                font.family: "Rubik"
+                                                font.pixelSize: 9
+                                                color: "#8e8e98"
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            width: 40
+                                            height: 18
+                                            radius: 6
+                                            color: Qt.rgba(1, 1, 1, 0.1)
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "Open"
+                                                font.family: "Rubik"
+                                                font.pixelSize: 9
+                                                color: "#f4f4f6"
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // 6. Sync Lyrics Preview
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 12
+                                    visible: root.previewWidget === "lyrics"
+
+                                    Row {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 3
+
+                                        Repeater {
+                                            model: [14, 22, 10, 18]
+
+                                            delegate: Rectangle {
+                                                required property int modelData
+                                                required property int index
+                                                width: 3
+                                                height: modelData
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                radius: 1.5
+                                                color: Config.activePalette.accent
+
+                                                SequentialAnimation on height {
+                                                    running: root.visible && root.activeTab === 1 && root.previewWidget === "lyrics"
+                                                    loops: Animation.Infinite
+                                                    NumberAnimation { to: 7 + (index % 2) * 5; duration: 360 + index * 90; easing.type: Easing.InOutSine }
+                                                    NumberAnimation { to: modelData + 4; duration: 340 + index * 80; easing.type: Easing.InOutSine }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Column {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 2
+
+                                        Text {
+                                            text: "♪  Walking through the midnight glow"
+                                            font.family: "Rubik"
+                                            font.pixelSize: 11
+                                            font.weight: Font.DemiBold
+                                            color: "#f4f4f6"
+                                        }
+
+                                        Text {
+                                            text: "    Every city light feels alive..."
+                                            font.family: "Rubik"
+                                            font.pixelSize: 9
+                                            color: "#6e6e7a"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         Text {
-                            text: "ENABLE / DISABLE WIDGET PAGES"
+                            text: "ENABLE / DISABLE WIDGET PAGES (HOVER TO PREVIEW)"
                             font.family: "Rubik"
                             font.pixelSize: 10
                             font.weight: Font.DemiBold
@@ -456,7 +880,10 @@ PopupWindow {
                             subtitle: "Stage files & copy/drag back out"
                             iconName: "inventory_2"
                             checked: Config.widgets.shelf
+                            selected: root.previewWidget === "shelf"
+                            onHovered: root.previewWidget = "shelf"
                             onToggled: {
+                                root.previewWidget = "shelf";
                                 Config.widgets.shelf = !Config.widgets.shelf;
                                 Config.save();
                             }
@@ -467,7 +894,10 @@ PopupWindow {
                             subtitle: "Timer, screenshot, color picker, Caffeine, Night Light"
                             iconName: "timer"
                             checked: Config.widgets.pomodoro
+                            selected: root.previewWidget === "pomodoro"
+                            onHovered: root.previewWidget = "pomodoro"
                             onToggled: {
+                                root.previewWidget = "pomodoro";
                                 Config.widgets.pomodoro = !Config.widgets.pomodoro;
                                 Config.save();
                             }
@@ -478,7 +908,10 @@ PopupWindow {
                             subtitle: "Searchable text & image clipboard history"
                             iconName: "content_paste"
                             checked: Config.widgets.clipboard
+                            selected: root.previewWidget === "clipboard"
+                            onHovered: root.previewWidget = "clipboard"
                             onToggled: {
+                                root.previewWidget = "clipboard";
                                 Config.widgets.clipboard = !Config.widgets.clipboard;
                                 Config.save();
                             }
@@ -489,7 +922,10 @@ PopupWindow {
                             subtitle: "Interactive notification center & alert bursts"
                             iconName: "notifications"
                             checked: Config.widgets.notifications
+                            selected: root.previewWidget === "notifications"
+                            onHovered: root.previewWidget = "notifications"
                             onToggled: {
+                                root.previewWidget = "notifications";
                                 Config.widgets.notifications = !Config.widgets.notifications;
                                 Config.save();
                             }
@@ -500,7 +936,10 @@ PopupWindow {
                             subtitle: "Spotify-style lyrics panel & collapsed lyric ticker"
                             iconName: "lyrics"
                             checked: Config.lyrics.enabled
+                            selected: root.previewWidget === "lyrics"
+                            onHovered: root.previewWidget = "lyrics"
                             onToggled: {
+                                root.previewWidget = "lyrics";
                                 Config.lyrics.enabled = !Config.lyrics.enabled;
                                 Config.save();
                             }
@@ -511,7 +950,10 @@ PopupWindow {
                             subtitle: "Animated owl eyes when idle"
                             iconName: "visibility"
                             checked: Config.companion.enabled
+                            selected: root.previewWidget === "companion"
+                            onHovered: root.previewWidget = "companion"
                             onToggled: {
+                                root.previewWidget = "companion";
                                 Config.companion.enabled = !Config.companion.enabled;
                                 Config.save();
                             }
@@ -635,15 +1077,19 @@ PopupWindow {
         required property string subtitle
         required property string iconName
         required property bool checked
+        property bool selected: false
         signal toggled()
+        signal hovered()
 
         Layout.fillWidth: true
         implicitHeight: 40
         height: 40
         radius: 10
-        color: rowMouse.containsMouse ? "#15151e" : Config.activePalette.elevated
+        color: rowMouse.containsMouse || selected ? "#161620" : Config.activePalette.elevated
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.07)
+        border.color: selected
+            ? Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.42)
+            : Qt.rgba(1, 1, 1, 0.07)
 
         Behavior on color {
             ColorAnimation { duration: 110 }
@@ -722,6 +1168,7 @@ PopupWindow {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
+            onEntered: rowRoot.hovered()
             onClicked: rowRoot.toggled()
         }
     }

@@ -162,8 +162,22 @@ Item {
     Row {
         id: eyesRow
 
+        property real breathOffset: 0.0
+
         anchors.centerIn: parent
-        spacing: 11
+        anchors.verticalCenterOffset: breathOffset
+        spacing: root.cursorTracking ? 12 : 11
+
+        Behavior on spacing {
+            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+        }
+
+        SequentialAnimation on breathOffset {
+            running: root.active && !root.happy
+            loops: Animation.Infinite
+            NumberAnimation { to: -0.9; duration: 1500; easing.type: Easing.InOutSine }
+            NumberAnimation { to: 0.7; duration: 1500; easing.type: Easing.InOutSine }
+        }
 
         Repeater {
             model: 2
@@ -182,25 +196,32 @@ Item {
 
                 // Soft ambient OLED halo behind each eye
                 Rectangle {
+                    id: eyeHalo
                     anchors.centerIn: eyeCapsule
-                    width: eyeCapsule.width + 6
-                    height: eyeCapsule.height + 6
+                    width: eyeCapsule.width + (root.cursorTracking ? 8 : 6)
+                    height: eyeCapsule.height + (root.cursorTracking ? 8 : 6)
                     radius: Math.min(width, height) / 2
                     color: root.eyeColor
-                    opacity: root.happy ? 0.24 : 0.14 * (1.0 - root.blinkProgress * 0.8)
+                    opacity: root.happy
+                        ? 0.28
+                        : (root.cursorTracking ? 0.24 : 0.16) * (1.0 - root.blinkProgress * 0.8)
                 }
 
                 // Glowing rounded OLED eye capsule
                 Rectangle {
                     id: eyeCapsule
 
-                    width: root.happy ? 13 : 11
-                    height: Math.max(2.5, 14.5 * eyeSlot.squash)
+                    width: root.happy ? 13 : (root.cursorTracking ? 11.5 : 11)
+                    height: Math.max(2.5, (root.cursorTracking ? 15.2 : 14.5) * eyeSlot.squash)
                     radius: root.happy ? 4 : Math.min(width, height) / 2
                     x: Math.round((parent.width - width) / 2 + root.eyeOffsetX)
                     y: Math.round((parent.height - height) / 2 + root.eyeOffsetY * (1.0 - root.blinkProgress))
                     color: root.eyeColor
                     opacity: Math.max(0.28, 1.0 - root.blinkProgress * 0.65)
+
+                    Behavior on height {
+                        NumberAnimation { duration: 90; easing.type: Easing.OutCubic }
+                    }
 
                     // Subtle inner catchlight sparkle
                     Rectangle {
@@ -210,7 +231,7 @@ Item {
                         x: 2.5
                         y: 2.5
                         color: "#ffffff"
-                        opacity: 0.85
+                        opacity: 0.9
                         visible: !root.happy && parent.height >= 8
                     }
                 }

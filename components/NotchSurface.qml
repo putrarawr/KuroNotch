@@ -42,20 +42,46 @@ Item {
     property real topRadius: targetTopRadius
     property real bottomRadius: targetBottomRadius
 
+    readonly property bool isAliveActivity: accentActive
+        || surfaceState === "peek"
+        || surfaceState === "expanded"
+        || NotchController.hovered
+        || PrivacyService.recordingActive
+        || PomodoroService.running
+    property real haloBreath: 1.0
+
+    SequentialAnimation on haloBreath {
+        running: root.isAliveActivity && root.surfaceState !== "sensor" && root.surfaceState !== "strip"
+        loops: Animation.Infinite
+        NumberAnimation { to: 1.18; duration: 1700; easing.type: Easing.InOutSine }
+        NumberAnimation { to: 0.86; duration: 1700; easing.type: Easing.InOutSine }
+        onRunningChanged: {
+            if (!running)
+                root.haloBreath = 1.0;
+        }
+    }
+
     readonly property color paletteRimBase: Config.activePalette.rim
     readonly property color targetFillColor: surfaceState === "sensor" ? Config.activePalette.elevated : Config.activePalette.surface
-    readonly property color targetRimColor: surfaceState === "sensor"
-        ? Qt.rgba(paletteRimBase.r, paletteRimBase.g, paletteRimBase.b, 0.24)
-        : Qt.rgba(paletteRimBase.r, paletteRimBase.g, paletteRimBase.b, 0.11)
+    readonly property color targetRimColor: {
+        if (surfaceState === "sensor")
+            return Qt.rgba(paletteRimBase.r, paletteRimBase.g, paletteRimBase.b, NotchController.hovered ? 0.36 : 0.24);
+        if (NotchController.hovered && surfaceState !== "expanded")
+            return Qt.rgba(paletteRimBase.r, paletteRimBase.g, paletteRimBase.b, 0.22);
+        return Qt.rgba(paletteRimBase.r, paletteRimBase.g, paletteRimBase.b, 0.12);
+    }
     readonly property color targetTopRimColor: isTopFlush ? Qt.rgba(1, 1, 1, 0) : targetRimColor
     readonly property real targetGlowOpacity: {
         if (surfaceState === "sensor" || surfaceState === "strip")
             return 0.0;
+        const hoverBoost = NotchController.hovered ? 0.04 : 0.0;
         if (accentActive)
-            return surfaceState === "expanded" ? 0.17 : 0.12;
+            return ((surfaceState === "expanded" ? 0.19 : 0.14) + hoverBoost) * haloBreath;
+        if (surfaceState === "peek")
+            return (0.12 + hoverBoost) * haloBreath;
         if (Config.theme.palette !== "obsidian")
-            return surfaceState === "expanded" ? 0.09 : 0.05;
-        return surfaceState === "expanded" ? 0.035 : 0.0;
+            return (surfaceState === "expanded" ? 0.10 : 0.06) + hoverBoost;
+        return (surfaceState === "expanded" ? 0.045 : 0.02) + hoverBoost;
     }
 
     property color fillColor: targetFillColor

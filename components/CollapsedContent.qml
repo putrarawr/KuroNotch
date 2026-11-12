@@ -855,15 +855,6 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 color: "#d4845a"
             }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: root.clockText
-                font.family: "Rubik"
-                font.pixelSize: 10
-                font.weight: Font.Medium
-                color: "#72727e"
-            }
         }
     }
 
@@ -879,15 +870,39 @@ Item {
             Layout.alignment: Qt.AlignVCenter
             spacing: 6
 
-            Text {
+            Item {
                 visible: !root.recordingActive || root.pomodoroText.length > 0
                 anchors.verticalCenter: parent.verticalCenter
-                text: root.pomodoroText.length > 0 ? "timer" : root._greetBadge.icon
-                font.family: "Material Symbols Rounded"
-                font.pixelSize: 13
-                color: Config.dnd
-                    ? "#d4845a"
-                    : (root.pomodoroText.length > 0 ? "#818cf8" : root._greetBadge.tint)
+                width: 16
+                height: 16
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 16
+                    height: 16
+                    radius: 8
+                    color: Config.dnd
+                        ? "#d4845a"
+                        : (root.pomodoroText.length > 0 ? "#818cf8" : root._greetBadge.tint)
+                    opacity: 0.18
+
+                    SequentialAnimation on opacity {
+                        running: root.showDefaultStatus
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 0.08; duration: 1500; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 0.24; duration: 1500; easing.type: Easing.InOutSine }
+                    }
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: root.pomodoroText.length > 0 ? "timer" : root._greetBadge.icon
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 13
+                    color: Config.dnd
+                        ? "#d4845a"
+                        : (root.pomodoroText.length > 0 ? "#818cf8" : root._greetBadge.tint)
+                }
             }
 
             // Live Recording Activity Chip with timer + 1-click Stop
