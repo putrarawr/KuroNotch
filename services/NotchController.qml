@@ -10,7 +10,7 @@ import "../lib/notchState.js" as NotchState
 Singleton {
     id: root
 
-    readonly property int pageCount: 5
+    readonly property int pageCount: 6
 
     // Core surface and geometry state
     readonly property string surfaceState: NotchState.resolveSurfaceState({
@@ -68,6 +68,7 @@ Singleton {
         if (Config.widgets.pomodoro) list.push(2);
         if (Config.widgets.clipboard) list.push(3);
         if (Config.widgets.notifications) list.push(4);
+        if (Config.widgets.controls) list.push(5);
         return list;
     }
 
@@ -85,6 +86,7 @@ Singleton {
     property bool hasLyrics: false
     property bool pomodoroRunning: false
     property bool recordingActive: false
+    readonly property bool agentActive: Config.agent.enabled && AgentService.active
 
     // Transient alert peek state
     property var peekAlert: ({
@@ -120,6 +122,7 @@ Singleton {
         && !root.mediaPlaying
         && !root.pomodoroRunning
         && !root.recordingActive
+        && !root.agentActive
         && !root.peekAlert.active
 
     readonly property bool companionVisible: NotchState.shouldShowCompanion({
@@ -577,6 +580,10 @@ Singleton {
 
         function greet(): void {
             root.triggerGreeting(false, true);
+        }
+
+        function setAgentStatus(phase: string, label: string): void {
+            AgentService.setAgentStatus(phase, label);
         }
 
         function clearNotifs(): void {

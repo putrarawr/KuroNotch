@@ -38,6 +38,8 @@ ShellRoot {
     readonly property bool _bootQuickActions: QuickActionsService.recording
     readonly property int _bootClipboard: ClipboardService.entries?.length ?? 0
     readonly property int _bootNotifs: NotificationService.unreadCount
+    readonly property bool _bootAgent: AgentService.active
+    readonly property string _bootSystem: SystemService.powerProfile
 
     Loader {
         active: root.targetScreen !== null && root.targetScreen !== undefined

@@ -146,6 +146,7 @@ Item {
 
         readonly property var alertPayload: NotchController.peekAlert?.payload
         readonly property bool isGreetPeek: root.isPeek && (NotchController.peekAlert?.kind === "greet")
+        readonly property bool isAgentPeek: root.isPeek && (NotchController.peekAlert?.kind === "agent")
         readonly property bool isNotifPeek: root.isPeek && (NotchController.peekAlert?.kind === "notif")
         readonly property bool hasActions: Boolean(alertPayload?.actions && alertPayload.actions.length > 0)
         readonly property var notifActions: alertPayload?.actions ?? []
@@ -353,7 +354,7 @@ Item {
                     Image {
                         id: peekNotifImg
                         anchors.fill: parent
-                        source: (!peekPillContainer.isOsdPeek && !peekPillContainer.isGreetPeek && peekPillContainer.hasActions)
+                        source: (!peekPillContainer.isOsdPeek && !peekPillContainer.isGreetPeek && !peekPillContainer.isAgentPeek && peekPillContainer.hasActions)
                             ? peekPillContainer.resolveIcon(peekPillContainer.notifIcon.length > 0 ? peekPillContainer.notifIcon : peekPillContainer.notifImage)
                             : ""
                         fillMode: Image.PreserveAspectFit
@@ -584,13 +585,96 @@ Item {
             }
         }
 
+        // Agent Done / Error Peek layout
+        RowLayout {
+            id: agentPeekLayout
+
+            readonly property bool isErr: NotchController.peekAlert?.payload?.phase === "error"
+            readonly property color badgeTone: isErr ? "#f87171" : "#a78bfa"
+
+            anchors.fill: parent
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
+            spacing: 10
+            visible: peekPillContainer.isAgentPeek
+
+            Rectangle {
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
+                Layout.alignment: Qt.AlignVCenter
+                radius: 14
+                color: Qt.rgba(agentPeekLayout.badgeTone.r, agentPeekLayout.badgeTone.g, agentPeekLayout.badgeTone.b, 0.2)
+                border.width: 1
+                border.color: Qt.rgba(agentPeekLayout.badgeTone.r, agentPeekLayout.badgeTone.g, agentPeekLayout.badgeTone.b, 0.45)
+
+                Text {
+                    anchors.centerIn: parent
+                    text: agentPeekLayout.isErr ? "error" : "auto_awesome"
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 16
+                    color: agentPeekLayout.badgeTone
+
+                    SequentialAnimation on scale {
+                        running: agentPeekLayout.visible
+                        NumberAnimation { to: 1.25; duration: 180; easing.type: Easing.OutBack }
+                        NumberAnimation { to: 1.0; duration: 240; easing.type: Easing.OutCubic }
+                    }
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
+                spacing: 1
+
+                Text {
+                    Layout.fillWidth: true
+                    text: peekPillContainer.notifTitle
+                    font.family: "Rubik"
+                    font.pixelSize: 12
+                    font.weight: Font.DemiBold
+                    color: "#f4f4f6"
+                    elide: Text.ElideRight
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    visible: text.length > 0
+                    text: peekPillContainer.notifSubtitle
+                    font.family: "Rubik"
+                    font.pixelSize: 10
+                    font.weight: Font.Normal
+                    color: "#b0b0bc"
+                    elide: Text.ElideRight
+                }
+            }
+
+            Rectangle {
+                Layout.preferredWidth: 26
+                Layout.preferredHeight: 26
+                Layout.alignment: Qt.AlignVCenter
+                radius: 13
+                color: Qt.rgba(74 / 255, 222 / 255, 128 / 255, agentPeekLayout.isErr ? 0.08 : 0.16)
+                border.width: 1
+                border.color: Qt.rgba(74 / 255, 222 / 255, 128 / 255, agentPeekLayout.isErr ? 0.16 : 0.35)
+
+                Text {
+                    anchors.centerIn: parent
+                    text: agentPeekLayout.isErr ? "close" : "check_circle"
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 15
+                    color: agentPeekLayout.isErr ? "#fca5a5" : "#4ade80"
+                }
+            }
+        }
+
         // Notification / peek layout WITHOUT actions (standard 40px height)
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: 12
             anchors.rightMargin: 10
             spacing: 8
-            visible: !peekPillContainer.isOsdPeek && !peekPillContainer.isGreetPeek && !peekPillContainer.hasActions
+            visible: !peekPillContainer.isOsdPeek && !peekPillContainer.isGreetPeek && !peekPillContainer.isAgentPeek && !peekPillContainer.hasActions
 
             Rectangle {
                 Layout.preferredWidth: 20
@@ -602,7 +686,7 @@ Item {
                 Image {
                     id: peekNotifCompactImg
                     anchors.fill: parent
-                    source: (!peekPillContainer.isOsdPeek && !peekPillContainer.isGreetPeek && !peekPillContainer.hasActions)
+                    source: (!peekPillContainer.isOsdPeek && !peekPillContainer.isGreetPeek && !peekPillContainer.isAgentPeek && !peekPillContainer.hasActions)
                         ? peekPillContainer.resolveIcon(peekPillContainer.notifIcon.length > 0 ? peekPillContainer.notifIcon : peekPillContainer.notifImage)
                         : ""
                     fillMode: Image.PreserveAspectFit
@@ -871,7 +955,7 @@ Item {
             spacing: 6
 
             Item {
-                visible: !root.recordingActive || root.pomodoroText.length > 0
+                visible: (!root.recordingActive && !NotchController.agentActive) || root.pomodoroText.length > 0
                 anchors.verticalCenter: parent.verticalCenter
                 width: 16
                 height: 16
@@ -902,6 +986,60 @@ Item {
                     color: Config.dnd
                         ? "#d4845a"
                         : (root.pomodoroText.length > 0 ? "#818cf8" : root._greetBadge.tint)
+                }
+            }
+
+            // Live AI Agent Working Chip
+            Rectangle {
+                visible: NotchController.agentActive && !root.recordingActive && root.pomodoroText.length === 0
+                anchors.verticalCenter: parent.verticalCenter
+                height: 18
+                width: agentLiveRow.implicitWidth + 12
+                radius: 9
+                color: Qt.rgba(167 / 255, 139 / 255, 250 / 255, 0.18)
+                border.width: 1
+                border.color: Qt.rgba(167 / 255, 139 / 255, 250 / 255, 0.45)
+
+                Row {
+                    id: agentLiveRow
+
+                    anchors.centerIn: parent
+                    spacing: 4
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "auto_awesome"
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 11
+                        color: "#c4b5fd"
+
+                        SequentialAnimation on opacity {
+                            running: NotchController.agentActive
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.45; duration: 650; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: 1.0; duration: 650; easing.type: Easing.InOutSine }
+                        }
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.min(implicitWidth, 108)
+                        elide: Text.ElideRight
+                        text: AgentService.statusLabel.length > 0 ? AgentService.statusLabel : "AI Working..."
+                        font.family: "Rubik"
+                        font.pixelSize: 10
+                        font.weight: Font.DemiBold
+                        color: "#ede9fe"
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: AgentService.formattedElapsed
+                        font.family: "Rubik"
+                        font.pixelSize: 9
+                        font.weight: Font.Medium
+                        color: "#c4b5fd"
+                    }
                 }
             }
 
@@ -966,7 +1104,7 @@ Item {
             }
 
             Text {
-                visible: !root.recordingActive || root.pomodoroText.length > 0
+                visible: (!root.recordingActive && !NotchController.agentActive) || root.pomodoroText.length > 0
                 anchors.verticalCenter: parent.verticalCenter
                 width: Math.min(implicitWidth, 96)
                 elide: Text.ElideRight
@@ -1012,7 +1150,7 @@ Item {
             }
 
             Text {
-                visible: !root.recordingActive && root.dateText.length > 0
+                visible: !root.recordingActive && !NotchController.agentActive && root.dateText.length > 0
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.dateText
                 font.family: "Rubik"
@@ -1022,7 +1160,7 @@ Item {
             }
 
             Text {
-                visible: !root.recordingActive && root.dateText.length > 0
+                visible: !root.recordingActive && !NotchController.agentActive && root.dateText.length > 0
                 anchors.verticalCenter: parent.verticalCenter
                 text: "·"
                 font.family: "Rubik"

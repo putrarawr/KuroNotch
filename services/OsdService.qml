@@ -252,6 +252,47 @@ Singleton {
         }
     }
 
+    readonly property real currentVolumeRatio: (root.sink?.ready && root.sink?.audio)
+        ? Math.max(0, Math.min(1.0, Number(root.sink.audio.volume) || 0))
+        : Math.max(0, Math.min(1.0, root._lastSinkVol >= 0 ? root._lastSinkVol : 0))
+    readonly property bool currentVolumeMuted: (root.sink?.ready && root.sink?.audio)
+        ? Boolean(root.sink.audio.muted)
+        : Boolean(root._lastSinkMuted)
+    readonly property real currentBrightnessRatio: root._brightnessInitialized
+        ? Math.max(0.01, Math.min(1.0, root._lastBrightness))
+        : 0.7
+
+    function setVolumeDirect(ratio: real): void {
+        if (typeof ratio !== "number" || !isFinite(ratio))
+            return;
+        const clamped = Math.max(0.0, Math.min(1.0, ratio));
+        if (root.sink?.ready && root.sink?.audio) {
+            root._lastSinkVol = clamped;
+            if (clamped > 0 && root.sink.audio.muted) {
+                root._lastSinkMuted = false;
+                root.sink.audio.muted = false;
+            }
+            root.sink.audio.volume = clamped;
+        }
+    }
+
+    function toggleMuteDirect(): void {
+        if (root.sink?.ready && root.sink?.audio) {
+            const next = !Boolean(root.sink.audio.muted);
+            root._lastSinkMuted = next;
+            root.sink.audio.muted = next;
+        }
+    }
+
+    function setBrightnessDirect(ratio: real): void {
+        if (typeof ratio !== "number" || !isFinite(ratio))
+            return;
+        const clamped = Math.max(0.05, Math.min(1.0, ratio));
+        root._lastBrightness = clamped;
+        root._brightnessInitialized = true;
+        root._applyBrightness(clamped);
+    }
+
     onSinkChanged: {
         root._trackedSinkNode = null;
         root._snapshotSink();

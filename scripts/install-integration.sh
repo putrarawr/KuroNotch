@@ -219,4 +219,65 @@ if ! pgrep -f "wl-paste --type image --watch cliphist store" >/dev/null 2>&1; th
     setsid wl-paste --type image --watch cliphist store </dev/null >/dev/null 2>&1 &
 fi
 
+# 6. Install Antigravity AI agent hook script & register in ~/.gemini/config/hooks.json
+echo "[6/6] Configuring Antigravity AI agent status & completion hook..."
+cp "$REPO_DIR/scripts/island-notch-agent-hook" "$BIN_DIR/island-notch-agent-hook"
+chmod +x "$BIN_DIR/island-notch-agent-hook"
+
+GEMINI_HOOKS="$HOME/.gemini/config/hooks.json"
+if [ -f "$GEMINI_HOOKS" ]; then
+    cp "$GEMINI_HOOKS" "${GEMINI_HOOKS}.bak.${TIMESTAMP}"
+    echo "  -> Backup created: ${GEMINI_HOOKS}.bak.${TIMESTAMP}"
+fi
+
+mkdir -p "$(dirname "$GEMINI_HOOKS")"
+python3 - <<EOF
+import json, os
+
+hooks_path = os.path.expanduser("$GEMINI_HOOKS")
+hook_cmd = os.path.expanduser("~/.local/bin/island-notch-agent-hook")
+
+if os.path.exists(hooks_path):
+    with open(hooks_path, "r", encoding="utf-8") as f:
+        try:
+            data = json.load(f)
+        except Exception:
+            data = {}
+else:
+    data = {}
+
+data["island-notch-agent"] = {
+    "PreInvocation": [
+        {
+            "type": "command",
+            "command": f"'{hook_cmd}' PreInvocation",
+            "timeout": 5
+        }
+    ],
+    "PostToolUse": [
+        {
+            "matcher": "*",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": f"'{hook_cmd}' PostToolUse",
+                    "timeout": 5
+                }
+            ]
+        }
+    ],
+    "Stop": [
+        {
+            "type": "command",
+            "command": f"'{hook_cmd}' Stop",
+            "timeout": 5
+        }
+    ]
+}
+
+with open(hooks_path, "w", encoding="utf-8") as f:
+    json.dump(data, f, indent=2)
+EOF
+echo "  -> Registered island-notch-agent hooks in $GEMINI_HOOKS"
+
 echo "=== Island Notch Installation Completed Successfully ==="

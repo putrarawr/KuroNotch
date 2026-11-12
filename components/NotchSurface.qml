@@ -48,6 +48,7 @@ Item {
         || NotchController.hovered
         || PrivacyService.recordingActive
         || PomodoroService.running
+        || NotchController.agentActive
     property real haloBreath: 1.0
 
     SequentialAnimation on haloBreath {
@@ -64,8 +65,11 @@ Item {
     readonly property color paletteRimBase: Config.activePalette.rim
     readonly property color targetFillColor: surfaceState === "sensor" ? Config.activePalette.elevated : Config.activePalette.surface
     readonly property color targetRimColor: {
-        if (surfaceState === "sensor")
+        if (surfaceState === "sensor") {
+            if (NotchController.agentActive)
+                return Qt.rgba(167 / 255, 139 / 255, 250 / 255, 0.72);
             return Qt.rgba(paletteRimBase.r, paletteRimBase.g, paletteRimBase.b, NotchController.hovered ? 0.36 : 0.24);
+        }
         if (NotchController.hovered && surfaceState !== "expanded")
             return Qt.rgba(paletteRimBase.r, paletteRimBase.g, paletteRimBase.b, 0.22);
         return Qt.rgba(paletteRimBase.r, paletteRimBase.g, paletteRimBase.b, 0.12);

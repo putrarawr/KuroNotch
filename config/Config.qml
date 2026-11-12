@@ -76,11 +76,17 @@ Singleton {
         property bool adaptiveAlbumAccent: true
     }
 
+    property QtObject agent: QtObject {
+        property bool enabled: true
+        property bool soundEnabled: true
+    }
+
     property QtObject widgets: QtObject {
         property bool shelf: true
         property bool pomodoro: true
         property bool clipboard: true
         property bool notifications: true
+        property bool controls: true
     }
 
     readonly property string wallpaperSchemePath: `${Quickshell.env("HOME")}/.local/state/caelestia/scheme.json`
@@ -163,11 +169,16 @@ Singleton {
                 "palette": root.theme.palette,
                 "adaptiveAlbumAccent": root.theme.adaptiveAlbumAccent
             },
+            "agent": {
+                "enabled": root.agent.enabled,
+                "soundEnabled": root.agent.soundEnabled
+            },
             "widgets": {
                 "shelf": root.widgets.shelf,
                 "pomodoro": root.widgets.pomodoro,
                 "clipboard": root.widgets.clipboard,
-                "notifications": root.widgets.notifications
+                "notifications": root.widgets.notifications,
+                "controls": root.widgets.controls
             }
         };
     }
@@ -233,11 +244,17 @@ Singleton {
             }
         }
 
+        if (data.agent && typeof data.agent === "object") {
+            if (typeof data.agent.enabled === "boolean") root.agent.enabled = data.agent.enabled;
+            if (typeof data.agent.soundEnabled === "boolean") root.agent.soundEnabled = data.agent.soundEnabled;
+        }
+
         if (data.widgets && typeof data.widgets === "object") {
             if (typeof data.widgets.shelf === "boolean") root.widgets.shelf = data.widgets.shelf;
             if (typeof data.widgets.pomodoro === "boolean") root.widgets.pomodoro = data.widgets.pomodoro;
             if (typeof data.widgets.clipboard === "boolean") root.widgets.clipboard = data.widgets.clipboard;
             if (typeof data.widgets.notifications === "boolean") root.widgets.notifications = data.widgets.notifications;
+            if (typeof data.widgets.controls === "boolean") root.widgets.controls = data.widgets.controls;
         }
     }
 

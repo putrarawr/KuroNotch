@@ -41,8 +41,8 @@ PanelWindow {
                     radius: hasLyric ? Math.round(targetHeight / 2) : base.radius
                 };
             }
-            const idleTargetWidth = (PrivacyService.recordingActive || PomodoroService.running)
-                ? (PrivacyService.recordingActive ? 292 : 272)
+            const idleTargetWidth = (PrivacyService.recordingActive || PomodoroService.running || NotchController.agentActive)
+                ? (PrivacyService.recordingActive ? 292 : (NotchController.agentActive ? 288 : 272))
                 : (NotchController.companionVisible
                     ? ((Config.dnd || PrivacyService.micActive) ? 132 : 116)
                     : Math.max(base.width, 268));
@@ -383,8 +383,8 @@ PanelWindow {
             targetGeometry: root.effectiveGeometry
             accentColor: (MediaService.playing && Config.theme.adaptiveAlbumAccent)
                 ? MediaService.accentColor
-                : Config.activePalette.accent
-            accentActive: MediaService.playing && Config.theme.adaptiveAlbumAccent
+                : (NotchController.agentActive ? "#a78bfa" : Config.activePalette.accent)
+            accentActive: (MediaService.playing && Config.theme.adaptiveAlbumAccent) || NotchController.agentActive
 
             HoverHandler {
                 id: surfaceHoverHandler
@@ -549,6 +549,12 @@ PanelWindow {
 
                             // Page 4: Notification Island (Task 9)
                             NotificationsPage {
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
+                            // Page 5: System Monitor & Quick Control Center
+                            ControlMonitorPage {
                                 width: carouselViewport.width
                                 height: carouselViewport.height
                             }

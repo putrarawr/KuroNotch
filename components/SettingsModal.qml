@@ -24,6 +24,8 @@ PopupWindow {
             return Config.widgets.clipboard;
         if (previewWidget === "notifications")
             return Config.widgets.notifications;
+        if (previewWidget === "controls")
+            return Config.widgets.controls;
         if (previewWidget === "lyrics")
             return Config.lyrics.enabled;
         return Config.companion.enabled;
@@ -496,6 +498,7 @@ PopupWindow {
                                         if (root.previewWidget === "pomodoro") return "PREVIEW · FOCUS & QUICK ACTIONS";
                                         if (root.previewWidget === "clipboard") return "PREVIEW · CLIPBOARD STASH";
                                         if (root.previewWidget === "notifications") return "PREVIEW · NOTIFICATION ISLAND";
+                                        if (root.previewWidget === "controls") return "PREVIEW · CONTROL & MONITOR";
                                         if (root.previewWidget === "lyrics") return "PREVIEW · SYNC LYRICS";
                                         return "PREVIEW · COMPANION EYES";
                                     }
@@ -863,6 +866,53 @@ PopupWindow {
                                         }
                                     }
                                 }
+
+                                // 7. Control Center & System Monitor Preview
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 10
+                                    visible: root.previewWidget === "controls"
+
+                                    Repeater {
+                                        model: [
+                                            { icon: "monitoring", lbl: "CPU 18%", c: "#38bdf8" },
+                                            { icon: "thermostat", lbl: "58°C", c: "#fb923c" },
+                                            { icon: "tune", lbl: "Controls", c: "#a78bfa" }
+                                        ]
+
+                                        delegate: Rectangle {
+                                            required property var modelData
+                                            width: 96
+                                            height: 36
+                                            radius: 9
+                                            color: "#111119"
+                                            border.width: 1
+                                            border.color: Qt.rgba(Qt.color(modelData.c).r, Qt.color(modelData.c).g, Qt.color(modelData.c).b, 0.35)
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 5
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: modelData.icon
+                                                    font.family: "Material Symbols Rounded"
+                                                    font.pixelSize: 14
+                                                    color: modelData.c
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: modelData.lbl
+                                                    font.family: "Rubik"
+                                                    font.pixelSize: 10
+                                                    font.weight: Font.Medium
+                                                    color: "#e4e4ec"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -927,6 +977,20 @@ PopupWindow {
                             onToggled: {
                                 root.previewWidget = "notifications";
                                 Config.widgets.notifications = !Config.widgets.notifications;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Control Center & Monitor"
+                            subtitle: "CPU, RAM, Temp, Power Profile, Volume/Brightness & BT"
+                            iconName: "monitoring"
+                            checked: Config.widgets.controls
+                            selected: root.previewWidget === "controls"
+                            onHovered: root.previewWidget = "controls"
+                            onToggled: {
+                                root.previewWidget = "controls";
+                                Config.widgets.controls = !Config.widgets.controls;
                                 Config.save();
                             }
                         }
@@ -1025,6 +1089,28 @@ PopupWindow {
                             checked: Config.pomodoro.chimeEnabled
                             onToggled: {
                                 Config.pomodoro.chimeEnabled = !Config.pomodoro.chimeEnabled;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "AI Agent Live Status"
+                            subtitle: "Show live indicator while Antigravity is working"
+                            iconName: "auto_awesome"
+                            checked: Config.agent.enabled
+                            onToggled: {
+                                Config.agent.enabled = !Config.agent.enabled;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "AI Agent Completion Sound"
+                            subtitle: "Play chime + popup when AI response completes"
+                            iconName: "campaign"
+                            checked: Config.agent.soundEnabled
+                            onToggled: {
+                                Config.agent.soundEnabled = !Config.agent.soundEnabled;
                                 Config.save();
                             }
                         }
