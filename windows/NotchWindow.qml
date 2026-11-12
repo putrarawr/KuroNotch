@@ -438,23 +438,15 @@ PanelWindow {
                         }
 
                         // Page 2: Pomodoro & Quick Tools (Task 8)
-                        PlaceholderPage {
+                        PomodoroToolsPage {
                             width: carouselViewport.width
                             height: carouselViewport.height
-                            iconName: "schedule"
-                            title: "Pomodoro & Quick Tools"
-                            subtitle: "Focus intervals, screenshots, color picker, and screen recording"
-                            taskLabel: "Coming in Task 8"
                         }
 
                         // Page 3: Clipboard Stash (Task 8)
-                        PlaceholderPage {
+                        ClipboardPage {
                             width: carouselViewport.width
                             height: carouselViewport.height
-                            iconName: "list"
-                            title: "Clipboard Stash"
-                            subtitle: "Search cliphist entries, preview images, and copy items back"
-                            taskLabel: "Coming in Task 8"
                         }
 
                         // Page 4: Notification Island (Task 9)

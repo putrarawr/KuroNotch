@@ -34,6 +34,9 @@ ShellRoot {
     readonly property string _bootOsd: OsdService.kind
     readonly property bool _bootPrivacy: PrivacyService.micActive || PrivacyService.recordingActive
     readonly property int _bootShelfCount: ShelfService.count
+    readonly property bool _bootPomodoro: PomodoroService.running
+    readonly property bool _bootQuickActions: QuickActionsService.recording
+    readonly property int _bootClipboard: ClipboardService.entries?.length ?? 0
 
     Loader {
         active: root.targetScreen !== null && root.targetScreen !== undefined

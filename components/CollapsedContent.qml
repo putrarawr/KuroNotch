@@ -11,7 +11,9 @@ Item {
     property string clockText: Qt.formatTime(new Date(), "hh:mm")
     property bool micActive: PrivacyService.micActive
     property bool recordingActive: NotchController.recordingActive
-    property string pomodoroText: ""
+    property string pomodoroText: PomodoroService.running
+        ? ((PomodoroService.phase === "focus" ? "Focus " : "Break ") + PomodoroService.formattedRemaining)
+        : ""
 
     readonly property string surfaceState: NotchController.surfaceState
     readonly property bool isStrip: surfaceState === "strip"
