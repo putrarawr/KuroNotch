@@ -11,7 +11,11 @@ function normalizeRealm(val) {
     if (val === null || val === undefined) return val;
     if (typeof val === "object") {
         if (Array.isArray(val)) {
-            return val.map(normalizeRealm);
+            const hostArr = [];
+            for (let i = 0; i < val.length; i++) {
+                hostArr.push(normalizeRealm(val[i]));
+            }
+            return hostArr;
         }
         const hostObj = {};
         for (const [k, v] of Object.entries(val)) {
