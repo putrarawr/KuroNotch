@@ -10,7 +10,7 @@ import "../lib/notchState.js" as NotchState
 Singleton {
     id: root
 
-    readonly property int pageCount: 6
+    readonly property int pageCount: 7
 
     // Core surface and geometry state
     readonly property string surfaceState: NotchState.resolveSurfaceState({
@@ -69,6 +69,7 @@ Singleton {
         if (Config.widgets.clipboard) list.push(3);
         if (Config.widgets.notifications) list.push(4);
         if (Config.widgets.controls) list.push(5);
+        if (Config.widgets.calendar) list.push(6);
         return list;
     }
 

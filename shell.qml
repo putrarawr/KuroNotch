@@ -40,6 +40,7 @@ ShellRoot {
     readonly property int _bootNotifs: NotificationService.unreadCount
     readonly property bool _bootAgent: AgentService.active
     readonly property string _bootSystem: SystemService.powerProfile
+    readonly property int _bootCalendar: CalendarService.todayPendingCount
 
     Loader {
         active: root.targetScreen !== null && root.targetScreen !== undefined

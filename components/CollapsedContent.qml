@@ -146,7 +146,8 @@ Item {
 
         readonly property var alertPayload: NotchController.peekAlert?.payload
         readonly property bool isGreetPeek: root.isPeek && (NotchController.peekAlert?.kind === "greet")
-        readonly property bool isAgentPeek: root.isPeek && (NotchController.peekAlert?.kind === "agent")
+        readonly property bool isCalendarPeek: root.isPeek && (NotchController.peekAlert?.kind === "calendar")
+        readonly property bool isAgentPeek: root.isPeek && (NotchController.peekAlert?.kind === "agent" || NotchController.peekAlert?.kind === "calendar")
         readonly property bool isNotifPeek: root.isPeek && (NotchController.peekAlert?.kind === "notif")
         readonly property bool hasActions: Boolean(alertPayload?.actions && alertPayload.actions.length > 0)
         readonly property var notifActions: alertPayload?.actions ?? []
@@ -585,12 +586,13 @@ Item {
             }
         }
 
-        // Agent Done / Error Peek layout
+        // Agent Done / Error / Calendar Reminder Peek layout
         RowLayout {
             id: agentPeekLayout
 
             readonly property bool isErr: NotchController.peekAlert?.payload?.phase === "error"
-            readonly property color badgeTone: isErr ? "#f87171" : "#a78bfa"
+            readonly property bool isCal: peekPillContainer.isCalendarPeek
+            readonly property color badgeTone: isErr ? "#f87171" : (isCal ? "#38bdf8" : "#a78bfa")
 
             anchors.fill: parent
             anchors.leftMargin: 12
@@ -609,7 +611,7 @@ Item {
 
                 Text {
                     anchors.centerIn: parent
-                    text: agentPeekLayout.isErr ? "error" : "auto_awesome"
+                    text: agentPeekLayout.isErr ? "error" : (agentPeekLayout.isCal ? "event_upcoming" : "auto_awesome")
                     font.family: "Material Symbols Rounded"
                     font.pixelSize: 16
                     color: agentPeekLayout.badgeTone
@@ -654,16 +656,26 @@ Item {
                 Layout.preferredHeight: 26
                 Layout.alignment: Qt.AlignVCenter
                 radius: 13
-                color: Qt.rgba(74 / 255, 222 / 255, 128 / 255, agentPeekLayout.isErr ? 0.08 : 0.16)
+                color: Qt.rgba(
+                    agentPeekLayout.isErr ? 239 / 255 : (agentPeekLayout.isCal ? 56 / 255 : 74 / 255),
+                    agentPeekLayout.isErr ? 68 / 255 : (agentPeekLayout.isCal ? 189 / 255 : 222 / 255),
+                    agentPeekLayout.isErr ? 68 / 255 : (agentPeekLayout.isCal ? 248 / 255 : 128 / 255),
+                    0.16
+                )
                 border.width: 1
-                border.color: Qt.rgba(74 / 255, 222 / 255, 128 / 255, agentPeekLayout.isErr ? 0.16 : 0.35)
+                border.color: Qt.rgba(
+                    agentPeekLayout.isErr ? 239 / 255 : (agentPeekLayout.isCal ? 56 / 255 : 74 / 255),
+                    agentPeekLayout.isErr ? 68 / 255 : (agentPeekLayout.isCal ? 189 / 255 : 222 / 255),
+                    agentPeekLayout.isErr ? 68 / 255 : (agentPeekLayout.isCal ? 248 / 255 : 128 / 255),
+                    0.35
+                )
 
                 Text {
                     anchors.centerIn: parent
-                    text: agentPeekLayout.isErr ? "close" : "check_circle"
+                    text: agentPeekLayout.isErr ? "close" : (agentPeekLayout.isCal ? "notifications_active" : "check_circle")
                     font.family: "Material Symbols Rounded"
                     font.pixelSize: 15
-                    color: agentPeekLayout.isErr ? "#fca5a5" : "#4ade80"
+                    color: agentPeekLayout.isErr ? "#fca5a5" : (agentPeekLayout.isCal ? "#7dd3fc" : "#4ade80")
                 }
             }
         }

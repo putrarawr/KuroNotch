@@ -558,6 +558,12 @@ PanelWindow {
                                 width: carouselViewport.width
                                 height: carouselViewport.height
                             }
+
+                            // Page 6: Mini Calendar & Agenda / To-Do
+                            CalendarPage {
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
                         }
 
                         // Stacked above pageStrip so Shift+Wheel & horizontal swipes intercept before child Flickables

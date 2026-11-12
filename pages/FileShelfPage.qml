@@ -328,11 +328,11 @@ Item {
                     ? (NotchController.dragActive ? 1.015 : 1.0)
                     : 0.94
                 radius: 12
-                color: NotchController.dragActive ? "#13131b" : "#0d0d11"
-                border.width: NotchController.dragActive ? 1.5 : 1
+                color: NotchController.dragActive ? "#13131b" : "transparent"
+                border.width: NotchController.dragActive ? 1.5 : 0
                 border.color: NotchController.dragActive
                     ? Qt.rgba(root.activeAccent.r, root.activeAccent.g, root.activeAccent.b, 0.55)
-                    : Qt.rgba(1, 1, 1, 0.08)
+                    : "transparent"
 
                 Behavior on opacity {
                     NumberAnimation { duration: 190; easing.type: Easing.OutCubic }

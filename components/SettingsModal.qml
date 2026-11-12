@@ -26,6 +26,8 @@ PopupWindow {
             return Config.widgets.notifications;
         if (previewWidget === "controls")
             return Config.widgets.controls;
+        if (previewWidget === "calendar")
+            return Config.widgets.calendar;
         if (previewWidget === "lyrics")
             return Config.lyrics.enabled;
         return Config.companion.enabled;
@@ -499,6 +501,7 @@ PopupWindow {
                                         if (root.previewWidget === "clipboard") return "PREVIEW · CLIPBOARD STASH";
                                         if (root.previewWidget === "notifications") return "PREVIEW · NOTIFICATION ISLAND";
                                         if (root.previewWidget === "controls") return "PREVIEW · CONTROL & MONITOR";
+                                        if (root.previewWidget === "calendar") return "PREVIEW · MINI CALENDAR";
                                         if (root.previewWidget === "lyrics") return "PREVIEW · SYNC LYRICS";
                                         return "PREVIEW · COMPANION EYES";
                                     }
@@ -913,6 +916,75 @@ PopupWindow {
                                         }
                                     }
                                 }
+                                // 8. Mini Calendar & Agenda Preview
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 10
+                                    visible: root.previewWidget === "calendar"
+
+                                    Rectangle {
+                                        width: 82
+                                        height: 36
+                                        radius: 9
+                                        color: "#111119"
+                                        border.width: 1
+                                        border.color: Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.35)
+
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 5
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "calendar_month"
+                                                font.family: "Material Symbols Rounded"
+                                                font.pixelSize: 14
+                                                color: Config.activePalette.accent
+                                            }
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "12 Nov"
+                                                font.family: "Rubik"
+                                                font.pixelSize: 10
+                                                font.weight: Font.DemiBold
+                                                color: "#f4f4f6"
+                                            }
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        width: 196
+                                        height: 36
+                                        radius: 9
+                                        color: "#111119"
+                                        border.width: 1
+                                        border.color: Qt.rgba(167 / 255, 139 / 255, 250 / 255, 0.35)
+
+                                        Row {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            anchors.left: parent.left
+                                            anchors.leftMargin: 8
+                                            spacing: 6
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "event_upcoming"
+                                                font.family: "Material Symbols Rounded"
+                                                font.pixelSize: 13
+                                                color: "#a78bfa"
+                                            }
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "19:30 · Agenda Reminder"
+                                                font.family: "Rubik"
+                                                font.pixelSize: 10
+                                                color: "#e4e4ec"
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -991,6 +1063,20 @@ PopupWindow {
                             onToggled: {
                                 root.previewWidget = "controls";
                                 Config.widgets.controls = !Config.widgets.controls;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Mini Calendar & Agenda"
+                            subtitle: "Monthly view, to-do checklist, and timed reminder alerts"
+                            iconName: "calendar_month"
+                            checked: Config.widgets.calendar
+                            selected: root.previewWidget === "calendar"
+                            onHovered: root.previewWidget = "calendar"
+                            onToggled: {
+                                root.previewWidget = "calendar";
+                                Config.widgets.calendar = !Config.widgets.calendar;
                                 Config.save();
                             }
                         }

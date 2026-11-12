@@ -18,20 +18,16 @@ Item {
         spacing: 10
 
         // ==========================================
-        // Left Card: System Telemetry & Power Mode
+        // Left Section: Borderless System Telemetry & Power Mode
         // ==========================================
-        Rectangle {
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.preferredWidth: 232
-            radius: 12
-            color: Config.activePalette.elevated
-            border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.08)
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: 6
                 spacing: 8
 
                 RowLayout {
@@ -175,21 +171,26 @@ Item {
             }
         }
 
-        // ==========================================
-        // Right Card: Quick Control Center
-        // ==========================================
+        // Hairline vertical separator
         Rectangle {
+            Layout.fillHeight: true
+            Layout.topMargin: 6
+            Layout.bottomMargin: 6
+            width: 1
+            color: Qt.rgba(1, 1, 1, 0.07)
+        }
+
+        // ==========================================
+        // Right Section: Borderless Quick Control Center
+        // ==========================================
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.preferredWidth: 264
-            radius: 12
-            color: Config.activePalette.elevated
-            border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.08)
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: 6
                 spacing: 8
 
                 RowLayout {

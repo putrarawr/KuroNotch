@@ -21,26 +21,16 @@ Item {
         spacing: 10
 
         // ==========================================
-        // Left Card: Pomodoro Focus Timer
+        // Left Section: Borderless Pomodoro Timer
         // ==========================================
-        Rectangle {
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.preferredWidth: 230
-            radius: 12
-            color: Config.activePalette.elevated
-            border.width: 1
-            border.color: PomodoroService.running
-                ? Qt.rgba(root.phaseColor.r, root.phaseColor.g, root.phaseColor.b, 0.34)
-                : Qt.rgba(1, 1, 1, 0.08)
-
-            Behavior on border.color {
-                ColorAnimation { duration: 200 }
-            }
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: 6
                 spacing: 6
 
                 // Top Header: Phase, Cycle, and Chime Toggle
@@ -371,21 +361,26 @@ Item {
             }
         }
 
-        // ==========================================
-        // Right Card: Spacious Horizontal Quick Actions
-        // ==========================================
+        // Hairline vertical separator
         Rectangle {
+            Layout.fillHeight: true
+            Layout.topMargin: 6
+            Layout.bottomMargin: 6
+            width: 1
+            color: Qt.rgba(1, 1, 1, 0.07)
+        }
+
+        // ==========================================
+        // Right Section: Borderless Quick Actions
+        // ==========================================
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.preferredWidth: 266
-            radius: 12
-            color: Config.activePalette.elevated
-            border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.08)
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: 6
                 spacing: 8
 
                 // Header
