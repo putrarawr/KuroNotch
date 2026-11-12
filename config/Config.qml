@@ -43,6 +43,19 @@ Singleton {
     property QtObject companion: QtObject {
         property bool enabled: true
         property int idleSeconds: 8
+        property bool greetingEnabled: true
+        property int greetingIntervalMin: 5
+        property string greetingName: ""
+    }
+
+    readonly property string resolvedGreetingName: {
+        const custom = (companion.greetingName || "").trim();
+        if (custom.length > 0)
+            return custom;
+        const rawUser = (Quickshell.env("USER") || "Friend").trim();
+        if (rawUser.length === 0)
+            return "Friend";
+        return rawUser.charAt(0).toUpperCase() + rawUser.slice(1);
     }
 
     property QtObject pomodoro: QtObject {
@@ -129,7 +142,10 @@ Singleton {
             },
             "companion": {
                 "enabled": root.companion.enabled,
-                "idleSeconds": root.companion.idleSeconds
+                "idleSeconds": root.companion.idleSeconds,
+                "greetingEnabled": root.companion.greetingEnabled,
+                "greetingIntervalMin": root.companion.greetingIntervalMin,
+                "greetingName": root.companion.greetingName
             },
             "pomodoro": {
                 "focusMin": root.pomodoro.focusMin,
@@ -183,6 +199,9 @@ Singleton {
         if (data.companion && typeof data.companion === "object") {
             if (typeof data.companion.enabled === "boolean") root.companion.enabled = data.companion.enabled;
             if (typeof data.companion.idleSeconds === "number") root.companion.idleSeconds = data.companion.idleSeconds;
+            if (typeof data.companion.greetingEnabled === "boolean") root.companion.greetingEnabled = data.companion.greetingEnabled;
+            if (typeof data.companion.greetingIntervalMin === "number") root.companion.greetingIntervalMin = data.companion.greetingIntervalMin;
+            if (typeof data.companion.greetingName === "string") root.companion.greetingName = data.companion.greetingName;
         }
 
         if (data.pomodoro && typeof data.pomodoro === "object") {

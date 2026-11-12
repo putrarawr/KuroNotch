@@ -412,11 +412,78 @@ Singleton {
             idleTimer.restart();
     }
 
+    property int _greetingCycle: 0
+
+    function _timeOfDayInfo(): var {
+        const now = new Date();
+        const h = now.getHours();
+        const name = Config.resolvedGreetingName;
+        if (h >= 5 && h < 11) {
+            return {
+                period: "pagi",
+                salute: `Selamat pagi, ${name}`,
+                shortLabel: `Pagi, ${name}`,
+                icon: "wb_twilight",
+                notes: ["Siap mulai hari?", "Jangan lupa sarapan ya", "Fokus pelan-pelan hari ini"]
+            };
+        }
+        if (h >= 11 && h < 15) {
+            return {
+                period: "siang",
+                salute: `Selamat siang, ${name}`,
+                shortLabel: `Siang, ${name}`,
+                icon: "wb_sunny",
+                notes: ["Jangan lupa minum air", "Lagi fokus kerja nih?", "Istirahat mata sebentar yuk"]
+            };
+        }
+        if (h >= 15 && h < 18) {
+            return {
+                period: "sore",
+                salute: `Selamat sore, ${name}`,
+                shortLabel: `Sore, ${name}`,
+                icon: "wb_sunny",
+                notes: ["Sore santai, tetap semangat!", "Tarik napas sebentar yuk", "Ada lagu asik buat nemenin?"]
+            };
+        }
+        return {
+            period: "malam",
+            salute: `Selamat malam, ${name}`,
+            shortLabel: `Malam, ${name}`,
+            icon: "nights_stay",
+            notes: ["Mode malam aktif", "Jangan lupa istirahat cukup ya", "Lembur santai ditemani musik"]
+        };
+    }
+
+    function triggerGreeting(isStartup: bool, forceManual: bool): void {
+        if (!forceManual) {
+            if (!Config.companion.greetingEnabled || Config.dnd || root.expanded || root.peekAlert?.active)
+                return;
+            if (!isStartup && (root.mediaPlaying || root.pomodoroRunning || root.recordingActive))
+                return;
+        }
+        const info = root._timeOfDayInfo();
+        const noteList = info.notes;
+        const subtitle = isStartup
+            ? `Halo ${Config.resolvedGreetingName} · ${Qt.formatDate(new Date(), "ddd, d MMM")}`
+            : noteList[root._greetingCycle % noteList.length];
+        root._greetingCycle += 1;
+
+        root.triggerPeek("greet", 1, {
+            title: isStartup ? info.salute : `Hai ${Config.resolvedGreetingName}!`,
+            subtitle: subtitle,
+            icon: info.icon,
+            durationMs: 3800,
+            alertHint: { width: 320, height: 48 }
+        });
+    }
+
     Component.onCompleted: {
         if (Config.pinned)
             root.expanded = true;
         if (root.companionEligible)
             idleTimer.restart();
+        if (Config.companion.greetingEnabled)
+            startupGreetingTimer.restart();
     }
 
     Connections {
@@ -429,6 +496,28 @@ Singleton {
                 root.collapseIfAllowed();
             }
         }
+    }
+
+    Timer {
+        id: startupGreetingTimer
+
+        interval: 1800
+        repeat: false
+        onTriggered: root.triggerGreeting(true, false)
+    }
+
+    Timer {
+        id: periodicGreetingTimer
+
+        interval: Math.max(1, Config.companion.greetingIntervalMin) * 60000
+        repeat: true
+        running: Config.companion.greetingEnabled
+            && !root.expanded
+            && !root.mediaPlaying
+            && !root.pomodoroRunning
+            && !root.recordingActive
+            && !Config.dnd
+        onTriggered: root.triggerGreeting(false, false)
     }
 
     Timer {
@@ -496,6 +585,10 @@ Singleton {
 
         function openSettings(): void {
             root.openSettings();
+        }
+
+        function greet(): void {
+            root.triggerGreeting(false, true);
         }
 
         function clearNotifs(): void {

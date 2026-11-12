@@ -10,11 +10,24 @@ Item {
     id: root
 
     property string clockText: Qt.formatTime(new Date(), "hh:mm")
+    property string dateText: Qt.formatDate(new Date(), "ddd, d MMM")
     property bool micActive: PrivacyService.micActive
     property bool recordingActive: NotchController.recordingActive
     property string pomodoroText: PomodoroService.running
         ? ((PomodoroService.phase === "focus" ? "Focus " : "Break ") + PomodoroService.formattedRemaining)
         : ""
+    readonly property var _greetBadge: {
+        const _tick = root.clockText;
+        const h = new Date().getHours();
+        const name = Config.resolvedGreetingName;
+        if (h >= 4 && h < 11)
+            return { icon: "wb_twilight", label: "Pagi, " + name, tint: "#fbbf24" };
+        if (h >= 11 && h < 15)
+            return { icon: "wb_sunny", label: "Siang, " + name, tint: "#fcd34d" };
+        if (h >= 15 && h < 18)
+            return { icon: "wb_twilight", label: "Sore, " + name, tint: "#fb923c" };
+        return { icon: "bedtime", label: "Malam, " + name, tint: "#a5b4fc" };
+    }
 
     readonly property string surfaceState: NotchController.surfaceState
     readonly property bool isStrip: surfaceState === "strip"
@@ -132,6 +145,7 @@ Item {
         }
 
         readonly property var alertPayload: NotchController.peekAlert?.payload
+        readonly property bool isGreetPeek: root.isPeek && (NotchController.peekAlert?.kind === "greet")
         readonly property bool isNotifPeek: root.isPeek && (NotchController.peekAlert?.kind === "notif")
         readonly property bool hasActions: Boolean(alertPayload?.actions && alertPayload.actions.length > 0)
         readonly property var notifActions: alertPayload?.actions ?? []
@@ -349,7 +363,9 @@ Item {
                     Image {
                         id: peekNotifImg
                         anchors.fill: parent
-                        source: peekPillContainer.resolveIcon(peekPillContainer.notifIcon.length > 0 ? peekPillContainer.notifIcon : peekPillContainer.notifImage)
+                        source: (!peekPillContainer.isOsdPeek && !peekPillContainer.isGreetPeek && peekPillContainer.hasActions)
+                            ? peekPillContainer.resolveIcon(peekPillContainer.notifIcon.length > 0 ? peekPillContainer.notifIcon : peekPillContainer.notifImage)
+                            : ""
                         fillMode: Image.PreserveAspectFit
                         visible: status === Image.Ready
                         asynchronous: true
@@ -487,13 +503,101 @@ Item {
             }
         }
 
+        // Animated Greeting Peek layout (startup / periodic idle greeting)
+        RowLayout {
+            id: greetPeekLayout
+
+            anchors.fill: parent
+            anchors.leftMargin: 14
+            anchors.rightMargin: 14
+            spacing: 10
+            visible: peekPillContainer.isGreetPeek
+
+            Item {
+                Layout.preferredWidth: 44
+                Layout.preferredHeight: 28
+                Layout.alignment: Qt.AlignVCenter
+
+                IdleCompanionEyes {
+                    anchors.centerIn: parent
+                    scale: 0.66
+                    active: greetPeekLayout.visible
+                    happy: true
+                    pointerActive: false
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
+                spacing: 1
+
+                Text {
+                    Layout.fillWidth: true
+                    text: peekPillContainer.notifTitle
+                    font.family: "Rubik"
+                    font.pixelSize: 12
+                    font.weight: Font.DemiBold
+                    color: "#f4f4f6"
+                    elide: Text.ElideRight
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    visible: text.length > 0
+                    text: peekPillContainer.notifSubtitle
+                    font.family: "Rubik"
+                    font.pixelSize: 10
+                    font.weight: Font.Normal
+                    color: "#b0b0bc"
+                    elide: Text.ElideRight
+                }
+            }
+
+            Rectangle {
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
+                Layout.alignment: Qt.AlignVCenter
+                radius: 14
+                color: {
+                    const ac = Config.activePalette.accent === "#f4f4f6" ? "#a5b4fc" : Config.activePalette.accent;
+                    return Qt.rgba(Qt.color(ac).r, Qt.color(ac).g, Qt.color(ac).b, 0.16);
+                }
+                border.width: 1
+                border.color: {
+                    const ac = Config.activePalette.accent === "#f4f4f6" ? "#a5b4fc" : Config.activePalette.accent;
+                    return Qt.rgba(Qt.color(ac).r, Qt.color(ac).g, Qt.color(ac).b, 0.32);
+                }
+
+                Text {
+                    id: greetWaveIcon
+
+                    anchors.centerIn: parent
+                    text: peekPillContainer.notifIcon.length > 0 ? peekPillContainer.notifIcon : "waving_hand"
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 15
+                    color: Config.activePalette.accent === "#f4f4f6" ? "#c7d2fe" : Config.activePalette.accent
+                    transformOrigin: Item.BottomRight
+
+                    SequentialAnimation on rotation {
+                        running: greetPeekLayout.visible
+                        NumberAnimation { to: -12; duration: 160; easing.type: Easing.InOutQuad }
+                        NumberAnimation { to: 14; duration: 220; easing.type: Easing.InOutQuad }
+                        NumberAnimation { to: -10; duration: 200; easing.type: Easing.InOutQuad }
+                        NumberAnimation { to: 8; duration: 180; easing.type: Easing.InOutQuad }
+                        NumberAnimation { to: 0; duration: 220; easing.type: Easing.OutCubic }
+                    }
+                }
+            }
+        }
+
         // Notification / peek layout WITHOUT actions (standard 40px height)
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: 12
             anchors.rightMargin: 10
             spacing: 8
-            visible: !peekPillContainer.isOsdPeek && !peekPillContainer.hasActions
+            visible: !peekPillContainer.isOsdPeek && !peekPillContainer.isGreetPeek && !peekPillContainer.hasActions
 
             Rectangle {
                 Layout.preferredWidth: 20
@@ -505,7 +609,9 @@ Item {
                 Image {
                     id: peekNotifCompactImg
                     anchors.fill: parent
-                    source: peekPillContainer.resolveIcon(peekPillContainer.notifIcon.length > 0 ? peekPillContainer.notifIcon : peekPillContainer.notifImage)
+                    source: (!peekPillContainer.isOsdPeek && !peekPillContainer.isGreetPeek && !peekPillContainer.hasActions)
+                        ? peekPillContainer.resolveIcon(peekPillContainer.notifIcon.length > 0 ? peekPillContainer.notifIcon : peekPillContainer.notifImage)
+                        : ""
                     fillMode: Image.PreserveAspectFit
                     visible: status === Image.Ready
                     asynchronous: true
@@ -753,6 +859,15 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 color: "#d4845a"
             }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.clockText
+                font.family: "Rubik"
+                font.pixelSize: 10
+                font.weight: Font.Medium
+                color: "#72727e"
+            }
         }
     }
 
@@ -768,13 +883,15 @@ Item {
             Layout.alignment: Qt.AlignVCenter
             spacing: 6
 
-            Rectangle {
-                visible: !root.recordingActive
-                width: 6
-                height: 6
-                radius: 3
+            Text {
+                visible: !root.recordingActive || root.pomodoroText.length > 0
                 anchors.verticalCenter: parent.verticalCenter
-                color: Config.dnd ? "#d4845a" : "#8e8e98"
+                text: root.pomodoroText.length > 0 ? "timer" : root._greetBadge.icon
+                font.family: "Material Symbols Rounded"
+                font.pixelSize: 13
+                color: Config.dnd
+                    ? "#d4845a"
+                    : (root.pomodoroText.length > 0 ? "#818cf8" : root._greetBadge.tint)
             }
 
             // Live Recording Activity Chip with timer + 1-click Stop
@@ -840,7 +957,9 @@ Item {
             Text {
                 visible: !root.recordingActive || root.pomodoroText.length > 0
                 anchors.verticalCenter: parent.verticalCenter
-                text: root.pomodoroText.length > 0 ? root.pomodoroText : "Island"
+                width: Math.min(implicitWidth, 96)
+                elide: Text.ElideRight
+                text: root.pomodoroText.length > 0 ? root.pomodoroText : root._greetBadge.label
                 font.family: "Rubik"
                 font.pixelSize: 11
                 font.weight: Font.Medium
@@ -882,12 +1001,31 @@ Item {
             }
 
             Text {
+                visible: !root.recordingActive && root.dateText.length > 0
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.dateText
+                font.family: "Rubik"
+                font.pixelSize: 10
+                font.weight: Font.Normal
+                color: "#8e8e98"
+            }
+
+            Text {
+                visible: !root.recordingActive && root.dateText.length > 0
+                anchors.verticalCenter: parent.verticalCenter
+                text: "·"
+                font.family: "Rubik"
+                font.pixelSize: 10
+                color: "#5c5c68"
+            }
+
+            Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.clockText
                 font.family: "Rubik"
                 font.pixelSize: 11
                 font.weight: Font.Medium
-                color: "#8e8e98"
+                color: "#e4e4ec"
             }
         }
     }

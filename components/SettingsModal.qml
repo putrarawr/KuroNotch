@@ -576,6 +576,17 @@ PopupWindow {
                             }
                         }
 
+                        SettingToggleRow {
+                            label: "Startup & Periodic Greeting"
+                            subtitle: "Show friendly greeting at boot and every few idle minutes"
+                            iconName: "waving_hand"
+                            checked: Config.companion.greetingEnabled
+                            onToggled: {
+                                Config.companion.greetingEnabled = !Config.companion.greetingEnabled;
+                                Config.save();
+                            }
+                        }
+
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.topMargin: 4

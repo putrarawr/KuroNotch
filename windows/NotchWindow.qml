@@ -14,6 +14,7 @@ PanelWindow {
 
     property int carouselWheelAccum: 0
     property string clockText: Qt.formatTime(new Date(), "hh:mm")
+    property string dateText: Qt.formatDate(new Date(), "ddd, d MMM")
     readonly property alias contextMenu: contextMenu
 
     readonly property bool bridgeActive: NotchController.expanded
@@ -40,18 +41,19 @@ PanelWindow {
                     radius: hasLyric ? Math.round(targetHeight / 2) : base.radius
                 };
             }
-            if (PrivacyService.recordingActive || PomodoroService.running) {
-                const targetWidth = Math.max(base.width, PrivacyService.recordingActive ? 276 : 252);
-                const sw = width > 0 ? width : NotchController.screenWidth;
-                return {
-                    x: Math.round((sw - targetWidth) / 2),
-                    y: base.y,
-                    width: targetWidth,
-                    height: base.height,
-                    topMargin: base.topMargin,
-                    radius: base.radius
-                };
-            }
+            const idleTargetWidth = (PrivacyService.recordingActive || PomodoroService.running)
+                ? (PrivacyService.recordingActive ? 292 : 272)
+                : 268;
+            const targetWidth = Math.max(base.width, idleTargetWidth);
+            const sw = width > 0 ? width : NotchController.screenWidth;
+            return {
+                x: Math.round((sw - targetWidth) / 2),
+                y: base.y,
+                width: targetWidth,
+                height: base.height,
+                topMargin: base.topMargin,
+                radius: base.radius
+            };
         }
         return base;
     }
@@ -239,7 +241,11 @@ PanelWindow {
         triggeredOnStart: true
         running: !NotchController.expanded
             && (NotchController.surfaceState === "notch" || NotchController.surfaceState === "pill")
-        onTriggered: root.clockText = Qt.formatTime(new Date(), "hh:mm")
+        onTriggered: {
+            const now = new Date();
+            root.clockText = Qt.formatTime(now, "hh:mm");
+            root.dateText = Qt.formatDate(now, "ddd, d MMM");
+        }
     }
 
     // Hidden 16x16 Canvas inside PanelWindow scene graph to sample album art RGBA
@@ -450,6 +456,7 @@ PanelWindow {
 
                     anchors.fill: parent
                     clockText: root.clockText
+                    dateText: root.dateText
                 }
             }
 
