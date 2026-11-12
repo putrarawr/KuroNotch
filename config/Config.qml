@@ -90,6 +90,7 @@ Singleton {
         property bool calendar: true
         property bool notes: true
         property bool wallpaper: true
+        property bool weatherWater: true
     }
 
     readonly property string wallpaperSchemePath: `${Quickshell.env("HOME")}/.local/state/caelestia/scheme.json`
@@ -184,7 +185,8 @@ Singleton {
                 "controls": root.widgets.controls,
                 "calendar": root.widgets.calendar,
                 "notes": root.widgets.notes,
-                "wallpaper": root.widgets.wallpaper
+                "wallpaper": root.widgets.wallpaper,
+                "weatherWater": root.widgets.weatherWater
             }
         };
     }
@@ -264,6 +266,7 @@ Singleton {
             if (typeof data.widgets.calendar === "boolean") root.widgets.calendar = data.widgets.calendar;
             if (typeof data.widgets.notes === "boolean") root.widgets.notes = data.widgets.notes;
             if (typeof data.widgets.wallpaper === "boolean") root.widgets.wallpaper = data.widgets.wallpaper;
+            if (typeof data.widgets.weatherWater === "boolean") root.widgets.weatherWater = data.widgets.weatherWater;
         }
     }
 

@@ -557,6 +557,13 @@ PanelWindow {
                                 height: carouselViewport.height
                             }
 
+                            // Page 9: Weather & Water Reminder (Interactive Sections)
+                            WeatherWaterPage {
+                                visible: Config.widgets.weatherWater
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
                             // Page 7: Quick Notes & Open Windows Switcher (Workspace)
                             NotesWindowsPage {
                                 visible: Config.widgets.notes

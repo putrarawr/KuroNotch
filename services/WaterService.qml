@@ -60,24 +60,52 @@ Singleton {
         root.saveNow();
     }
 
-    function cycleInterval(): void {
-        if (!root.enabled) {
-            root.enabled = true;
-            root.intervalMin = 30;
-            root.minutesUntilNext = 30;
-        } else if (root.intervalMin === 30) {
-            root.intervalMin = 45;
-            root.minutesUntilNext = 45;
-        } else if (root.intervalMin === 45) {
-            root.intervalMin = 60;
-            root.minutesUntilNext = 60;
-        } else if (root.intervalMin === 60) {
-            root.intervalMin = 90;
-            root.minutesUntilNext = 90;
-        } else {
+    function setCount(nextCount: int): void {
+        root._rollDayIfNeeded();
+        const clamped = Math.max(0, Math.min(24, Math.trunc(nextCount)));
+        if (clamped === root.count)
+            return;
+        root.count = clamped;
+        root.minutesUntilNext = Math.max(1, root.intervalMin);
+        root.saveNow();
+    }
+
+    function setGoal(nextGoal: int): void {
+        const clamped = Math.max(4, Math.min(16, Math.trunc(nextGoal)));
+        root.goal = clamped;
+        root.saveNow();
+    }
+
+    function setIntervalMin(mins: int): void {
+        if (mins <= 0) {
             root.enabled = false;
+        } else {
+            root.enabled = true;
+            root.intervalMin = Math.trunc(mins);
+            root.minutesUntilNext = root.intervalMin;
         }
         root.saveNow();
+    }
+
+    function resetToday(): void {
+        root._rollDayIfNeeded();
+        root.count = 0;
+        root.minutesUntilNext = Math.max(1, root.intervalMin);
+        root.saveNow();
+    }
+
+    function cycleInterval(): void {
+        if (!root.enabled) {
+            root.setIntervalMin(30);
+        } else if (root.intervalMin === 30) {
+            root.setIntervalMin(45);
+        } else if (root.intervalMin === 45) {
+            root.setIntervalMin(60);
+        } else if (root.intervalMin === 60) {
+            root.setIntervalMin(90);
+        } else {
+            root.setIntervalMin(0);
+        }
     }
 
     function snooze(mins: int): void {

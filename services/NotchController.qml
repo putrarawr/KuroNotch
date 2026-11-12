@@ -10,7 +10,7 @@ import "../lib/notchState.js" as NotchState
 Singleton {
     id: root
 
-    readonly property int pageCount: 9
+    readonly property int pageCount: 10
 
     // Core surface and geometry state
     readonly property string surfaceState: NotchState.resolveSurfaceState({
@@ -68,6 +68,7 @@ Singleton {
         if (Config.widgets.wallpaper) list.push(8); // Wallpaper Switcher
         if (Config.widgets.pomodoro) list.push(2); // Focus & Quick Tools
         if (Config.widgets.calendar) list.push(6); // Calendar & To-Do
+        if (Config.widgets.weatherWater) list.push(9); // Weather & Water Reminder
         if (Config.widgets.notes) list.push(7);    // Notes & Windows
         if (Config.widgets.shelf) list.push(1);    // File Shelf
         if (Config.widgets.clipboard) list.push(3); // Clipboard Stash
@@ -84,6 +85,7 @@ Singleton {
         case 8: return { title: "Wallpaper", icon: "wallpaper" };
         case 2: return { title: "Focus & Tools", icon: "timer" };
         case 6: return { title: "Calendar & To-Do", icon: "calendar_month" };
+        case 9: return { title: "Weather & Water", icon: "water_drop" };
         case 7: return { title: "Notes & Windows", icon: "edit_note" };
         case 1: return { title: "File Shelf", icon: "inventory_2" };
         case 3: return { title: "Clipboard", icon: "content_paste" };

@@ -32,6 +32,8 @@ PopupWindow {
             return Config.widgets.notes;
         if (previewWidget === "wallpaper")
             return Config.widgets.wallpaper;
+        if (previewWidget === "weatherWater")
+            return Config.widgets.weatherWater;
         if (previewWidget === "lyrics")
             return Config.lyrics.enabled;
         return Config.companion.enabled;
@@ -508,6 +510,7 @@ PopupWindow {
                                         if (root.previewWidget === "calendar") return "PREVIEW · MINI CALENDAR";
                                         if (root.previewWidget === "notes") return "PREVIEW · NOTES & WINDOWS";
                                         if (root.previewWidget === "wallpaper") return "PREVIEW · WALLPAPER SWITCHER";
+                                        if (root.previewWidget === "weatherWater") return "PREVIEW · WEATHER & WATER";
                                         if (root.previewWidget === "lyrics") return "PREVIEW · SYNC LYRICS";
                                         return "PREVIEW · COMPANION EYES";
                                     }
@@ -1084,6 +1087,52 @@ PopupWindow {
                                         }
                                     }
                                 }
+
+                                // 11. Weather & Water Preview
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 10
+                                    visible: root.previewWidget === "weatherWater"
+
+                                    Repeater {
+                                        model: [
+                                            { icon: "rainy", lbl: "27°C · Cuaca", c: "#fde047" },
+                                            { icon: "water_drop", lbl: "3/8 Gelas", c: "#38bdf8" }
+                                        ]
+
+                                        delegate: Rectangle {
+                                            required property var modelData
+                                            width: 126
+                                            height: 36
+                                            radius: 9
+                                            color: "#111119"
+                                            border.width: 1
+                                            border.color: Qt.rgba(Qt.color(modelData.c).r, Qt.color(modelData.c).g, Qt.color(modelData.c).b, 0.38)
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 5
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: modelData.icon
+                                                    font.family: "Material Symbols Rounded"
+                                                    font.pixelSize: 14
+                                                    color: modelData.c
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: modelData.lbl
+                                                    font.family: "Rubik"
+                                                    font.pixelSize: 10
+                                                    font.weight: Font.Medium
+                                                    color: "#e4e4ec"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -1162,6 +1211,20 @@ PopupWindow {
                             onToggled: {
                                 root.previewWidget = "calendar";
                                 Config.widgets.calendar = !Config.widgets.calendar;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Weather & Water Reminder"
+                            subtitle: "Hourly forecast, city search, clickable cup tracker & alerts"
+                            iconName: "water_drop"
+                            checked: Config.widgets.weatherWater
+                            selected: root.previewWidget === "weatherWater"
+                            onHovered: root.previewWidget = "weatherWater"
+                            onToggled: {
+                                root.previewWidget = "weatherWater";
+                                Config.widgets.weatherWater = !Config.widgets.weatherWater;
                                 Config.save();
                             }
                         }
