@@ -57,9 +57,21 @@ Singleton {
     }
 
     property bool isSaving: false
+    property bool _dirReady: false
+    property string _pendingSaveText: ""
 
-    function ensureDirectory() {
-        Quickshell.execDetached(["mkdir", "-p", root.configDir]);
+    Process {
+        id: ensureDirProc
+
+        command: ["mkdir", "-p", root.configDir]
+        onExited: (exitCode, exitStatus) => {
+            root._dirReady = true;
+            if (root._pendingSaveText.length > 0) {
+                const textToSave = root._pendingSaveText;
+                root._pendingSaveText = "";
+                root._writeConfig(textToSave);
+            }
+        }
     }
 
     function exportConfig() {
@@ -153,17 +165,27 @@ Singleton {
         root.setMode(modes[nextIdx]);
     }
 
-    function save() {
+    function _writeConfig(textToSave) {
         root.isSaving = true;
-        root.ensureDirectory();
-        configFileView.setText(JSON.stringify(root.exportConfig(), null, 2) + "\n");
+        configFileView.setText(textToSave);
         Qt.callLater(() => {
             root.isSaving = false;
         });
     }
 
+    function save() {
+        const textToSave = JSON.stringify(root.exportConfig(), null, 2) + "\n";
+        if (!root._dirReady) {
+            root._pendingSaveText = textToSave;
+            if (!ensureDirProc.running)
+                ensureDirProc.running = true;
+            return;
+        }
+        root._writeConfig(textToSave);
+    }
+
     Component.onCompleted: {
-        root.ensureDirectory();
+        ensureDirProc.running = true;
     }
 
     FileView {
@@ -196,7 +218,6 @@ Singleton {
 
         onLoadFailed: error => {
             if (error === FileViewError.FileNotFound) {
-                root.ensureDirectory();
                 root.save();
             }
         }

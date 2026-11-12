@@ -151,5 +151,23 @@ describe("lrcParser.js - Pure LRC Lyrics Helper", () => {
             assert.equal(buildLrcCacheKey("Artist", ""), "artist");
             assert.equal(buildLrcCacheKey("", ""), "unknown_track");
         });
+
+        it("produces distinct collision-free keys for non-Latin tracks (Japanese, Cyrillic, etc.)", () => {
+            const yoasobiKey = buildLrcCacheKey("YOASOBI", "アイドル");
+            const adoKey = buildLrcCacheKey("Ado", "うっせぇわ");
+            const kinoKey = buildLrcCacheKey("Кино", "Группа крови");
+            const standaloneNonLatinKey = buildLrcCacheKey("", "アイドル");
+
+            assert.match(yoasobiKey, /^yoasobi_[0-9a-f]{8}$/);
+            assert.match(adoKey, /^ado_[0-9a-f]{8}$/);
+            assert.match(kinoKey, /^[0-9a-f]{8}_[0-9a-f]{8}$/);
+            assert.match(standaloneNonLatinKey, /^track_[0-9a-f]{8}$/);
+
+            assert.notEqual(yoasobiKey, adoKey);
+            assert.notEqual(yoasobiKey, kinoKey);
+            assert.notEqual(yoasobiKey, "unknown_track");
+            assert.notEqual(kinoKey, "unknown_track");
+        });
     });
 });
+

@@ -86,7 +86,7 @@ Singleton {
                 Hyprland.refreshMonitors();
             } else if (n.indexOf("workspace") !== -1) {
                 Hyprland.refreshWorkspaces();
-            } else if (n.indexOf("window") !== -1
+            } else if (["openwindow", "closewindow", "movewindow", "activewindow", "activewindowv2", "windowclass"].indexOf(n) !== -1
                 || n.indexOf("group") !== -1
                 || ["pin", "fullscreen", "changefloatingmode", "minimize"].indexOf(n) !== -1) {
                 Hyprland.refreshToplevels();

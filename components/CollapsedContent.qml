@@ -343,6 +343,7 @@ Item {
                     clip: true
 
                     Image {
+                        id: peekNotifImg
                         anchors.fill: parent
                         source: peekPillContainer.resolveIcon(peekPillContainer.notifIcon.length > 0 ? peekPillContainer.notifIcon : peekPillContainer.notifImage)
                         fillMode: Image.PreserveAspectFit
@@ -352,7 +353,7 @@ Item {
 
                     Text {
                         anchors.centerIn: parent
-                        visible: parent.children[0].status !== Image.Ready
+                        visible: peekNotifImg.status !== Image.Ready
                         text: {
                             const icon = peekPillContainer.notifIcon;
                             return (icon.length > 0 && !icon.includes("/")) ? icon : (peekPillContainer.isNotifPeek ? "notifications" : "tune");
@@ -498,6 +499,7 @@ Item {
                 clip: true
 
                 Image {
+                    id: peekNotifCompactImg
                     anchors.fill: parent
                     source: peekPillContainer.resolveIcon(peekPillContainer.notifIcon.length > 0 ? peekPillContainer.notifIcon : peekPillContainer.notifImage)
                     fillMode: Image.PreserveAspectFit
@@ -507,7 +509,7 @@ Item {
 
                 Text {
                     anchors.centerIn: parent
-                    visible: parent.children[0].status !== Image.Ready
+                    visible: peekNotifCompactImg.status !== Image.Ready
                     text: {
                         const icon = peekPillContainer.notifIcon;
                         return (icon.length > 0 && !icon.includes("/")) ? icon : (peekPillContainer.isNotifPeek ? "notifications" : "tune");

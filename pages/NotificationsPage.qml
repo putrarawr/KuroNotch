@@ -252,6 +252,7 @@ Item {
                             readonly property string resolvedIcon: root.resolveIconPath(cardDelegate.modelData?.appIcon ?? "")
 
                             Image {
+                                id: cardNotifImg
                                 anchors.fill: parent
                                 source: parent.resolvedIcon
                                 fillMode: Image.PreserveAspectFit
@@ -261,7 +262,7 @@ Item {
 
                             Text {
                                 anchors.centerIn: parent
-                                visible: parent.resolvedIcon.length === 0 || parent.children[0].status !== Image.Ready
+                                visible: parent.resolvedIcon.length === 0 || cardNotifImg.status !== Image.Ready
                                 text: {
                                     const icon = cardDelegate.modelData?.appIcon ?? "";
                                     return (icon.length > 0 && !icon.includes("/")) ? icon : "notifications";

@@ -26,13 +26,14 @@ PanelWindow {
             && MediaService.playing) {
             const hasLyric = Config.lyrics.enabled
                 && Config.lyrics.showInCollapsed
-                && LyricsService.activeLineText.length > 0;
-            const widened = hasLyric ? 340 : 310;
+                && LyricsService.available
+                && LyricsService.synced;
+            const targetWidth = Math.max(base.width, hasLyric ? 340 : 310);
             const sw = width > 0 ? width : NotchController.screenWidth;
             return {
-                x: Math.round((sw - widened) / 2),
+                x: Math.round((sw - targetWidth) / 2),
                 y: base.y,
-                width: widened,
+                width: targetWidth,
                 height: base.height,
                 topMargin: base.topMargin,
                 radius: base.radius

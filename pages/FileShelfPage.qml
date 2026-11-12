@@ -393,6 +393,7 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 acceptedButtons: Qt.LeftButton
+                                // preventStealing prevents ListView flick from intercepting mouse drag while mouse-wheel scrolling remains active
                                 preventStealing: true
                                 cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
 
@@ -409,13 +410,11 @@ Item {
                                     const dy = mouse.y - pressY;
                                     if ((dx * dx + dy * dy) >= 36) {
                                         dragStarted = true;
-                                        ShelfService.setDraggingOut(true);
                                         dragProxy.Drag.hotSpot = Qt.point(
                                             Math.max(0, Math.min(48, Math.round(mouse.x))),
                                             Math.max(0, Math.min(48, Math.round(mouse.y)))
                                         );
                                         dragProxy.Drag.startDrag(Qt.CopyAction);
-                                        ShelfService.setDraggingOut(false);
                                     }
                                 }
 

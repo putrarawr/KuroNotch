@@ -46,6 +46,16 @@ describe("notchState.js - Pure State Machine", () => {
         });
     });
 
+    it("handles non-string winClass inputs safely without throwing (123, null, undefined, {})", () => {
+        assert.doesNotThrow(() => classifyWindowContext(123, 0));
+        assert.doesNotThrow(() => classifyWindowContext(null, 0));
+        assert.doesNotThrow(() => classifyWindowContext(undefined, 0));
+        assert.doesNotThrow(() => classifyWindowContext({}, 0));
+        assert.equal(classifyWindowContext(null, 0).isBrowser, false);
+        assert.equal(classifyWindowContext(123, 0).isBrowser, false);
+        assert.equal(classifyWindowContext({}, 0).isBrowser, false);
+    });
+
     it("4. allows OSD and normal notifications to peek during browser auto-hide", () => {
         const browserContext = { isBrowser: true, isTrueFullscreen: false, autoHideActive: true };
         assert.equal(shouldPeekAlert("osd", 1, browserContext), true);

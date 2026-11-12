@@ -6,12 +6,16 @@ set -euo pipefail
 # Creates timestamped .bak.<timestamp> backups before modifying any external file.
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-REPO_DIR="/home/putra/.gemini/antigravity/scratch/island-notch"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 QUICKSHELL_DIR="$HOME/.config/quickshell"
 CAELESTIA_NOTIFS="$HOME/.config/quickshell/caelestia/services/Notifs.qml"
 CAELESTIA_SHELL_JSON="$HOME/.config/caelestia/shell.json"
 HYPRLAND_CONF="$HOME/.config/hypr/hyprland.conf"
 BIN_DIR="$HOME/.local/bin"
+
+# Pre-create all required runtime directories upfront to avoid clean-install races
+mkdir -p "$HOME/.config/island-notch" "$HOME/.local/state/island-notch" "$HOME/.cache/island-notch/lyrics"
 
 echo "=== Island Notch Integration Installer ==="
 echo "Timestamp: $TIMESTAMP"

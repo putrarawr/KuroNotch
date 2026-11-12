@@ -93,7 +93,7 @@ Singleton {
             return;
         Quickshell.execDetached([
             "sh", "-c",
-            'if [ -f "$1" ]; then /home/putra/.nix-profile/bin/pw-play "$1" 2>/dev/null || pw-play "$1" 2>/dev/null || true; fi',
+            'if [ -f "$1" ]; then "$HOME/.nix-profile/bin/pw-play" "$1" 2>/dev/null || pw-play "$1" 2>/dev/null || true; fi',
             "sh",
             root.chimePath
         ]);

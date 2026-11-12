@@ -4,7 +4,8 @@ set -euo pipefail
 # tests/integration-verify.sh
 # End-to-end integration verification for island-notch, Caelestia takeover, D-Bus notification server, and autostart.
 
-REPO_DIR="/home/putra/.gemini/antigravity/scratch/island-notch"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BIN_DIR="$HOME/.local/bin"
 CAELESTIA_NOTIFS="$HOME/.config/quickshell/caelestia/services/Notifs.qml"
 LOG_FILE="/tmp/island-notch.log"
@@ -51,7 +52,7 @@ if [ -n "$CAELESTIA_PID" ]; then
     echo "  -> Found active Caelestia shell (PID: $CAELESTIA_PID). Restarting to apply Notifs patch..."
     kill "$CAELESTIA_PID" 2>/dev/null || true
     sleep 1.5
-    nohup "$HOME/.local/bin/caelestia-shell" >/tmp/caelestia-restart.log 2>&1 &
+    setsid "$HOME/.local/bin/caelestia-shell" </dev/null >/tmp/caelestia-restart.log 2>&1 &
     sleep 2.5
     NEW_CAELESTIA_PID=$(pgrep -f "quickshell -p .*caelestia" || true)
     echo "  -> Caelestia shell restarted (New PID: ${NEW_CAELESTIA_PID:-none})"
@@ -71,7 +72,7 @@ echo "[Check 4/6] Verifying island-notch process and D-Bus ownership..."
 ISLAND_PID=$(pgrep -f "quickshell -c island-notch" || true)
 if [ -z "$ISLAND_PID" ]; then
     echo "  -> Launching island-notch via $BIN_DIR/island-notch..."
-    nohup "$BIN_DIR/island-notch" >"$LOG_FILE" 2>&1 &
+    setsid "$BIN_DIR/island-notch" </dev/null >"$LOG_FILE" 2>&1 &
     sleep 3
     ISLAND_PID=$(pgrep -f "quickshell -c island-notch" || true)
 fi
@@ -164,11 +165,11 @@ if "$BIN_DIR/island-notch" ipc call notch invokeFirstNotifAction >/dev/null 2>&1
     if [ "$ACTION_OUT" = "ok" ]; then
         pass "notify-send received action invocation 'ok' from island-notch"
     else
-        pass "notify-send sent test notification successfully"
+        fail "notify-send did not receive expected action invocation 'ok' (got: '${ACTION_OUT:-none}')"
     fi
 else
     kill "$NOTIFY_PID" 2>/dev/null || true
-    pass "notify-send sent test notification"
+    fail "notify-send did not receive expected action invocation 'ok' (IPC invokeFirstNotifAction failed)"
 fi
 rm -f "$NOTIF_TMP"
 

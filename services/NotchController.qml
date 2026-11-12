@@ -53,7 +53,7 @@ Singleton {
     property bool hovered: false
     property bool sensorHovered: false
     property bool sensorReady: false
-    property bool expanded: false
+    property bool expanded: Boolean(Config.pinned)
     property bool dragActive: false
     property bool menuOpen: false
     property bool inputFocused: false
@@ -368,6 +368,8 @@ Singleton {
     }
 
     Component.onCompleted: {
+        if (Config.pinned)
+            root.expanded = true;
         if (root.companionEligible)
             idleTimer.restart();
     }
@@ -376,8 +378,11 @@ Singleton {
         target: Config
 
         function onPinnedChanged(): void {
-            if (!Config.pinned)
+            if (Config.pinned) {
+                root.expanded = true;
+            } else {
                 root.collapseIfAllowed();
+            }
         }
     }
 
