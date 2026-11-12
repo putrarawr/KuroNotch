@@ -66,6 +66,21 @@ describe("notchState.js - Pure State Machine", () => {
         assert.equal(classifyWindowContext("antigravity", 0, ["firefox"]).autoHideActive, false);
     });
 
+    it("detects obstructing windows underneath notch via hasWindowOverlap", () => {
+        const notchZone = { x: 543, y: 0, width: 280, height: 44 };
+        // Empty workspace -> no overlap
+        assert.equal(notchState.hasWindowOverlap([], notchZone), false);
+        // Full tiled window covering notch top area -> overlap
+        assert.equal(notchState.hasWindowOverlap([{ x: 72, y: 22, width: 1272, height: 724, mapped: true, hidden: false }], notchZone), true);
+        // Window below notch or tucked to side -> no overlap
+        assert.equal(notchState.hasWindowOverlap([{ x: 72, y: 60, width: 1272, height: 680 }], notchZone), false);
+        assert.equal(notchState.hasWindowOverlap([{ x: 72, y: 22, width: 400, height: 500 }], notchZone), false);
+        // Hidden window -> ignored
+        assert.equal(notchState.hasWindowOverlap([{ x: 72, y: 22, width: 1272, height: 724, hidden: true }], notchZone), false);
+        // Explicit override marks autoHideActive
+        assert.equal(classifyWindowContext("antigravity", 0, ["firefox"], true).autoHideActive, true);
+    });
+
     it("4. allows OSD and normal notifications to peek during browser auto-hide", () => {
         const browserContext = { isBrowser: true, isTrueFullscreen: false, autoHideActive: true };
         assert.equal(shouldPeekAlert("osd", 1, browserContext), true);

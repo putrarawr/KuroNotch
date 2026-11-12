@@ -947,7 +947,7 @@ PopupWindow {
 
                         SettingToggleRow {
                             label: "Idle Companion Eyes"
-                            subtitle: "Animated owl eyes when idle"
+                            subtitle: `After ${Config.companion.idleSeconds}s idle · wakes when mouse/keys move`
                             iconName: "visibility"
                             checked: Config.companion.enabled
                             selected: root.previewWidget === "companion"
@@ -978,12 +978,23 @@ PopupWindow {
                         }
 
                         SettingToggleRow {
-                            label: "Smart Browser & Fullscreen Auto-Hide"
-                            subtitle: "Shrink into thin top sensor while browsing"
+                            label: "Smart Auto-Hide"
+                            subtitle: "Shrink into thin top sensor while using browser or fullscreen"
                             iconName: "visibility_off"
                             checked: Config.autoHide.enabled
                             onToggled: {
                                 Config.autoHide.enabled = !Config.autoHide.enabled;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Auto-Hide When Window Below"
+                            subtitle: "Hide automatically whenever any window occupies area beneath notch"
+                            iconName: "layers"
+                            checked: Config.autoHide.smartOverlap
+                            onToggled: {
+                                Config.autoHide.smartOverlap = !Config.autoHide.smartOverlap;
                                 Config.save();
                             }
                         }
@@ -1026,6 +1037,99 @@ PopupWindow {
                             onToggled: {
                                 Config.companion.greetingEnabled = !Config.companion.greetingEnabled;
                                 Config.save();
+                            }
+                        }
+
+                        // Idle Companion Eyes Duration Picker
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: 44
+                            height: 44
+                            radius: 10
+                            color: Config.activePalette.elevated
+                            border.width: 1
+                            border.color: Qt.rgba(1, 1, 1, 0.07)
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 10
+                                anchors.rightMargin: 10
+                                spacing: 8
+
+                                Text {
+                                    Layout.alignment: Qt.AlignVCenter
+                                    text: "hourglass_bottom"
+                                    font.family: "Material Symbols Rounded"
+                                    font.pixelSize: 16
+                                    color: Config.companion.enabled ? Config.activePalette.accent : "#6c6c78"
+                                }
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignVCenter
+                                    spacing: 0
+
+                                    Text {
+                                        text: "Idle Eye Delay"
+                                        font.family: "Rubik"
+                                        font.pixelSize: 11
+                                        font.weight: Font.Medium
+                                        color: "#f4f4f6"
+                                    }
+
+                                    Text {
+                                        text: "Wait before eyes appear (exits on activity)"
+                                        font.family: "Rubik"
+                                        font.pixelSize: 9
+                                        color: "#8e8e98"
+                                    }
+                                }
+
+                                Row {
+                                    Layout.alignment: Qt.AlignVCenter
+                                    spacing: 4
+
+                                    Repeater {
+                                        model: [5, 8, 15, 30, 60]
+
+                                        delegate: Rectangle {
+                                            required property int modelData
+                                            readonly property bool active: Config.companion.idleSeconds === modelData
+
+                                            height: 22
+                                            width: durTxt.implicitWidth + 10
+                                            radius: 6
+                                            color: active
+                                                ? Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.22)
+                                                : (durMouse.containsMouse ? "#1b1b26" : "#12121a")
+                                            border.width: 1
+                                            border.color: active
+                                                ? Config.activePalette.accent
+                                                : Qt.rgba(1, 1, 1, 0.08)
+
+                                            Text {
+                                                id: durTxt
+                                                anchors.centerIn: parent
+                                                text: `${modelData}s`
+                                                font.family: "Rubik"
+                                                font.pixelSize: 10
+                                                font.weight: active ? Font.DemiBold : Font.Normal
+                                                color: active ? "#ffffff" : "#b8b8c4"
+                                            }
+
+                                            MouseArea {
+                                                id: durMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: {
+                                                    Config.companion.idleSeconds = modelData;
+                                                    Config.save();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 

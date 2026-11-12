@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import "../config"
 import "../lib/notchState.js" as NotchState
 
@@ -97,12 +98,22 @@ Singleton {
         payload: null
     })
 
-    // Idle companion tracking
-    property int idleElapsedMs: 0
+    // Wayland-native system idle monitor (ext_idle_notification_v1)
+    IdleMonitor {
+        id: systemIdleMonitor
+
+        enabled: Config.companion.enabled && root.companionEligible
+        timeout: Config.companion.idleSeconds > 0 ? Math.max(2, Config.companion.idleSeconds) : 8
+        respectInhibitors: false
+    }
 
     readonly property int effectiveIdleThresholdMs: Config.companion.idleSeconds > 0
         ? Config.companion.idleSeconds * 1000
         : 8000
+
+    readonly property int idleElapsedMs: (root.companionEligible && systemIdleMonitor.isIdle)
+        ? root.effectiveIdleThresholdMs
+        : 0
 
     readonly property bool companionEligible: Config.companion.enabled
         && (root.surfaceState === "notch" || root.surfaceState === "pill")
@@ -154,6 +165,8 @@ Singleton {
         root.sensorHovered = next;
 
         if (next) {
+            if (root.settingsOpen)
+                return;
             const isAutoHide = Config.autoHide.enabled && Boolean(HyprContext.windowContext?.autoHideActive);
             if (!isAutoHide || Config.autoHide.topSensorDebounceMs <= 0) {
                 sensorDebounceTimer.stop();
@@ -175,6 +188,8 @@ Singleton {
         root.hovered = next;
 
         if (next) {
+            if (root.settingsOpen)
+                return;
             if (root.osdPeekActive) {
                 peekTimer.stop();
                 return;
@@ -226,7 +241,8 @@ Singleton {
 
     function openSettings(): void {
         root.menuOpen = false;
-        root.expanded = true;
+        root.expanded = false;
+        root.sensorReady = false;
         root.settingsOpen = true;
     }
 
@@ -397,21 +413,6 @@ Singleton {
             root.collapseIfAllowed();
     }
 
-    onCompanionEligibleChanged: {
-        if (root.companionEligible) {
-            root.idleElapsedMs = 0;
-            idleTimer.restart();
-        } else {
-            idleTimer.stop();
-            root.idleElapsedMs = 0;
-        }
-    }
-
-    onEffectiveIdleThresholdMsChanged: {
-        if (root.companionEligible && root.idleElapsedMs < root.effectiveIdleThresholdMs)
-            idleTimer.restart();
-    }
-
     property int _greetingCycle: 0
 
     function _timeOfDayInfo(): var {
@@ -480,8 +481,6 @@ Singleton {
     Component.onCompleted: {
         if (Config.pinned)
             root.expanded = true;
-        if (root.companionEligible)
-            idleTimer.restart();
         if (Config.companion.greetingEnabled)
             startupGreetingTimer.restart();
     }
@@ -542,17 +541,6 @@ Singleton {
             if (root.osdPeekActive && (root.hovered || root.peekInteracting))
                 return;
             root.dismissPeek();
-        }
-    }
-
-    Timer {
-        id: idleTimer
-
-        interval: root.effectiveIdleThresholdMs
-        repeat: false
-        onTriggered: {
-            if (root.companionEligible)
-                root.idleElapsedMs = root.effectiveIdleThresholdMs;
         }
     }
 

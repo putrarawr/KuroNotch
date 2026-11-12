@@ -31,6 +31,7 @@ Singleton {
             "microsoft-edge"
         ]
         property bool hideOnFullscreen: true
+        property bool smartOverlap: true
         property int peekDurationMs: 2500
         property int topSensorDebounceMs: 120
     }
@@ -133,6 +134,7 @@ Singleton {
                 "enabled": root.autoHide.enabled,
                 "browserClasses": root.autoHide.browserClasses,
                 "hideOnFullscreen": root.autoHide.hideOnFullscreen,
+                "smartOverlap": root.autoHide.smartOverlap,
                 "peekDurationMs": root.autoHide.peekDurationMs,
                 "topSensorDebounceMs": root.autoHide.topSensorDebounceMs
             },
@@ -187,6 +189,7 @@ Singleton {
             if (typeof data.autoHide.enabled === "boolean") root.autoHide.enabled = data.autoHide.enabled;
             if (Array.isArray(data.autoHide.browserClasses)) root.autoHide.browserClasses = data.autoHide.browserClasses;
             if (typeof data.autoHide.hideOnFullscreen === "boolean") root.autoHide.hideOnFullscreen = data.autoHide.hideOnFullscreen;
+            if (typeof data.autoHide.smartOverlap === "boolean") root.autoHide.smartOverlap = data.autoHide.smartOverlap;
             if (typeof data.autoHide.peekDurationMs === "number") root.autoHide.peekDurationMs = data.autoHide.peekDurationMs;
             if (typeof data.autoHide.topSensorDebounceMs === "number") root.autoHide.topSensorDebounceMs = data.autoHide.topSensorDebounceMs;
         }

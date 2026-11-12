@@ -45,12 +45,48 @@ Singleton {
         return maxFlag;
     }
 
+    readonly property bool hasObstructingWindow: {
+        if (!Config.autoHide.smartOverlap)
+            return false;
+        const m = root.focusedMonitor;
+        const monX = (m && typeof m.x === "number") ? m.x : 0;
+        const monY = (m && typeof m.y === "number") ? m.y : 0;
+        const scale = (m && typeof m.scale === "number" && m.scale > 0) ? m.scale : 1;
+        const monW = (m && typeof m.width === "number" && m.width > 0) ? Math.round(m.width / scale) : 1366;
+        const zoneW = 280;
+        const zoneH = Config.mode === "pill" ? 44 : (Config.mode === "strip" ? 18 : 34);
+        const zoneRect = {
+            x: monX + Math.round((monW - zoneW) / 2),
+            y: monY,
+            width: zoneW,
+            height: zoneH
+        };
+
+        const wsToplevels = Hyprland.focusedWorkspace?.toplevels?.values ?? [];
+        const rects = [];
+        for (let i = 0; i < wsToplevels.length; i++) {
+            const ipc = wsToplevels[i]?.lastIpcObject;
+            if (!ipc || !Array.isArray(ipc.at) || !Array.isArray(ipc.size))
+                continue;
+            rects.push({
+                x: ipc.at[0],
+                y: ipc.at[1],
+                width: ipc.size[0],
+                height: ipc.size[1],
+                mapped: ipc.mapped !== false,
+                hidden: Boolean(ipc.hidden)
+            });
+        }
+        return NotchState.hasWindowOverlap(rects, zoneRect);
+    }
+
     readonly property var windowContext: {
         const effectiveFlag = Config.autoHide.hideOnFullscreen ? root.maxFullscreenFlag : 0;
         return NotchState.classifyWindowContext(
             root.activeClass,
             effectiveFlag,
-            Config.autoHide.browserClasses
+            Config.autoHide.browserClasses,
+            root.hasObstructingWindow
         );
     }
 
@@ -87,7 +123,7 @@ Singleton {
                 Hyprland.refreshMonitors();
             } else if (n.indexOf("workspace") !== -1) {
                 Hyprland.refreshWorkspaces();
-            } else if (["openwindow", "closewindow", "movewindow", "activewindow", "activewindowv2", "windowclass"].indexOf(n) !== -1
+            } else if (["openwindow", "closewindow", "movewindow", "activewindow", "windowclass"].indexOf(n) !== -1
                 || n.indexOf("group") !== -1
                 || ["pin", "fullscreen", "changefloatingmode", "minimize"].indexOf(n) !== -1) {
                 Hyprland.refreshToplevels();
