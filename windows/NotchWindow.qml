@@ -43,8 +43,10 @@ PanelWindow {
             }
             const idleTargetWidth = (PrivacyService.recordingActive || PomodoroService.running)
                 ? (PrivacyService.recordingActive ? 292 : 272)
-                : 268;
-            const targetWidth = Math.max(base.width, idleTargetWidth);
+                : (NotchController.companionVisible
+                    ? ((Config.dnd || PrivacyService.micActive) ? 132 : 116)
+                    : Math.max(base.width, 268));
+            const targetWidth = idleTargetWidth;
             const sw = width > 0 ? width : NotchController.screenWidth;
             return {
                 x: Math.round((sw - targetWidth) / 2),
@@ -446,9 +448,14 @@ PanelWindow {
                 anchors.fill: parent
                 visible: opacity > 0.01 && NotchController.surfaceState !== "sensor"
                 opacity: NotchController.expanded ? 0 : 1
+                scale: NotchController.expanded ? 0.9 : 1.0
 
                 Behavior on opacity {
                     NumberAnimation { duration: 140 }
+                }
+
+                Behavior on scale {
+                    NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
                 }
 
                 CollapsedContent {
@@ -468,9 +475,14 @@ PanelWindow {
                 spacing: 0
                 visible: opacity > 0.01
                 opacity: NotchController.expanded ? 1 : 0
+                scale: NotchController.expanded ? 1.0 : 0.93
 
                 Behavior on opacity {
                     NumberAnimation { duration: 170 }
+                }
+
+                Behavior on scale {
+                    NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
                 }
 
                 ExpandedHeader {

@@ -167,6 +167,11 @@ Item {
         anchors.centerIn: parent
         anchors.verticalCenterOffset: breathOffset
         spacing: root.cursorTracking ? 12 : 11
+        scale: root.cursorTracking ? 1.12 : 1.0
+
+        Behavior on scale {
+            NumberAnimation { duration: 160; easing.type: Easing.OutBack }
+        }
 
         Behavior on spacing {
             NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
