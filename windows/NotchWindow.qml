@@ -99,6 +99,75 @@ PanelWindow {
         onTriggered: root.carouselWheelAccum = 0
     }
 
+    function isExternalFileDrag(dragEvent: var): bool {
+        if (!dragEvent || ShelfService.draggingOut)
+            return false;
+        if (dragEvent.source && dragEvent.source.isShelfDragItem)
+            return false;
+        if (dragEvent.hasUrls)
+            return true;
+        const formats = dragEvent.formats;
+        if (formats && typeof formats.indexOf === "function" && formats.indexOf("text/uri-list") !== -1)
+            return true;
+        return false;
+    }
+
+    function handleExternalDragEnter(dragEvent: var): void {
+        if (!isExternalFileDrag(dragEvent)) {
+            dragEvent.accepted = false;
+            return;
+        }
+        dragLeaveTimer.stop();
+        dragEvent.accept(Qt.CopyAction);
+        NotchController.setDragActive(true);
+    }
+
+    function handleExternalDragExit(): void {
+        if (!sensorDropArea.containsDrag && !notchDropArea.containsDrag)
+            dragLeaveTimer.restart();
+    }
+
+    function handleExternalDrop(dropEvent: var): void {
+        if (!isExternalFileDrag(dropEvent)) {
+            dropEvent.accepted = false;
+            if (NotchController.dragActive && !sensorDropArea.containsDrag && !notchDropArea.containsDrag)
+                dragLeaveTimer.restart();
+            return;
+        }
+        dragLeaveTimer.stop();
+        const urls = dropEvent.urls;
+        if (urls && urls.length > 0) {
+            ShelfService.addUrls(urls);
+            dropEvent.accept(Qt.CopyAction);
+        } else if (typeof dropEvent.getDataAsString === "function") {
+            const rawUriList = dropEvent.getDataAsString("text/uri-list") || "";
+            const parsed = rawUriList.split(/\r?\n/)
+                .map(s => s.trim())
+                .filter(s => s.length > 0 && !s.startsWith("#"));
+            if (parsed.length > 0) {
+                ShelfService.addUrls(parsed);
+                dropEvent.accept(Qt.CopyAction);
+            } else {
+                dropEvent.accepted = false;
+            }
+        } else {
+            dropEvent.accepted = false;
+        }
+        // Brief settle avoids collapse bounce before Wayland restores wl_pointer hover after drop
+        dragLeaveTimer.restart();
+    }
+
+    Timer {
+        id: dragLeaveTimer
+
+        interval: 180
+        repeat: false
+        onTriggered: {
+            if (!sensorDropArea.containsDrag && !notchDropArea.containsDrag)
+                NotchController.setDragActive(false);
+        }
+    }
+
     Timer {
         interval: 15000
         repeat: true
@@ -213,7 +282,7 @@ PanelWindow {
                 NotchController.inputFocused = false;
         }
 
-        // Top-edge sensor HoverHandler (120x4 at y=0 in auto-hide, or topBridge while expanded)
+        // Top-edge sensor HoverHandler + DropArea (120x4 at y=0 in auto-hide, or topBridge while expanded)
         Item {
             id: sensorZone
 
@@ -228,6 +297,16 @@ PanelWindow {
 
                 enabled: sensorZone.width > 0 && sensorZone.height > 0
                 onHoveredChanged: NotchController.setSensorHovered(hovered)
+            }
+
+            DropArea {
+                id: sensorDropArea
+
+                anchors.fill: parent
+                enabled: sensorZone.width > 0 && sensorZone.height > 0
+                onEntered: drag => root.handleExternalDragEnter(drag)
+                onExited: root.handleExternalDragExit()
+                onDropped: drop => root.handleExternalDrop(drop)
             }
         }
 
@@ -272,19 +351,14 @@ PanelWindow {
                 }
             }
 
-            // Drag-and-drop entry stub (Task 7 wires ShelfService)
+            // Drag-and-drop entry onto notch / pill / strip / expanded card
             DropArea {
-                id: dropAreaStub
+                id: notchDropArea
 
                 anchors.fill: parent
-                onEntered: drag => {
-                    drag.accept();
-                    NotchController.setDragActive(true);
-                }
-                onExited: NotchController.setDragActive(false)
-                onDropped: drop => {
-                    NotchController.setDragActive(false);
-                }
+                onEntered: drag => root.handleExternalDragEnter(drag)
+                onExited: root.handleExternalDragExit()
+                onDropped: drop => root.handleExternalDrop(drop)
             }
 
             // Collapsed / Peek Content Slot
@@ -358,13 +432,9 @@ PanelWindow {
                         }
 
                         // Page 1: Drag-and-Drop File Shelf (Task 7)
-                        PlaceholderPage {
+                        FileShelfPage {
                             width: carouselViewport.width
                             height: carouselViewport.height
-                            iconName: "folder"
-                            title: "Drag & Drop File Shelf"
-                            subtitle: "Stage dropped files for drag-out or one-click clipboard copy"
-                            taskLabel: "Coming in Task 7"
                         }
 
                         // Page 2: Pomodoro & Quick Tools (Task 8)
