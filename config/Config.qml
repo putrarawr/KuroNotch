@@ -57,7 +57,7 @@ Singleton {
     }
 
     property QtObject theme: QtObject {
-        property string palette: "obsidian" // "obsidian" | "midnight" | "forest" | "crimson" | "amber" | "violet"
+        property string palette: "obsidian" // "obsidian" | "midnight" | "forest" | "crimson" | "amber" | "violet" | "wallpaper"
         property bool adaptiveAlbumAccent: true
     }
 
@@ -68,13 +68,20 @@ Singleton {
         property bool notifications: true
     }
 
+    readonly property string wallpaperSchemePath: `${Quickshell.env("HOME")}/.local/state/caelestia/scheme.json`
+    property string _wallSurface: "#08060d"
+    property string _wallElevated: "#120e1c"
+    property string _wallRim: "#c176c4"
+    property string _wallAccent: "#c176c4"
+
     readonly property var palettePresets: [
         { id: "obsidian", label: "Obsidian", surface: "#050507", elevated: "#0d0d11", rim: "#ffffff", accent: "#f4f4f6" },
         { id: "midnight", label: "Midnight", surface: "#070a14", elevated: "#0e1424", rim: "#93c5fd", accent: "#60a5fa" },
         { id: "forest", label: "Forest", surface: "#050d09", elevated: "#0c1912", rim: "#86efac", accent: "#4ade80" },
         { id: "crimson", label: "Crimson", surface: "#110609", elevated: "#1b0b10", rim: "#fca5a5", accent: "#f87171" },
         { id: "amber", label: "Amber", surface: "#100a05", elevated: "#1c1209", rim: "#fcd34d", accent: "#fbbf24" },
-        { id: "violet", label: "Violet", surface: "#0c0714", elevated: "#150e24", rim: "#d8b4fe", accent: "#c084fc" }
+        { id: "violet", label: "Violet", surface: "#0c0714", elevated: "#150e24", rim: "#d8b4fe", accent: "#c084fc" },
+        { id: "wallpaper", label: "Wallpaper", surface: root._wallSurface, elevated: root._wallElevated, rim: root._wallRim, accent: root._wallAccent }
     ]
 
     readonly property var activePalette: {
@@ -290,6 +297,48 @@ Singleton {
             if (error === FileViewError.FileNotFound) {
                 root.save();
             }
+        }
+    }
+
+    function _normalizeHex(raw, fallback) {
+        if (typeof raw !== "string")
+            return fallback;
+        const clean = raw.trim().replace(/^#/, "");
+        if (!/^[0-9a-fA-F]{6}$/.test(clean))
+            return fallback;
+        return "#" + clean.toLowerCase();
+    }
+
+    FileView {
+        id: schemeFileView
+
+        path: root.wallpaperSchemePath
+        watchChanges: true
+        printErrors: false
+
+        onFileChanged: schemeFileView.reload()
+
+        onLoaded: {
+            try {
+                const parsed = JSON.parse(text().trim());
+                const c = parsed?.colours;
+                if (!c || typeof c !== "object")
+                    return;
+                const surf = root._normalizeHex(c.surface || c.background, "#08060d");
+                const accent = root._normalizeHex(c.tertiary || c.secondary || c.primary, "#c176c4");
+                const rim = root._normalizeHex(c.secondary || c.primary || c.tertiary, accent);
+                const surfCol = Qt.color(surf);
+                const elevCol = Qt.rgba(
+                    Math.min(1, surfCol.r + 0.045),
+                    Math.min(1, surfCol.g + 0.045),
+                    Math.min(1, surfCol.b + 0.055),
+                    1.0
+                );
+                root._wallSurface = surf;
+                root._wallElevated = elevCol.toString();
+                root._wallAccent = accent;
+                root._wallRim = rim;
+            } catch (e) {}
         }
     }
 }

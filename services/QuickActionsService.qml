@@ -10,6 +10,49 @@ Singleton {
     id: root
 
     readonly property bool recording: NotchController.recordingActive
+    property bool caffeineActive: false
+    property bool nightLightActive: false
+
+    function toggleCaffeine(): void {
+        root.caffeineActive = !root.caffeineActive;
+        NotchController.triggerPeek("osd", 1, {
+            title: root.caffeineActive ? "Caffeine On" : "Caffeine Off",
+            subtitle: root.caffeineActive ? "Display & idle sleep inhibited" : "Normal sleep schedule restored",
+            icon: "coffee",
+            progress: root.caffeineActive ? 1 : 0
+        });
+    }
+
+    function toggleNightLight(): void {
+        root.nightLightActive = !root.nightLightActive;
+        if (!root.nightLightActive) {
+            Quickshell.execDetached(["pkill", "-x", "hyprsunset"]);
+        }
+        NotchController.triggerPeek("osd", 1, {
+            title: root.nightLightActive ? "Night Light On" : "Night Light Off",
+            subtitle: root.nightLightActive ? "Warm 4200K eye comfort" : "Standard display color",
+            icon: "bedtime",
+            progress: root.nightLightActive ? 1 : 0
+        });
+    }
+
+    Process {
+        id: caffeineProc
+
+        running: root.caffeineActive
+        command: ["systemd-inhibit", "--what=idle", "--who=island-notch", "--why=Caffeine Mode", "sleep", "infinity"]
+    }
+
+    Process {
+        id: nightLightProc
+
+        running: root.nightLightActive
+        command: ["hyprsunset", "-t", "4200"]
+        onExited: (code, status) => {
+            if (root.nightLightActive && code !== 0)
+                root.nightLightActive = false;
+        }
+    }
 
     function screenshotRegion(): void {
         NotchController.menuOpen = false;

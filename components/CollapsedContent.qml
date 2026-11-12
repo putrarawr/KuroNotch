@@ -769,6 +769,7 @@ Item {
             spacing: 6
 
             Rectangle {
+                visible: !root.recordingActive
                 width: 6
                 height: 6
                 radius: 3
@@ -776,7 +777,68 @@ Item {
                 color: Config.dnd ? "#d4845a" : "#8e8e98"
             }
 
+            // Live Recording Activity Chip with timer + 1-click Stop
+            Rectangle {
+                visible: root.recordingActive
+                anchors.verticalCenter: parent.verticalCenter
+                height: 18
+                width: recLiveRow.implicitWidth + 10
+                radius: 9
+                color: Qt.rgba(239 / 255, 68 / 255, 68 / 255, 0.18)
+                border.width: 1
+                border.color: Qt.rgba(239 / 255, 68 / 255, 68 / 255, 0.42)
+
+                Row {
+                    id: recLiveRow
+
+                    anchors.centerIn: parent
+                    spacing: 4
+
+                    Rectangle {
+                        width: 6
+                        height: 6
+                        radius: 3
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: "#ef4444"
+
+                        SequentialAnimation on opacity {
+                            running: root.recordingActive
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.35; duration: 600 }
+                            NumberAnimation { to: 1.0; duration: 600 }
+                        }
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: `REC ${PrivacyService.formattedRecordingTime}`
+                        font.family: "Rubik"
+                        font.pixelSize: 10
+                        font.weight: Font.DemiBold
+                        color: "#fecaca"
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "stop_circle"
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 12
+                        color: stopRecChipMouse.containsMouse ? "#ffffff" : "#ef4444"
+
+                        MouseArea {
+                            id: stopRecChipMouse
+                            anchors.fill: parent
+                            anchors.margins: -3
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: QuickActionsService.toggleRecord()
+                        }
+                    }
+                }
+            }
+
             Text {
+                visible: !root.recordingActive || root.pomodoroText.length > 0
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.pomodoroText.length > 0 ? root.pomodoroText : "Island"
                 font.family: "Rubik"
@@ -789,7 +851,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 dotSize: 6
                 micActive: root.micActive
-                recordingActive: root.recordingActive
+                recordingActive: false
             }
         }
 

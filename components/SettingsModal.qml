@@ -12,6 +12,14 @@ PopupWindow {
 
     required property var parentWindow
 
+    property int activeTab: 0 // 0: Appearance, 1: Widgets, 2: Behavior
+
+    readonly property var tabs: [
+        { id: 0, label: "Appearance", icon: "palette" },
+        { id: 1, label: "Widgets", icon: "widgets" },
+        { id: 2, label: "Behavior", icon: "tune" }
+    ]
+
     readonly property var presets: [
         { id: "notch", label: "Notch", icon: "page_header" },
         { id: "pill", label: "Pill", icon: "web_asset" },
@@ -20,8 +28,8 @@ PopupWindow {
 
     visible: NotchController.settingsOpen
     color: "transparent"
-    implicitWidth: 430
-    implicitHeight: 372
+    implicitWidth: 448
+    implicitHeight: 392
 
     anchor.window: root.parentWindow
     anchor.rect: Qt.rect(
@@ -63,7 +71,7 @@ PopupWindow {
                 Qt.color(Config.activePalette.rim).r,
                 Qt.color(Config.activePalette.rim).g,
                 Qt.color(Config.activePalette.rim).b,
-                0.16
+                0.18
             )
 
             // Soft top accent wash inside modal
@@ -117,7 +125,7 @@ PopupWindow {
                         }
 
                         Text {
-                            text: "Customize layout mode, color palette, and active widgets"
+                            text: "Layout mode, color palette, and widgets on/off"
                             font.family: "Rubik"
                             font.pixelSize: 10
                             color: "#8e8e98"
@@ -151,32 +159,103 @@ PopupWindow {
                     }
                 }
 
-                // Hairline divider
+                // Segmented Navigation Tabs: Appearance | Widgets | Behavior
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 1
-                    color: Qt.rgba(1, 1, 1, 0.07)
+                    height: 32
+                    radius: 10
+                    color: Config.activePalette.elevated
+                    border.width: 1
+                    border.color: Qt.rgba(1, 1, 1, 0.08)
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 3
+                        spacing: 4
+
+                        Repeater {
+                            model: root.tabs
+
+                            delegate: Rectangle {
+                                id: tabBtn
+
+                                required property var modelData
+                                readonly property bool active: root.activeTab === modelData.id
+
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                radius: 7
+                                color: active
+                                    ? Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.18)
+                                    : (tabMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.05) : "transparent")
+                                border.width: active ? 1 : 0
+                                border.color: Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.45)
+
+                                Behavior on color {
+                                    ColorAnimation { duration: 120 }
+                                }
+
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 5
+
+                                    Text {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: tabBtn.modelData.icon
+                                        font.family: "Material Symbols Rounded"
+                                        font.pixelSize: 14
+                                        color: tabBtn.active ? Config.activePalette.accent : "#8e8e98"
+                                    }
+
+                                    Text {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: tabBtn.modelData.label
+                                        font.family: "Rubik"
+                                        font.pixelSize: 11
+                                        font.weight: tabBtn.active ? Font.DemiBold : Font.Medium
+                                        color: tabBtn.active ? "#f4f4f6" : "#9e9eaa"
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: tabMouse
+
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.activeTab = tabBtn.modelData.id
+                                }
+                            }
+                        }
+                    }
                 }
 
-                // Scrollable Settings Body
+                // Tab Body Content
                 Flickable {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     contentWidth: width
-                    contentHeight: bodyCol.implicitHeight
+                    contentHeight: {
+                        if (root.activeTab === 0)
+                            return appearanceCol.implicitHeight;
+                        if (root.activeTab === 1)
+                            return widgetsCol.implicitHeight;
+                        return behaviorCol.implicitHeight;
+                    }
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
 
+                    // TAB 0: Appearance (Style + Color Palette + Adaptive Glow)
                     ColumnLayout {
-                        id: bodyCol
+                        id: appearanceCol
 
+                        visible: root.activeTab === 0
                         width: parent.width
-                        spacing: 14
+                        spacing: 12
 
-                        // Section 1: Style & Behavior
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: 7
+                            spacing: 6
 
                             Text {
                                 text: "NOTCH STYLE"
@@ -250,10 +329,9 @@ PopupWindow {
                             }
                         }
 
-                        // Section 2: Color Palette
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: 7
+                            spacing: 6
 
                             Text {
                                 text: "COLOR PALETTE"
@@ -280,7 +358,7 @@ PopupWindow {
                                         readonly property bool active: Config.theme.palette === modelData.id
 
                                         Layout.fillWidth: true
-                                        height: 36
+                                        height: 34
                                         radius: 10
                                         color: modelData.elevated
                                         border.width: active ? 1.5 : 1
@@ -290,12 +368,12 @@ PopupWindow {
 
                                         Row {
                                             anchors.centerIn: parent
-                                            spacing: 7
+                                            spacing: 6
 
                                             Rectangle {
-                                                width: 12
-                                                height: 12
-                                                radius: 6
+                                                width: 11
+                                                height: 11
+                                                radius: 5.5
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 color: swatchCard.modelData.accent
                                                 border.width: 1
@@ -326,8 +404,8 @@ PopupWindow {
 
                             SettingToggleRow {
                                 label: "Adaptive Album Color Glow"
-                                subtitle: "Tint glow & accents from playing track artwork"
-                                iconName: "palette"
+                                subtitle: "Tint glow & lyrics from playing track artwork"
+                                iconName: "auto_awesome"
                                 checked: Config.theme.adaptiveAlbumAccent
                                 onToggled: {
                                     Config.theme.adaptiveAlbumAccent = !Config.theme.adaptiveAlbumAccent;
@@ -335,104 +413,183 @@ PopupWindow {
                                 }
                             }
                         }
+                    }
 
-                        // Section 3: Active Widgets & Modules
-                        ColumnLayout {
+                    // TAB 1: Widgets On / Off
+                    ColumnLayout {
+                        id: widgetsCol
+
+                        visible: root.activeTab === 1
+                        width: parent.width
+                        spacing: 6
+
+                        Text {
+                            text: "ENABLE / DISABLE WIDGET PAGES"
+                            font.family: "Rubik"
+                            font.pixelSize: 10
+                            font.weight: Font.DemiBold
+                            font.letterSpacing: 0.8
+                            color: "#8e8e98"
+                        }
+
+                        SettingToggleRow {
+                            label: "Drag & Drop File Shelf"
+                            subtitle: "Stage files & copy/drag back out"
+                            iconName: "inventory_2"
+                            checked: Config.widgets.shelf
+                            onToggled: {
+                                Config.widgets.shelf = !Config.widgets.shelf;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Pomodoro & Quick Tools"
+                            subtitle: "Timer, screenshot, color picker, Caffeine, Night Light"
+                            iconName: "timer"
+                            checked: Config.widgets.pomodoro
+                            onToggled: {
+                                Config.widgets.pomodoro = !Config.widgets.pomodoro;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Clipboard Stash (cliphist)"
+                            subtitle: "Searchable text & image clipboard history"
+                            iconName: "content_paste"
+                            checked: Config.widgets.clipboard
+                            onToggled: {
+                                Config.widgets.clipboard = !Config.widgets.clipboard;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Notification Island"
+                            subtitle: "Interactive notification center & alert bursts"
+                            iconName: "notifications"
+                            checked: Config.widgets.notifications
+                            onToggled: {
+                                Config.widgets.notifications = !Config.widgets.notifications;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Sync Lyrics"
+                            subtitle: "Spotify-style lyrics panel & collapsed lyric ticker"
+                            iconName: "lyrics"
+                            checked: Config.lyrics.enabled
+                            onToggled: {
+                                Config.lyrics.enabled = !Config.lyrics.enabled;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Idle Companion Eyes"
+                            subtitle: "Animated owl eyes when idle"
+                            iconName: "visibility"
+                            checked: Config.companion.enabled
+                            onToggled: {
+                                Config.companion.enabled = !Config.companion.enabled;
+                                Config.save();
+                            }
+                        }
+                    }
+
+                    // TAB 2: Behavior & Shortcuts
+                    ColumnLayout {
+                        id: behaviorCol
+
+                        visible: root.activeTab === 2
+                        width: parent.width
+                        spacing: 6
+
+                        Text {
+                            text: "SMART BEHAVIOR"
+                            font.family: "Rubik"
+                            font.pixelSize: 10
+                            font.weight: Font.DemiBold
+                            font.letterSpacing: 0.8
+                            color: "#8e8e98"
+                        }
+
+                        SettingToggleRow {
+                            label: "Smart Browser & Fullscreen Auto-Hide"
+                            subtitle: "Shrink into thin top sensor while browsing"
+                            iconName: "visibility_off"
+                            checked: Config.autoHide.enabled
+                            onToggled: {
+                                Config.autoHide.enabled = !Config.autoHide.enabled;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Show Lyrics in Collapsed Notch"
+                            subtitle: "Display active lyric line inside collapsed pill"
+                            iconName: "subtitles"
+                            checked: Config.lyrics.showInCollapsed
+                            onToggled: {
+                                Config.lyrics.showInCollapsed = !Config.lyrics.showInCollapsed;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Do Not Disturb"
+                            subtitle: "Silence incoming notification peeks"
+                            iconName: "notifications_off"
+                            checked: Config.dnd
+                            onToggled: NotchController.toggleDnd()
+                        }
+
+                        SettingToggleRow {
+                            label: "Pomodoro Completion Chime"
+                            subtitle: "Play gentle tone when focus/break finishes"
+                            iconName: "music_note"
+                            checked: Config.pomodoro.chimeEnabled
+                            onToggled: {
+                                Config.pomodoro.chimeEnabled = !Config.pomodoro.chimeEnabled;
+                                Config.save();
+                            }
+                        }
+
+                        Rectangle {
                             Layout.fillWidth: true
-                            spacing: 6
+                            Layout.topMargin: 4
+                            implicitHeight: shortcutsCol.implicitHeight + 16
+                            radius: 10
+                            color: Config.activePalette.elevated
+                            border.width: 1
+                            border.color: Qt.rgba(1, 1, 1, 0.07)
 
-                            Text {
-                                text: "WIDGETS & MODULES"
-                                font.family: "Rubik"
-                                font.pixelSize: 10
-                                font.weight: Font.DemiBold
-                                font.letterSpacing: 0.8
-                                color: "#8e8e98"
-                            }
+                            ColumnLayout {
+                                id: shortcutsCol
 
-                            SettingToggleRow {
-                                label: "Drag & Drop File Shelf"
-                                subtitle: "Stage files directly onto the notch"
-                                iconName: "inventory_2"
-                                checked: Config.widgets.shelf
-                                onToggled: {
-                                    Config.widgets.shelf = !Config.widgets.shelf;
-                                    Config.save();
+                                anchors.fill: parent
+                                anchors.margins: 8
+                                spacing: 3
+
+                                Text {
+                                    text: "HYPRLAND KEYBINDS"
+                                    font.family: "Rubik"
+                                    font.pixelSize: 9
+                                    font.weight: Font.DemiBold
+                                    font.letterSpacing: 0.7
+                                    color: Config.activePalette.accent
                                 }
-                            }
 
-                            SettingToggleRow {
-                                label: "Pomodoro & Quick Tools"
-                                subtitle: "Focus timer, screenshots, picker, screen recorder"
-                                iconName: "timer"
-                                checked: Config.widgets.pomodoro
-                                onToggled: {
-                                    Config.widgets.pomodoro = !Config.widgets.pomodoro;
-                                    Config.save();
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Super + I: Toggle Notch   ·   Super + Shift + V: Clipboard   ·   Super + N: Notifications"
+                                    wrapMode: Text.WordWrap
+                                    font.family: "Rubik"
+                                    font.pixelSize: 10
+                                    color: "#b8b8c4"
                                 }
-                            }
-
-                            SettingToggleRow {
-                                label: "Clipboard Stash (cliphist)"
-                                subtitle: "Searchable text & image clipboard history"
-                                iconName: "content_paste"
-                                checked: Config.widgets.clipboard
-                                onToggled: {
-                                    Config.widgets.clipboard = !Config.widgets.clipboard;
-                                    Config.save();
-                                }
-                            }
-
-                            SettingToggleRow {
-                                label: "Notification Island"
-                                subtitle: "Live alert bursts & notification center"
-                                iconName: "notifications"
-                                checked: Config.widgets.notifications
-                                onToggled: {
-                                    Config.widgets.notifications = !Config.widgets.notifications;
-                                    Config.save();
-                                }
-                            }
-
-                            SettingToggleRow {
-                                label: "Sync Lyrics"
-                                subtitle: "Live Spotify-style lyrics & collapsed ticker"
-                                iconName: "lyrics"
-                                checked: Config.lyrics.enabled
-                                onToggled: {
-                                    Config.lyrics.enabled = !Config.lyrics.enabled;
-                                    Config.save();
-                                }
-                            }
-
-                            SettingToggleRow {
-                                label: "Idle Companion Eyes"
-                                subtitle: "Animated eyes when idle"
-                                iconName: "visibility"
-                                checked: Config.companion.enabled
-                                onToggled: {
-                                    Config.companion.enabled = !Config.companion.enabled;
-                                    Config.save();
-                                }
-                            }
-
-                            SettingToggleRow {
-                                label: "Smart Browser & Fullscreen Auto-Hide"
-                                subtitle: "Shrink into thin top sensor while browsing"
-                                iconName: "visibility_off"
-                                checked: Config.autoHide.enabled
-                                onToggled: {
-                                    Config.autoHide.enabled = !Config.autoHide.enabled;
-                                    Config.save();
-                                }
-                            }
-
-                            SettingToggleRow {
-                                label: "Do Not Disturb"
-                                subtitle: "Silence notification peeks"
-                                iconName: "notifications_off"
-                                checked: Config.dnd
-                                onToggled: NotchController.toggleDnd()
                             }
                         }
                     }
@@ -501,7 +658,6 @@ PopupWindow {
                 }
             }
 
-            // Pill Switch
             Rectangle {
                 Layout.preferredWidth: 34
                 Layout.preferredHeight: 19

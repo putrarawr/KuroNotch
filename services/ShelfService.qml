@@ -223,6 +223,32 @@ Singleton {
         }
     }
 
+    function copyAllForPaste(): void {
+        if (!Array.isArray(root.items) || root.items.length === 0)
+            return;
+        const uris = [];
+        for (let i = 0; i < root.items.length; i++) {
+            const item = root.items[i];
+            if (!item) continue;
+            let uri = typeof item.url === "string" ? item.url.trim() : "";
+            const localPath = typeof item.path === "string" ? item.path.trim() : "";
+            if (uri.length === 0 && localPath.startsWith("/"))
+                uri = root._normalizeEntryUrl(localPath);
+            if (uri.indexOf("://") !== -1)
+                uris.push(uri);
+        }
+        if (uris.length === 0)
+            return;
+        const payload = uris.join("\n") + "\n";
+        Quickshell.execDetached([
+            "sh", "-c",
+            "printf '%s' \"$1\" | wl-copy -t text/uri-list",
+            "sh",
+            payload
+        ]);
+        root._setFeedback(-1, "all", `Copied ${uris.length} files for paste`);
+    }
+
     function copyPath(index: int): void {
         if (!Array.isArray(root.items) || index < 0 || index >= root.items.length)
             return;

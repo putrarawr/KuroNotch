@@ -22,23 +22,36 @@ PanelWindow {
     readonly property var effectiveGeometry: {
         const base = NotchController.geometry;
         if (!NotchController.expanded
-            && (NotchController.surfaceState === "notch" || NotchController.surfaceState === "pill")
-            && MediaService.playing) {
-            const hasLyric = Config.lyrics.enabled
-                && Config.lyrics.showInCollapsed
-                && LyricsService.available
-                && LyricsService.synced;
-            const targetWidth = Math.max(base.width, hasLyric ? 376 : 320);
-            const targetHeight = Math.max(base.height, hasLyric ? 36 : base.height);
-            const sw = width > 0 ? width : NotchController.screenWidth;
-            return {
-                x: Math.round((sw - targetWidth) / 2),
-                y: base.y,
-                width: targetWidth,
-                height: targetHeight,
-                topMargin: base.topMargin,
-                radius: hasLyric ? Math.round(targetHeight / 2) : base.radius
-            };
+            && (NotchController.surfaceState === "notch" || NotchController.surfaceState === "pill")) {
+            if (MediaService.playing) {
+                const hasLyric = Config.lyrics.enabled
+                    && Config.lyrics.showInCollapsed
+                    && LyricsService.available
+                    && LyricsService.synced;
+                const targetWidth = Math.max(base.width, hasLyric ? 376 : 320);
+                const targetHeight = Math.max(base.height, hasLyric ? 36 : base.height);
+                const sw = width > 0 ? width : NotchController.screenWidth;
+                return {
+                    x: Math.round((sw - targetWidth) / 2),
+                    y: base.y,
+                    width: targetWidth,
+                    height: targetHeight,
+                    topMargin: base.topMargin,
+                    radius: hasLyric ? Math.round(targetHeight / 2) : base.radius
+                };
+            }
+            if (PrivacyService.recordingActive || PomodoroService.running) {
+                const targetWidth = Math.max(base.width, PrivacyService.recordingActive ? 276 : 252);
+                const sw = width > 0 ? width : NotchController.screenWidth;
+                return {
+                    x: Math.round((sw - targetWidth) / 2),
+                    y: base.y,
+                    width: targetWidth,
+                    height: base.height,
+                    topMargin: base.topMargin,
+                    radius: base.radius
+                };
+            }
         }
         return base;
     }

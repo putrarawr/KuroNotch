@@ -178,6 +178,57 @@ Item {
                 }
             }
 
+            // Copy All files button (when > 1 item staged)
+            Rectangle {
+                visible: ShelfService.count > 1 && !NotchController.dragActive
+                Layout.alignment: Qt.AlignVCenter
+                height: 22
+                width: copyAllRow.implicitWidth + 12
+                radius: 7
+                color: copyAllMouse.containsMouse ? "#1b1b26" : "#12121a"
+                border.width: 1
+                border.color: copyAllMouse.containsMouse
+                    ? Qt.rgba(root.activeAccent.r, root.activeAccent.g, root.activeAccent.b, 0.40)
+                    : Qt.rgba(1, 1, 1, 0.08)
+
+                Behavior on color {
+                    ColorAnimation { duration: 110 }
+                }
+
+                Row {
+                    id: copyAllRow
+
+                    anchors.centerIn: parent
+                    spacing: 4
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "content_copy"
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 12
+                        color: copyAllMouse.containsMouse ? root.activeAccent : "#9e9eaa"
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "Copy All"
+                        font.family: "Rubik"
+                        font.pixelSize: 10
+                        font.weight: Font.Medium
+                        color: copyAllMouse.containsMouse ? "#ffffff" : "#c8c8d4"
+                    }
+                }
+
+                MouseArea {
+                    id: copyAllMouse
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: ShelfService.copyAllForPaste()
+                }
+            }
+
             // Clear shelf button
             Rectangle {
                 visible: ShelfService.count > 0 && !NotchController.dragActive

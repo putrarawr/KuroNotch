@@ -109,6 +109,7 @@ Singleton {
     readonly property bool canSeek: Boolean(root.player?.canSeek)
     readonly property bool positionSupported: Boolean(root.player?.positionSupported)
     readonly property string playerIdentity: root.player?.identity ?? ""
+    readonly property int playerCount: (Mpris.players?.values ?? []).length
 
     property list<real> cavaBars: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     property color accentColor: "#f4f4f6"
@@ -183,6 +184,16 @@ Singleton {
         const currentIdx = root.sinks.findIndex(s => s === root.activeSink);
         const nextIdx = currentIdx < 0 ? 0 : (currentIdx + 1) % root.sinks.length;
         root.setSink(root.sinks[nextIdx]);
+    }
+
+    function cyclePlayer(): void {
+        const players = Mpris.players?.values ?? [];
+        if (players.length <= 1)
+            return;
+        const currentIdx = players.indexOf(root.player);
+        const nextIdx = currentIdx < 0 ? 0 : (currentIdx + 1) % players.length;
+        root.player = players[nextIdx];
+        root.syncPosition();
     }
 
     function refreshSinks(): void {

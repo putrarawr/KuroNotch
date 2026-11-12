@@ -15,10 +15,12 @@ Singleton {
     property var lines: []
     property bool synced: false
     property bool loading: false
+    property real offsetSec: 0
+    property bool _skipCacheOnce: false
 
     readonly property bool available: Config.lyrics.enabled && root.lines.length > 0
     readonly property int activeIndex: (root.synced && root.lines.length > 0)
-        ? LrcParser.findActiveLineIndex(root.lines, MediaService.position)
+        ? LrcParser.findActiveLineIndex(root.lines, Math.max(0, MediaService.position + root.offsetSec))
         : -1
     readonly property string activeLineText: (root.activeIndex >= 0 && root.activeIndex < root.lines.length)
         ? (root.lines[root.activeIndex]?.text ?? "")
@@ -42,13 +44,29 @@ Singleton {
         return `${a}\0${t}\0${al}\0${u}`;
     }
 
+    function adjustOffset(deltaSec: real): void {
+        if (typeof deltaSec !== "number" || !isFinite(deltaSec))
+            return;
+        const next = Math.round((root.offsetSec + deltaSec) * 10) / 10;
+        root.offsetSec = Math.max(-15, Math.min(15, next));
+    }
+
+    function resetOffset(): void {
+        root.offsetSec = 0;
+    }
+
+    function reloadLyrics(): void {
+        root._skipCacheOnce = true;
+        root._beginLookup();
+    }
+
     function seekToLine(index: int): void {
         if (index < 0 || index >= root.lines.length)
             return;
         const line = root.lines[index];
         if (!line || typeof line.timeSec !== "number" || line.timeSec < 0)
             return;
-        MediaService.seek(line.timeSec);
+        MediaService.seek(Math.max(0, line.timeSec - root.offsetSec));
     }
 
     function _abortActiveXhr(): void {
@@ -96,8 +114,11 @@ Singleton {
     function _beginLookup(): void {
         root._abortActiveXhr();
         const reqId = ++root._requestSeq;
+        if (!root._skipCacheOnce)
+            root.offsetSec = 0;
 
         if (!Config.lyrics.enabled) {
+            root._skipCacheOnce = false;
             root._clearLyrics();
             return;
         }
@@ -109,6 +130,7 @@ Singleton {
         const duration = MediaService.length;
 
         if (title.length === 0) {
+            root._skipCacheOnce = false;
             root._clearLyrics();
             return;
         }
@@ -128,6 +150,7 @@ Singleton {
 
         const sidecar = root._sidecarPathForUrl(trackUrl);
         if (sidecar.length > 0) {
+            root._skipCacheOnce = false;
             root._pendingSidecarReqId = reqId;
             if (sidecarFileView.path === sidecar)
                 sidecarFileView.reload();
@@ -143,7 +166,8 @@ Singleton {
         if (reqId !== root._requestSeq || !root._pendingContext)
             return;
 
-        if (!Config.lyrics.cacheEnabled) {
+        if (!Config.lyrics.cacheEnabled || root._skipCacheOnce) {
+            root._skipCacheOnce = false;
             root._fetchLrclibGet(reqId);
             return;
         }

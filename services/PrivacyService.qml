@@ -12,6 +12,26 @@ Singleton {
     property bool micActive: false
     property bool recordingActive: false
     property string recordingLabel: ""
+    property int recordingElapsedSec: 0
+
+    readonly property string formattedRecordingTime: {
+        const sec = Math.max(0, root.recordingElapsedSec);
+        const mins = Math.floor(sec / 60);
+        const rem = sec % 60;
+        return `${mins < 10 ? "0" : ""}${mins}:${rem < 10 ? "0" : ""}${rem}`;
+    }
+
+    onRecordingActiveChanged: {
+        if (!root.recordingActive)
+            root.recordingElapsedSec = 0;
+    }
+
+    Timer {
+        interval: 1000
+        repeat: true
+        running: root.recordingActive
+        onTriggered: root.recordingElapsedSec += 1
+    }
 
     // Ensure Pipewire singleton connects even if PrivacyService is loaded standalone
     readonly property PwNode _pwAnchor: Pipewire.defaultAudioSink

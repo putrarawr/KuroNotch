@@ -188,20 +188,66 @@ Item {
                         color: "#b4b4c0"
                     }
 
-                    Text {
+                    RowLayout {
                         Layout.fillWidth: true
-                        visible: text.length > 0
-                        text: {
-                            const alb = MediaService.album.trim();
-                            const app = MediaService.playerIdentity.trim();
-                            if (alb.length > 0 && app.length > 0)
-                                return `${alb} · ${app}`;
-                            return alb.length > 0 ? alb : app;
+                        spacing: 5
+                        visible: MediaService.album.trim().length > 0 || MediaService.playerIdentity.trim().length > 0
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: MediaService.album.trim().length > 0
+                                ? MediaService.album.trim()
+                                : MediaService.playerIdentity.trim()
+                            elide: Text.ElideRight
+                            font.family: "Rubik"
+                            font.pixelSize: 9
+                            color: "#727280"
                         }
-                        elide: Text.ElideRight
-                        font.family: "Rubik"
-                        font.pixelSize: 9
-                        color: "#727280"
+
+                        // Clickable player switcher chip when > 1 MPRIS player is active
+                        Rectangle {
+                            visible: MediaService.playerCount > 1
+                            Layout.alignment: Qt.AlignVCenter
+                            height: 15
+                            width: playerSwitchRow.implicitWidth + 8
+                            radius: 5
+                            color: playerSwitchMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.14) : Qt.rgba(1, 1, 1, 0.06)
+                            border.width: 1
+                            border.color: Qt.rgba(1, 1, 1, 0.10)
+
+                            Row {
+                                id: playerSwitchRow
+
+                                anchors.centerIn: parent
+                                spacing: 2
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: MediaService.playerIdentity.length > 0 ? MediaService.playerIdentity : "Player"
+                                    font.family: "Rubik"
+                                    font.pixelSize: 8
+                                    font.weight: Font.Medium
+                                    color: "#d4d4de"
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "swap_horiz"
+                                    font.family: "Material Symbols Rounded"
+                                    font.pixelSize: 10
+                                    color: root.activeAccent
+                                }
+                            }
+
+                            MouseArea {
+                                id: playerSwitchMouse
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: MediaService.cyclePlayer()
+                            }
+                        }
                     }
 
                     // 14-bar on-demand Cava visualizer
@@ -847,27 +893,125 @@ Item {
                 }
             }
 
-            // Minimal subtle SYNC / PLAIN micro-badge
-            Rectangle {
+            // Minimal Spotify-style SYNC + Timing Offset (-0.5s / +0.5s) + Reload controls
+            Row {
                 visible: lyricsListView.visible
                 anchors.top: parent.top
                 anchors.right: parent.right
                 anchors.margins: 4
                 z: 4
-                height: 14
-                width: syncBadgeLabel.implicitWidth + 10
-                radius: 7
-                color: Qt.rgba(1, 1, 1, 0.06)
+                spacing: 4
 
-                Text {
-                    id: syncBadgeLabel
+                // Timing offset pill (-0.5s / offset / +0.5s)
+                Rectangle {
+                    visible: LyricsService.synced
+                    height: 15
+                    width: offsetRow.implicitWidth + 8
+                    radius: 7.5
+                    color: Qt.rgba(1, 1, 1, 0.06)
 
-                    anchors.centerIn: parent
-                    text: LyricsService.synced ? "SYNC" : "PLAIN"
-                    font.family: "Rubik"
-                    font.pixelSize: 8
-                    font.weight: Font.DemiBold
-                    color: LyricsService.synced ? root.activeAccent : "#9e9eaa"
+                    Row {
+                        id: offsetRow
+
+                        anchors.centerIn: parent
+                        spacing: 4
+
+                        Text {
+                            text: "−"
+                            font.family: "Rubik"
+                            font.pixelSize: 10
+                            font.weight: Font.Bold
+                            color: minusOffMouse.containsMouse ? "#ffffff" : "#8e8e98"
+
+                            MouseArea {
+                                id: minusOffMouse
+                                anchors.fill: parent
+                                anchors.margins: -3
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: LyricsService.adjustOffset(-0.5)
+                            }
+                        }
+
+                        Text {
+                            text: {
+                                if (Math.abs(LyricsService.offsetSec) < 0.05)
+                                    return "0.0s";
+                                const sign = LyricsService.offsetSec > 0 ? "+" : "";
+                                return `${sign}${LyricsService.offsetSec.toFixed(1)}s`;
+                            }
+                            font.family: "Rubik"
+                            font.pixelSize: 8
+                            font.weight: Font.Medium
+                            color: Math.abs(LyricsService.offsetSec) >= 0.05 ? root.activeAccent : "#8e8e98"
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: LyricsService.resetOffset()
+                            }
+                        }
+
+                        Text {
+                            text: "+"
+                            font.family: "Rubik"
+                            font.pixelSize: 10
+                            font.weight: Font.Bold
+                            color: plusOffMouse.containsMouse ? "#ffffff" : "#8e8e98"
+
+                            MouseArea {
+                                id: plusOffMouse
+                                anchors.fill: parent
+                                anchors.margins: -3
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: LyricsService.adjustOffset(0.5)
+                            }
+                        }
+                    }
+                }
+
+                // Reload lyrics button
+                Rectangle {
+                    height: 15
+                    width: 15
+                    radius: 7.5
+                    color: reloadLyricsMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.14) : Qt.rgba(1, 1, 1, 0.06)
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "refresh"
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 10
+                        color: reloadLyricsMouse.containsMouse ? "#ffffff" : "#9e9eaa"
+                    }
+
+                    MouseArea {
+                        id: reloadLyricsMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: LyricsService.reloadLyrics()
+                    }
+                }
+
+                // SYNC / PLAIN badge
+                Rectangle {
+                    height: 15
+                    width: syncBadgeLabel.implicitWidth + 10
+                    radius: 7.5
+                    color: Qt.rgba(1, 1, 1, 0.06)
+
+                    Text {
+                        id: syncBadgeLabel
+
+                        anchors.centerIn: parent
+                        text: LyricsService.synced ? "SYNC" : "PLAIN"
+                        font.family: "Rubik"
+                        font.pixelSize: 8
+                        font.weight: Font.DemiBold
+                        color: LyricsService.synced ? root.activeAccent : "#9e9eaa"
+                    }
                 }
             }
         }

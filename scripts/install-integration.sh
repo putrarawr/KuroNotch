@@ -187,14 +187,23 @@ if "wl-paste --type text --watch cliphist store" not in text_content:
 if "wl-paste --type image --watch cliphist store" not in text_content:
     new_entries.append("exec-once = wl-paste --type image --watch cliphist store\n")
 
+if "island-notch ipc call notch toggleExpand" not in text_content:
+    new_entries.append("bind = \$mainMod, I, exec, ~/.local/bin/island-notch ipc call notch toggleExpand\n")
+
+if "island-notch ipc call notch setPage 3" not in text_content:
+    new_entries.append("bind = \$mainMod SHIFT, V, exec, ~/.local/bin/island-notch ipc call notch setPage 3\n")
+
+if "island-notch ipc call notch setPage 4" not in text_content:
+    new_entries.append("bind = \$mainMod, N, exec, ~/.local/bin/island-notch ipc call notch setPage 4\n")
+
 if new_entries:
     with open(path, "a", encoding="utf-8") as f:
         f.write("\n# --- ISLAND NOTCH & CLIPBOARD AUTOSTART ---\n")
         for entry in new_entries:
             f.write(entry)
-    print(f"  -> Added {len(new_entries)} autostart entries to hyprland.conf")
+    print(f"  -> Added {len(new_entries)} entries to hyprland.conf")
 else:
-    print("  -> Autostart entries already present in hyprland.conf (skipping)")
+    print("  -> Autostart & keybind entries already present in hyprland.conf (skipping)")
 EOF
 else
     echo "  -> Note: $HYPRLAND_CONF does not exist, skipping."

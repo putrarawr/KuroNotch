@@ -494,7 +494,7 @@ Item {
                                 Layout.alignment: Qt.AlignHCenter
                                 text: NotchController.recordingActive ? "stop_circle" : "videocam"
                                 font.family: "Material Symbols Rounded"
-                                font.pixelSize: 17
+                                font.pixelSize: 16
                                 color: NotchController.recordingActive ? "#ef4444" : (recMouse.containsMouse ? "#f4f4f6" : "#c8c8d4")
                             }
 
@@ -514,6 +514,94 @@ Item {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: QuickActionsService.toggleRecord()
+                        }
+                    }
+
+                    // Action 5: Caffeine (Keep Awake)
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        radius: 8
+                        color: QuickActionsService.caffeineActive
+                            ? Qt.rgba(0.98, 0.75, 0.14, 0.18)
+                            : (cafMouse.containsMouse ? "#1c1c26" : "#15151d")
+                        border.width: 1
+                        border.color: QuickActionsService.caffeineActive
+                            ? Qt.rgba(0.98, 0.75, 0.14, 0.42)
+                            : Qt.rgba(1, 1, 1, 0.08)
+
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 2
+
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "coffee"
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 16
+                                color: QuickActionsService.caffeineActive ? "#fbbf24" : (cafMouse.containsMouse ? "#f4f4f6" : "#c8c8d4")
+                            }
+
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: QuickActionsService.caffeineActive ? "Awake" : "Caffeine"
+                                font.family: "Rubik"
+                                font.pixelSize: 10
+                                font.weight: Font.Medium
+                                color: QuickActionsService.caffeineActive ? "#fde68a" : "#f4f4f6"
+                            }
+                        }
+
+                        MouseArea {
+                            id: cafMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: QuickActionsService.toggleCaffeine()
+                        }
+                    }
+
+                    // Action 6: Night Light (hyprsunset 4200K)
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        radius: 8
+                        color: QuickActionsService.nightLightActive
+                            ? Qt.rgba(0.96, 0.62, 0.34, 0.18)
+                            : (nightMouse.containsMouse ? "#1c1c26" : "#15151d")
+                        border.width: 1
+                        border.color: QuickActionsService.nightLightActive
+                            ? Qt.rgba(0.96, 0.62, 0.34, 0.42)
+                            : Qt.rgba(1, 1, 1, 0.08)
+
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 2
+
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "bedtime"
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 16
+                                color: QuickActionsService.nightLightActive ? "#fb923c" : (nightMouse.containsMouse ? "#f4f4f6" : "#c8c8d4")
+                            }
+
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: QuickActionsService.nightLightActive ? "Warm" : "Night"
+                                font.family: "Rubik"
+                                font.pixelSize: 10
+                                font.weight: Font.Medium
+                                color: QuickActionsService.nightLightActive ? "#fed7aa" : "#f4f4f6"
+                            }
+                        }
+
+                        MouseArea {
+                            id: nightMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: QuickActionsService.toggleNightLight()
                         }
                     }
                 }

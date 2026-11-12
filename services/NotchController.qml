@@ -494,6 +494,10 @@ Singleton {
             root.openExpanded(index);
         }
 
+        function openSettings(): void {
+            root.openSettings();
+        }
+
         function clearNotifs(): void {
             NotificationService.clearAll();
         }
