@@ -450,13 +450,9 @@ PanelWindow {
                         }
 
                         // Page 4: Notification Island (Task 9)
-                        PlaceholderPage {
+                        NotificationsPage {
                             width: carouselViewport.width
                             height: carouselViewport.height
-                            iconName: "notifications"
-                            title: "Notification Island"
-                            subtitle: "Interactive desktop notifications, actions, and Do Not Disturb"
-                            taskLabel: "Coming in Task 9"
                         }
                     }
 

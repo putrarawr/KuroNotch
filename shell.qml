@@ -37,6 +37,7 @@ ShellRoot {
     readonly property bool _bootPomodoro: PomodoroService.running
     readonly property bool _bootQuickActions: QuickActionsService.recording
     readonly property int _bootClipboard: ClipboardService.entries?.length ?? 0
+    readonly property int _bootNotifs: NotificationService.unreadCount
 
     Loader {
         active: root.targetScreen !== null && root.targetScreen !== undefined

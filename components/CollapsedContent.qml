@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import "../config"
 import "../services"
 
@@ -124,6 +125,33 @@ Item {
             if (osdKind === "bluetooth")
                 return "#60a5fa";
             return "#f4f4f6";
+        }
+
+        readonly property var alertPayload: NotchController.peekAlert?.payload
+        readonly property bool isNotifPeek: root.isPeek && (NotchController.peekAlert?.kind === "notif")
+        readonly property bool hasActions: Boolean(alertPayload?.actions && alertPayload.actions.length > 0)
+        readonly property var notifActions: alertPayload?.actions ?? []
+        readonly property string notifImage: alertPayload?.image ?? ""
+        readonly property string notifIcon: alertPayload?.icon ?? NotchController.peekAlert?.icon ?? ""
+        readonly property string notifTitle: NotchController.peekAlert?.title ?? "Alert"
+        readonly property string notifSubtitle: NotchController.peekAlert?.subtitle ?? alertPayload?.body ?? ""
+
+        function resolveIcon(str: string): string {
+            if (!str || str.length === 0)
+                return "";
+            if (str.startsWith("image://") || str.startsWith("file://"))
+                return str;
+            if (str.startsWith("/"))
+                return "file://" + str;
+            try {
+                const p = Quickshell.iconPath(str);
+                if (p && p.length > 0) {
+                    if (p.startsWith("image://") || p.startsWith("file://"))
+                        return p;
+                    return p.startsWith("/") ? ("file://" + p) : p;
+                }
+            } catch (e) {}
+            return "";
         }
 
         anchors.fill: parent
@@ -293,25 +321,201 @@ Item {
             }
         }
 
-        // Notification / generic peek layout
+        // Notification / peek layout WITH actions (height ~64px)
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 6
+            anchors.leftMargin: 12
+            anchors.rightMargin: 10
+            spacing: 4
+            visible: !peekPillContainer.isOsdPeek && peekPillContainer.hasActions
+
+            // Top Row: App icon, Title, Subtitle, Expand & Close buttons
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+
+                Rectangle {
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    radius: 4
+                    color: "transparent"
+                    clip: true
+
+                    Image {
+                        anchors.fill: parent
+                        source: peekPillContainer.resolveIcon(peekPillContainer.notifIcon.length > 0 ? peekPillContainer.notifIcon : peekPillContainer.notifImage)
+                        fillMode: Image.PreserveAspectFit
+                        visible: status === Image.Ready
+                        asynchronous: true
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        visible: parent.children[0].status !== Image.Ready
+                        text: {
+                            const icon = peekPillContainer.notifIcon;
+                            return (icon.length > 0 && !icon.includes("/")) ? icon : (peekPillContainer.isNotifPeek ? "notifications" : "tune");
+                        }
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 15
+                        color: "#f4f4f6"
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 0
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: peekPillContainer.notifTitle
+                        elide: Text.ElideRight
+                        font.family: "Rubik"
+                        font.pixelSize: 11
+                        font.weight: Font.Medium
+                        color: "#f4f4f6"
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        visible: text.length > 0
+                        text: peekPillContainer.notifSubtitle
+                        elide: Text.ElideRight
+                        font.family: "Rubik"
+                        font.pixelSize: 10
+                        color: "#8e8e98"
+                    }
+                }
+
+                // Expand button
+                Rectangle {
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    radius: 5
+                    color: expandPeekNotifMouse.containsMouse ? "#242432" : "transparent"
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "open_in_full"
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 12
+                        color: expandPeekNotifMouse.containsMouse ? "#f4f4f6" : "#8e8e98"
+                    }
+
+                    MouseArea {
+                        id: expandPeekNotifMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: NotchController.expandFromPeek()
+                    }
+                }
+
+                // Dismiss button
+                Rectangle {
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    radius: 5
+                    color: dismissPeekNotifMouse.containsMouse ? "#242432" : "transparent"
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "close"
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 13
+                        color: dismissPeekNotifMouse.containsMouse ? "#f4f4f6" : "#8e8e98"
+                    }
+
+                    MouseArea {
+                        id: dismissPeekNotifMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: NotchController.dismissPeek()
+                    }
+                }
+            }
+
+            // Bottom Row: Action buttons
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 6
+
+                Repeater {
+                    model: peekPillContainer.notifActions
+
+                    delegate: Rectangle {
+                        id: peekActionBtn
+                        required property var modelData
+
+                        Layout.preferredHeight: 22
+                        Layout.preferredWidth: peekActionText.implicitWidth + 14
+                        radius: 5
+                        color: peekActionMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.20) : Qt.rgba(255, 255, 255, 0.10)
+                        border.width: 1
+                        border.color: Qt.rgba(255, 255, 255, 0.12)
+
+                        Text {
+                            id: peekActionText
+                            anchors.centerIn: parent
+                            text: peekActionBtn.modelData?.text || "Action"
+                            font.family: "Rubik"
+                            font.pixelSize: 10
+                            font.weight: Font.Medium
+                            color: "#f4f4f6"
+                        }
+
+                        MouseArea {
+                            id: peekActionMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                NotificationService.invokeAction(peekPillContainer.alertPayload?.notifItem, peekActionBtn.modelData);
+                            }
+                        }
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+            }
+        }
+
+        // Notification / peek layout WITHOUT actions (standard 40px height)
         RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: 14
-            anchors.rightMargin: 14
+            anchors.leftMargin: 12
+            anchors.rightMargin: 10
             spacing: 8
-            visible: !peekPillContainer.isOsdPeek
+            visible: !peekPillContainer.isOsdPeek && !peekPillContainer.hasActions
 
-            Text {
-                Layout.alignment: Qt.AlignVCenter
-                text: {
-                    const icon = NotchController.peekAlert?.icon ?? "";
-                    if (icon.length > 0)
-                        return icon;
-                    return NotchController.peekAlert?.kind === "notif" ? "notifications" : "tune";
+            Rectangle {
+                Layout.preferredWidth: 20
+                Layout.preferredHeight: 20
+                radius: 4
+                color: "transparent"
+                clip: true
+
+                Image {
+                    anchors.fill: parent
+                    source: peekPillContainer.resolveIcon(peekPillContainer.notifIcon.length > 0 ? peekPillContainer.notifIcon : peekPillContainer.notifImage)
+                    fillMode: Image.PreserveAspectFit
+                    visible: status === Image.Ready
+                    asynchronous: true
                 }
-                font.family: "Material Symbols Rounded"
-                font.pixelSize: 16
-                color: "#f4f4f6"
+
+                Text {
+                    anchors.centerIn: parent
+                    visible: parent.children[0].status !== Image.Ready
+                    text: {
+                        const icon = peekPillContainer.notifIcon;
+                        return (icon.length > 0 && !icon.includes("/")) ? icon : (peekPillContainer.isNotifPeek ? "notifications" : "tune");
+                    }
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 16
+                    color: "#f4f4f6"
+                }
             }
 
             ColumnLayout {
@@ -321,7 +525,7 @@ Item {
 
                 Text {
                     Layout.fillWidth: true
-                    text: NotchController.peekAlert?.title || "Alert"
+                    text: peekPillContainer.notifTitle
                     elide: Text.ElideRight
                     font.family: "Rubik"
                     font.pixelSize: 11
@@ -332,11 +536,61 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     visible: text.length > 0
-                    text: NotchController.peekAlert?.subtitle || ""
+                    text: peekPillContainer.notifSubtitle
                     elide: Text.ElideRight
                     font.family: "Rubik"
                     font.pixelSize: 10
                     color: "#8e8e98"
+                }
+            }
+
+            // Expand button
+            Rectangle {
+                Layout.preferredWidth: 20
+                Layout.preferredHeight: 20
+                Layout.alignment: Qt.AlignVCenter
+                radius: 5
+                color: expandPeekSingleMouse.containsMouse ? "#242432" : "transparent"
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "open_in_full"
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 12
+                    color: expandPeekSingleMouse.containsMouse ? "#f4f4f6" : "#8e8e98"
+                }
+
+                MouseArea {
+                    id: expandPeekSingleMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: NotchController.expandFromPeek()
+                }
+            }
+
+            // Dismiss button
+            Rectangle {
+                Layout.preferredWidth: 20
+                Layout.preferredHeight: 20
+                Layout.alignment: Qt.AlignVCenter
+                radius: 5
+                color: dismissPeekSingleMouse.containsMouse ? "#242432" : "transparent"
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "close"
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 13
+                    color: dismissPeekSingleMouse.containsMouse ? "#f4f4f6" : "#8e8e98"
+                }
+
+                MouseArea {
+                    id: dismissPeekSingleMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: NotchController.dismissPeek()
                 }
             }
         }

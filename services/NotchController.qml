@@ -443,5 +443,18 @@ Singleton {
         function setPage(index: int): void {
             root.openExpanded(index);
         }
+
+        function clearNotifs(): void {
+            NotificationService.clearAll();
+        }
+
+        function invokeFirstNotifAction(): void {
+            if (NotificationService.notifications.length > 0) {
+                const first = NotificationService.notifications[0];
+                if (first.actions && first.actions.length > 0) {
+                    NotificationService.invokeAction(first, first.actions[0]);
+                }
+            }
+        }
     }
 }
