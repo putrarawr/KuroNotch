@@ -26,10 +26,48 @@ Singleton {
         return `${m < 10 ? "0" : ""}${m}:${rem < 10 ? "0" : ""}${rem}`;
     }
 
+    function _ensureChimeFile(): void {
+        Quickshell.execDetached([
+            "python3", "-c",
+            "import os, math, struct, wave\n" +
+            `d = ${JSON.stringify(root.cacheDir)}\n` +
+            `p = ${JSON.stringify(root.chimePath)}\n` +
+            "os.makedirs(d, exist_ok=True)\n" +
+            "if not os.path.exists(p):\n" +
+            "    sr = 44100\n" +
+            "    notes = [(659.25, 0.0, 0.22), (987.77, 0.13, 0.36)]\n" +
+            "    n = int(sr * 0.52)\n" +
+            "    data = bytearray()\n" +
+            "    for i in range(n):\n" +
+            "        t = i / sr\n" +
+            "        s = 0.0\n" +
+            "        for freq, st, ln in notes:\n" +
+            "            if st <= t < st + ln:\n" +
+            "                lt = t - st\n" +
+            "                env = math.sin(min(1.0, lt / 0.012) * math.pi / 2.0) * math.exp(-lt * 8.5)\n" +
+            "                s += math.sin(2.0 * math.pi * freq * lt) * 0.34 * env\n" +
+            "        data.extend(struct.pack('<h', int(max(-32767, min(32767, s * 32767)))))\n" +
+            "    with wave.open(p, 'wb') as wf:\n" +
+            "        wf.setnchannels(1)\n" +
+            "        wf.setsampwidth(2)\n" +
+            "        wf.setframerate(sr)\n" +
+            "        wf.writeframes(data)\n"
+        ]);
+    }
+
     function _playDoneChime(): void {
         if (!Config.agent.enabled || !Config.agent.soundEnabled || Config.dnd)
             return;
-        chimePlayProc.running = true;
+        Quickshell.execDetached([
+            "sh", "-c",
+            'if [ -f "$1" ]; then "$HOME/.nix-profile/bin/pw-play" "$1" 2>/dev/null || pw-play "$1" 2>/dev/null || true; fi',
+            "sh",
+            root.chimePath
+        ]);
+    }
+
+    Component.onCompleted: {
+        root._ensureChimeFile();
     }
 
     function setAgentStatus(nextPhase: string, label = ""): void {
@@ -126,36 +164,5 @@ Singleton {
             root._startedAtMs = 0;
             root.elapsedSec = 0;
         }
-    }
-
-    Process {
-        id: chimePlayProc
-
-        running: false
-        command: [
-            "sh", "-c",
-            'dir="$1"; wav="$2"; mkdir -p "$dir"; '
-            + 'if [ ! -f "$wav" ]; then python3 -c "'
-            + 'import math, struct, wave, sys; '
-            + 'sr=44100; '
-            + 'notes=[(659.25, 0.0, 0.22), (987.77, 0.14, 0.34)]; '
-            + 'dur=0.52; n=int(sr*dur); '
-            + 'w=wave.open(sys.argv[1], \\"w\\"); w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); '
-            + 'frames=[]; '
-            + 'for i in range(n):\\n'
-            + '  t=i/sr; s=0.0\\n'
-            + '  for f, st, ln in notes:\\n'
-            + '    if st<=t<st+ln:\\n'
-            + '      lt=t-st; env=math.sin(min(1.0, lt/0.012)*math.pi/2)*math.exp(-lt*8.5)\\n'
-            + '      s+=math.sin(2*math.pi*f*lt)*0.32*env\\n'
-            + '  frames.append(struct.pack(\\"<h\\", max(-32767, min(32767, int(s*32767)))))\\n'
-            + 'w.writeframes(b\\"\\".join(frames)); w.close()'
-            + '" "$wav" >/dev/null 2>&1 || true; fi; '
-            + 'if [ -x "$HOME/.nix-profile/bin/pw-play" ]; then exec "$HOME/.nix-profile/bin/pw-play" "$wav"; fi; '
-            + 'exec pw-play "$wav"',
-            "sh",
-            root.cacheDir,
-            root.chimePath
-        ]
     }
 }
