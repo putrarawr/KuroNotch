@@ -612,10 +612,10 @@ Item {
 
         // Mini cover art tile
         Rectangle {
-            Layout.preferredWidth: 20
-            Layout.preferredHeight: 20
+            Layout.preferredWidth: 22
+            Layout.preferredHeight: 22
             Layout.alignment: Qt.AlignVCenter
-            radius: 5
+            radius: 6
             color: "#14141c"
             border.width: 1
             border.color: Qt.rgba(1, 1, 1, 0.12)
@@ -638,7 +638,7 @@ Item {
                 visible: miniArt.status !== Image.Ready
                 text: "music_note"
                 font.family: "Material Symbols Rounded"
-                font.pixelSize: 12
+                font.pixelSize: 13
                 color: root.activeAccent
             }
         }
@@ -650,9 +650,9 @@ Item {
             text: root.tickerText
             elide: Text.ElideRight
             font.family: "Rubik"
-            font.pixelSize: 11
+            font.pixelSize: root.hasActiveLyric ? 13 : 12
             font.weight: root.hasActiveLyric ? Font.Medium : Font.Normal
-            color: root.hasActiveLyric ? "#f4f4f6" : "#d8d8e0"
+            color: root.hasActiveLyric ? "#ffffff" : "#d8d8e0"
         }
 
         // Optional Pomodoro countdown chip when running concurrently

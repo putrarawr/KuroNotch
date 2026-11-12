@@ -108,30 +108,32 @@ Item {
             Layout.fillHeight: true
             spacing: 8
 
-            // Top: Album art + Title / Artist + 14-bar Cava Visualizer
+            // Top: Album art + Title / Artist / Album + 14-bar Cava Visualizer
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 10
 
                 Item {
-                    Layout.preferredWidth: 58
-                    Layout.preferredHeight: 58
+                    Layout.preferredWidth: 64
+                    Layout.preferredHeight: 64
 
                     Rectangle {
                         id: artMask
 
                         anchors.fill: parent
-                        radius: 10
+                        radius: 11
                         visible: false
                         layer.enabled: true
                     }
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: 10
+                        radius: 11
                         color: "#13131b"
                         border.width: 1
-                        border.color: Qt.rgba(1, 1, 1, 0.10)
+                        border.color: MediaService.playing
+                            ? Qt.rgba(root.activeAccent.r, root.activeAccent.g, root.activeAccent.b, 0.35)
+                            : Qt.rgba(1, 1, 1, 0.12)
 
                         Image {
                             id: albumArtImage
@@ -154,7 +156,7 @@ Item {
                             visible: albumArtImage.status !== Image.Ready
                             text: "album"
                             font.family: "Material Symbols Rounded"
-                            font.pixelSize: 24
+                            font.pixelSize: 26
                             color: "#6e6e7a"
                         }
                     }
@@ -183,7 +185,23 @@ Item {
                         elide: Text.ElideRight
                         font.family: "Rubik"
                         font.pixelSize: 10
-                        color: "#8e8e98"
+                        color: "#b4b4c0"
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        visible: text.length > 0
+                        text: {
+                            const alb = MediaService.album.trim();
+                            const app = MediaService.playerIdentity.trim();
+                            if (alb.length > 0 && app.length > 0)
+                                return `${alb} · ${app}`;
+                            return alb.length > 0 ? alb : app;
+                        }
+                        elide: Text.ElideRight
+                        font.family: "Rubik"
+                        font.pixelSize: 9
+                        color: "#727280"
                     }
 
                     // 14-bar on-demand Cava visualizer
@@ -344,6 +362,135 @@ Item {
                 Layout.fillHeight: true
             }
 
+            // Inline Audio Volume Strip (fills void below scrub bar cleanly)
+            Rectangle {
+                readonly property real sinkVol: {
+                    const s = MediaService.activeSink;
+                    const v = s?.audio?.volume;
+                    return (typeof v === "number" && isFinite(v)) ? Math.max(0, Math.min(1, v)) : 0;
+                }
+                readonly property bool sinkMuted: Boolean(MediaService.activeSink?.audio?.muted)
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 24
+                radius: 8
+                color: Qt.rgba(1, 1, 1, 0.035)
+                border.width: 1
+                border.color: Qt.rgba(1, 1, 1, 0.06)
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 8
+                    spacing: 7
+
+                    Text {
+                        Layout.alignment: Qt.AlignVCenter
+                        text: {
+                            if (parent.parent.sinkMuted || parent.parent.sinkVol <= 0.001)
+                                return "volume_off";
+                            if (parent.parent.sinkVol >= 0.5)
+                                return "volume_up";
+                            return "volume_down";
+                        }
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 14
+                        color: muteBtnMouse.containsMouse
+                            ? "#ffffff"
+                            : (parent.parent.sinkMuted ? "#ef4444" : "#a8a8b6")
+
+                        MouseArea {
+                            id: muteBtnMouse
+
+                            anchors.fill: parent
+                            anchors.margins: -3
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                const s = MediaService.activeSink;
+                                if (s?.audio)
+                                    s.audio.muted = !s.audio.muted;
+                            }
+                        }
+                    }
+
+                    Item {
+                        id: volSliderTrack
+
+                        Layout.fillWidth: true
+                        height: 16
+
+                        function applyVolRatio(px: real): void {
+                            const s = MediaService.activeSink;
+                            if (!s?.audio)
+                                return;
+                            const ratio = Math.max(0, Math.min(1, px / Math.max(1, width)));
+                            if (s.audio.muted && ratio > 0)
+                                s.audio.muted = false;
+                            s.audio.volume = ratio;
+                        }
+
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            height: (volMouse.containsMouse || volMouse.pressed) ? 5 : 3
+                            radius: height / 2
+                            color: Qt.rgba(1, 1, 1, 0.12)
+
+                            Behavior on height {
+                                NumberAnimation { duration: 100 }
+                            }
+
+                            Rectangle {
+                                height: parent.height
+                                radius: parent.radius
+                                width: Math.max(0, Math.min(parent.width, parent.width * volSliderTrack.parent.parent.sinkVol))
+                                color: volSliderTrack.parent.parent.sinkMuted ? "#686876" : root.activeAccent
+                            }
+                        }
+
+                        MouseArea {
+                            id: volMouse
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            preventStealing: true
+                            cursorShape: Qt.PointingHandCursor
+                            onPressed: mouse => volSliderTrack.applyVolRatio(mouse.x)
+                            onPositionChanged: mouse => {
+                                if (pressed)
+                                    volSliderTrack.applyVolRatio(mouse.x);
+                            }
+                            onWheel: event => {
+                                const s = MediaService.activeSink;
+                                if (!s?.audio)
+                                    return;
+                                event.accepted = true;
+                                const delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x;
+                                const step = delta > 0 ? 0.05 : -0.05;
+                                const cur = typeof s.audio.volume === "number" ? s.audio.volume : 0;
+                                if (s.audio.muted && step > 0)
+                                    s.audio.muted = false;
+                                s.audio.volume = Math.max(0, Math.min(1, cur + step));
+                            }
+                        }
+                    }
+
+                    Text {
+                        Layout.preferredWidth: 26
+                        horizontalAlignment: Text.AlignRight
+                        text: parent.parent.sinkMuted
+                            ? "Mute"
+                            : `${Math.round(parent.parent.sinkVol * 100)}%`
+                        font.family: "Rubik"
+                        font.pixelSize: 9
+                        font.weight: Font.Medium
+                        color: "#8e8e98"
+                    }
+                }
+            }
+
             // Bottom: Transport Controls + Pipewire Sink Switcher
             RowLayout {
                 Layout.fillWidth: true
@@ -405,27 +552,20 @@ Item {
             }
         }
 
-        // Right Column: Spotify-style Auto-centering Interactive Sync Lyrics
-        Rectangle {
+        // Right Column: Transparent Spotify-style Auto-centering Sync Lyrics
+        Item {
             id: lyricsPanel
 
-            readonly property color tintBgTop: Qt.rgba(root.activeAccent.r * 0.24, root.activeAccent.g * 0.24, root.activeAccent.b * 0.24, 1.0)
-            readonly property color tintBgBottom: Config.activePalette.elevated
+            readonly property color edgeFadeColor: Qt.rgba(
+                Qt.color(Config.activePalette.surface).r,
+                Qt.color(Config.activePalette.surface).g,
+                Qt.color(Config.activePalette.surface).b,
+                0.90
+            )
 
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: 14
-            border.width: 1
-            border.color: LyricsService.available && LyricsService.synced
-                ? Qt.rgba(root.activeAccent.r, root.activeAccent.g, root.activeAccent.b, 0.24)
-                : Qt.rgba(1, 1, 1, 0.08)
             clip: true
-
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: lyricsPanel.tintBgTop }
-                GradientStop { position: 0.55; color: lyricsPanel.tintBgBottom }
-                GradientStop { position: 1.0; color: Config.activePalette.surface }
-            }
 
             property bool userScrolling: false
 
@@ -680,16 +820,16 @@ Item {
                 }
             }
 
-            // Smooth top & bottom gradient feathering matching lyrics panel tint
+            // Smooth top & bottom gradient feathering blending seamlessly into transparent panel
             Rectangle {
                 visible: lyricsListView.visible
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: 22
+                height: 18
                 z: 3
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: lyricsPanel.tintBgTop }
+                    GradientStop { position: 0.0; color: lyricsPanel.edgeFadeColor }
                     GradientStop { position: 1.0; color: "transparent" }
                 }
             }
@@ -699,27 +839,25 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: 24
+                height: 20
                 z: 3
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 1.0; color: Config.activePalette.surface }
+                    GradientStop { position: 1.0; color: lyricsPanel.edgeFadeColor }
                 }
             }
 
-            // Minimal Spotify-style SYNC / PLAIN glass micro-badge
+            // Minimal subtle SYNC / PLAIN micro-badge
             Rectangle {
                 visible: lyricsListView.visible
                 anchors.top: parent.top
                 anchors.right: parent.right
-                anchors.margins: 7
+                anchors.margins: 4
                 z: 4
-                height: 15
+                height: 14
                 width: syncBadgeLabel.implicitWidth + 10
-                radius: 7.5
-                color: Qt.rgba(0, 0, 0, 0.36)
-                border.width: 1
-                border.color: Qt.rgba(1, 1, 1, 0.12)
+                radius: 7
+                color: Qt.rgba(1, 1, 1, 0.06)
 
                 Text {
                     id: syncBadgeLabel

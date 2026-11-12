@@ -28,15 +28,16 @@ PanelWindow {
                 && Config.lyrics.showInCollapsed
                 && LyricsService.available
                 && LyricsService.synced;
-            const targetWidth = Math.max(base.width, hasLyric ? 340 : 310);
+            const targetWidth = Math.max(base.width, hasLyric ? 376 : 320);
+            const targetHeight = Math.max(base.height, hasLyric ? 36 : base.height);
             const sw = width > 0 ? width : NotchController.screenWidth;
             return {
                 x: Math.round((sw - targetWidth) / 2),
                 y: base.y,
                 width: targetWidth,
-                height: base.height,
+                height: targetHeight,
                 topMargin: base.topMargin,
-                radius: base.radius
+                radius: hasLyric ? Math.round(targetHeight / 2) : base.radius
             };
         }
         return base;
@@ -553,32 +554,38 @@ PanelWindow {
 
                         visible: NotchController.enabledPages.length > 1
                         anchors.left: parent.left
-                        anchors.leftMargin: 3
+                        anchors.leftMargin: 5
                         anchors.verticalCenter: parent.verticalCenter
                         z: 25
-                        width: 20
-                        height: 52
-                        radius: 10
-                        color: leftNavMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.11) : Qt.rgba(1, 1, 1, 0.03)
+                        width: 22
+                        height: 22
+                        radius: 11
+                        scale: leftNavMouse.containsMouse ? 1.08 : 1.0
+                        color: leftNavMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.14) : "transparent"
                         border.width: leftNavMouse.containsMouse ? 1 : 0
-                        border.color: Qt.rgba(1, 1, 1, 0.16)
+                        border.color: Qt.rgba(1, 1, 1, 0.22)
 
                         Behavior on color {
-                            ColorAnimation { duration: 120 }
+                            ColorAnimation { duration: 130 }
+                        }
+
+                        Behavior on scale {
+                            NumberAnimation { duration: 130; easing.type: Easing.OutCubic }
                         }
 
                         Text {
                             anchors.centerIn: parent
                             text: "chevron_left"
                             font.family: "Material Symbols Rounded"
-                            font.pixelSize: 17
-                            color: leftNavMouse.containsMouse ? "#ffffff" : "#7e7e8a"
+                            font.pixelSize: 18
+                            color: leftNavMouse.containsMouse ? "#ffffff" : "#6c6c7a"
                         }
 
                         MouseArea {
                             id: leftNavMouse
 
                             anchors.fill: parent
+                            anchors.margins: -4
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: NotchController.stepPage(-1)
@@ -591,32 +598,38 @@ PanelWindow {
 
                         visible: NotchController.enabledPages.length > 1
                         anchors.right: parent.right
-                        anchors.rightMargin: 3
+                        anchors.rightMargin: 5
                         anchors.verticalCenter: parent.verticalCenter
                         z: 25
-                        width: 20
-                        height: 52
-                        radius: 10
-                        color: rightNavMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.11) : Qt.rgba(1, 1, 1, 0.03)
+                        width: 22
+                        height: 22
+                        radius: 11
+                        scale: rightNavMouse.containsMouse ? 1.08 : 1.0
+                        color: rightNavMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.14) : "transparent"
                         border.width: rightNavMouse.containsMouse ? 1 : 0
-                        border.color: Qt.rgba(1, 1, 1, 0.16)
+                        border.color: Qt.rgba(1, 1, 1, 0.22)
 
                         Behavior on color {
-                            ColorAnimation { duration: 120 }
+                            ColorAnimation { duration: 130 }
+                        }
+
+                        Behavior on scale {
+                            NumberAnimation { duration: 130; easing.type: Easing.OutCubic }
                         }
 
                         Text {
                             anchors.centerIn: parent
                             text: "chevron_right"
                             font.family: "Material Symbols Rounded"
-                            font.pixelSize: 17
-                            color: rightNavMouse.containsMouse ? "#ffffff" : "#7e7e8a"
+                            font.pixelSize: 18
+                            color: rightNavMouse.containsMouse ? "#ffffff" : "#6c6c7a"
                         }
 
                         MouseArea {
                             id: rightNavMouse
 
                             anchors.fill: parent
+                            anchors.margins: -4
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: NotchController.stepPage(1)
