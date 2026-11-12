@@ -16,7 +16,7 @@ Singleton {
         presetMode: Config.mode,
         autoHideEnabled: Config.autoHide.enabled,
         context: HyprContext.windowContext,
-        hovered: root.hovered || root.sensorHovered,
+        hovered: (root.hovered || root.sensorHovered) && !root.osdPeekActive,
         sensorReady: root.sensorReady,
         expanded: root.expanded,
         dragActive: root.dragActive,
@@ -57,7 +57,12 @@ Singleton {
     property bool dragActive: false
     property bool menuOpen: false
     property bool inputFocused: false
+    property bool peekInteracting: false
     property int activePage: 0
+
+    readonly property bool osdPeekActive: Boolean(root.peekAlert?.active)
+        && root.peekAlert.kind === "osd"
+        && !root.expanded
 
     // Activity inputs bound by feature services (Tasks 5-9)
     property bool mediaPlaying: false
@@ -154,6 +159,10 @@ Singleton {
         root.hovered = next;
 
         if (next) {
+            if (root.osdPeekActive) {
+                peekTimer.stop();
+                return;
+            }
             const isAutoHide = Config.autoHide.enabled && Boolean(HyprContext.windowContext?.autoHideActive);
             const hoveringVisiblePeek = Boolean(root.peekAlert?.active) && root.surfaceState === "peek";
             if (!isAutoHide || root.sensorReady || hoveringVisiblePeek) {
@@ -164,8 +173,35 @@ Singleton {
                 root.enterExpandedFromInteraction();
             }
         } else {
+            if (root.osdPeekActive && !root.peekInteracting)
+                peekTimer.restart();
             root.collapseIfAllowed();
         }
+    }
+
+    function setPeekInteracting(v: bool): void {
+        const next = Boolean(v);
+        if (root.peekInteracting === next)
+            return;
+        root.peekInteracting = next;
+
+        if (next) {
+            if (root.osdPeekActive)
+                peekTimer.stop();
+        } else if (root.osdPeekActive && !root.hovered) {
+            peekTimer.restart();
+        }
+    }
+
+    function expandFromPeek(): void {
+        root.peekInteracting = false;
+        sensorDebounceTimer.stop();
+        if (root.hovered)
+            root.sensorReady = true;
+        if (root.peekAlert?.active && root.peekAlert.kind === "notif")
+            root.setPage(4);
+        root.expanded = true;
+        root.dismissPeek();
     }
 
     function setDragActive(v: bool): void {
@@ -195,6 +231,7 @@ Singleton {
         if (!NotchState.shouldPeekAlert(kind, normalizedUrgency, HyprContext.windowContext))
             return;
 
+        const wasOsdPeek = root.osdPeekActive;
         const p = (payload && typeof payload === "object") ? payload : {};
         const title = (typeof p.title === "string")
             ? p.title
@@ -222,11 +259,21 @@ Singleton {
             ? p.durationMs
             : (Config.autoHide.peekDurationMs > 0 ? Config.autoHide.peekDurationMs : 2500);
         peekTimer.interval = Math.max(100, Math.trunc(duration));
-        peekTimer.restart();
+
+        if (kind === "osd" && !root.expanded && (root.hovered || root.peekInteracting)) {
+            peekTimer.stop();
+        } else if (wasOsdPeek && kind !== "osd" && root.hovered && !root.expanded) {
+            root.peekInteracting = false;
+            root.sensorReady = true;
+            root.enterExpandedFromInteraction();
+        } else {
+            peekTimer.restart();
+        }
     }
 
     function dismissPeek(): void {
         peekTimer.stop();
+        root.peekInteracting = false;
         if (!root.peekAlert?.active)
             return;
         root.peekAlert = {
@@ -239,6 +286,11 @@ Singleton {
             urgency: 1,
             payload: null
         };
+        if (root.hovered && !root.expanded) {
+            const isAutoHide = Config.autoHide.enabled && Boolean(HyprContext.windowContext?.autoHideActive);
+            if (!isAutoHide || root.sensorReady)
+                root.expanded = true;
+        }
     }
 
     function togglePin(): void {
@@ -262,7 +314,10 @@ Singleton {
             root.expanded = false;
             root.sensorReady = false;
         } else {
+            root.peekInteracting = false;
             root.expanded = true;
+            if (root.peekAlert?.active && root.peekAlert.kind === "osd")
+                root.dismissPeek();
         }
     }
 
@@ -276,7 +331,10 @@ Singleton {
     function openExpanded(pageIdx: int): void {
         if (typeof pageIdx === "number" && !isNaN(pageIdx))
             root.setPage(pageIdx);
+        root.peekInteracting = false;
         root.expanded = true;
+        if (root.peekAlert?.active && root.peekAlert.kind === "osd")
+            root.dismissPeek();
     }
 
     onDragActiveChanged: {
@@ -345,7 +403,11 @@ Singleton {
 
         interval: Config.autoHide.peekDurationMs > 0 ? Config.autoHide.peekDurationMs : 2500
         repeat: false
-        onTriggered: root.dismissPeek()
+        onTriggered: {
+            if (root.osdPeekActive && (root.hovered || root.peekInteracting))
+                return;
+            root.dismissPeek();
+        }
     }
 
     Timer {

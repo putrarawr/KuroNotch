@@ -9,7 +9,7 @@ Item {
     id: root
 
     property string clockText: Qt.formatTime(new Date(), "hh:mm")
-    property bool micActive: false
+    property bool micActive: PrivacyService.micActive
     property bool recordingActive: NotchController.recordingActive
     property string pomodoroText: ""
 
@@ -100,17 +100,204 @@ Item {
         }
     }
 
-    // 2. Peek Alert Pill (280x40): OSD / Notification burst
+    // 2. Peek Alert Pill (280x40): Interactive OSD Slider / Notification burst
     Item {
+        id: peekPillContainer
+
+        readonly property bool isOsdPeek: root.isPeek && (NotchController.peekAlert?.kind === "osd")
+        readonly property string osdKind: NotchController.peekAlert?.payload?.osdKind ?? OsdService.kind
+        readonly property bool osdAdjustable: osdKind === "volume" || osdKind === "mic" || osdKind === "brightness"
+        readonly property real osdValue: Math.max(0, Number(NotchController.peekAlert?.payload?.value ?? NotchController.peekAlert?.progress ?? OsdService.value) || 0)
+        readonly property bool osdMuted: Boolean(NotchController.peekAlert?.payload?.muted ?? OsdService.muted)
+        readonly property bool osdShowBar: osdAdjustable || osdKind === "battery" || Boolean(NotchController.peekAlert?.payload?.hasBattery)
+        readonly property color osdAccentColor: {
+            if (osdMuted)
+                return "#8e8e98";
+            if (osdKind === "battery" && osdValue <= 0.20)
+                return "#ef4444";
+            if (osdKind === "battery" && Boolean(NotchController.peekAlert?.payload?.charging))
+                return "#4ade80";
+            if ((osdKind === "volume" || osdKind === "mic") && osdValue > 1.0)
+                return "#d4845a";
+            if (osdKind === "bluetooth")
+                return "#60a5fa";
+            return "#f4f4f6";
+        }
+
         anchors.fill: parent
         visible: root.isPeek
 
+        // Interactive OSD Peek Pill (wheel + horizontal drag slider)
+        Item {
+            anchors.fill: parent
+            visible: peekPillContainer.isOsdPeek
+
+            MouseArea {
+                id: osdInteractiveArea
+
+                function applyPointerX(px: real): void {
+                    const trackLeft = osdTrackBg.x;
+                    const trackW = Math.max(1, osdTrackBg.width);
+                    const ratio = Math.max(0, Math.min(1, (px - trackLeft) / trackW));
+                    if (OsdService.muted && ratio > 0)
+                        OsdService.unmuteActive();
+                    OsdService.adjustActive(ratio - OsdService.value);
+                }
+
+                anchors.fill: parent
+                enabled: peekPillContainer.isOsdPeek && peekPillContainer.osdAdjustable
+                acceptedButtons: Qt.LeftButton
+                hoverEnabled: true
+                preventStealing: true
+                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+
+                onPressed: mouse => {
+                    if (!peekPillContainer.osdAdjustable)
+                        return;
+                    NotchController.setPeekInteracting(true);
+                    applyPointerX(mouse.x);
+                }
+
+                onPositionChanged: mouse => {
+                    if (pressed && peekPillContainer.osdAdjustable)
+                        applyPointerX(mouse.x);
+                }
+
+                onReleased: NotchController.setPeekInteracting(false)
+                onCanceled: NotchController.setPeekInteracting(false)
+
+                onWheel: event => {
+                    if (!peekPillContainer.osdAdjustable) {
+                        event.accepted = false;
+                        return;
+                    }
+                    event.accepted = true;
+                    const raw = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x;
+                    if (raw !== 0)
+                        OsdService.adjustActive(raw > 0 ? 0.05 : -0.05);
+                }
+            }
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.leftMargin: 14
+                anchors.rightMargin: 10
+                anchors.topMargin: peekPillContainer.osdShowBar ? 5 : 9
+                height: 20
+                spacing: 7
+
+                Text {
+                    Layout.alignment: Qt.AlignVCenter
+                    text: {
+                        const icon = NotchController.peekAlert?.icon ?? "";
+                        return icon.length > 0 ? icon : "tune";
+                    }
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 16
+                    color: peekPillContainer.osdAccentColor
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    text: NotchController.peekAlert?.title || "OSD"
+                    elide: Text.ElideRight
+                    font.family: "Rubik"
+                    font.pixelSize: 11
+                    font.weight: Font.Medium
+                    color: "#f4f4f6"
+                }
+
+                Text {
+                    Layout.alignment: Qt.AlignVCenter
+                    visible: text.length > 0
+                    text: NotchController.peekAlert?.subtitle || ""
+                    font.family: "Rubik"
+                    font.pixelSize: 11
+                    font.weight: Font.Medium
+                    color: peekPillContainer.osdMuted ? "#8e8e98" : "#c8c8d2"
+                }
+
+                Rectangle {
+                    Layout.preferredWidth: 18
+                    Layout.preferredHeight: 18
+                    Layout.alignment: Qt.AlignVCenter
+                    radius: 6
+                    color: expandPeekMouse.containsMouse ? "#1a1a24" : "transparent"
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "open_in_full"
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 11
+                        color: expandPeekMouse.containsMouse ? "#f4f4f6" : "#8e8e98"
+                    }
+
+                    MouseArea {
+                        id: expandPeekMouse
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: NotchController.expandFromPeek()
+                    }
+                }
+            }
+
+            // Interactive progress / drag track at bottom of OSD peek pill
+            Rectangle {
+                id: osdTrackBg
+
+                visible: peekPillContainer.osdShowBar
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.leftMargin: 14
+                anchors.rightMargin: 14
+                anchors.bottomMargin: 6
+                height: (peekPillContainer.osdAdjustable && (osdInteractiveArea.containsMouse || osdInteractiveArea.pressed)) ? 5 : 3
+                radius: height / 2
+                color: Qt.rgba(1, 1, 1, 0.14)
+
+                Behavior on height {
+                    NumberAnimation { duration: 100 }
+                }
+
+                Rectangle {
+                    id: osdTrackFill
+
+                    height: parent.height
+                    radius: parent.radius
+                    width: Math.max(0, Math.min(parent.width, parent.width * Math.max(0, Math.min(1, Number(NotchController.peekAlert?.progress ?? 0)))))
+                    color: peekPillContainer.osdAccentColor
+
+                    Behavior on width {
+                        enabled: !osdInteractiveArea.pressed
+                        NumberAnimation { duration: 90 }
+                    }
+                }
+
+                Rectangle {
+                    visible: peekPillContainer.osdAdjustable && (osdInteractiveArea.containsMouse || osdInteractiveArea.pressed)
+                    width: 9
+                    height: 9
+                    radius: 4.5
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: Math.max(0, Math.min(parent.width - width, osdTrackFill.width - width / 2))
+                    color: "#f4f4f6"
+                }
+            }
+        }
+
+        // Notification / generic peek layout
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: 14
             anchors.rightMargin: 14
-            anchors.bottomMargin: (NotchController.peekAlert?.kind === "osd") ? 3 : 0
             spacing: 8
+            visible: !peekPillContainer.isOsdPeek
 
             Text {
                 Layout.alignment: Qt.AlignVCenter
@@ -148,31 +335,6 @@ Item {
                     font.family: "Rubik"
                     font.pixelSize: 10
                     color: "#8e8e98"
-                }
-            }
-        }
-
-        // Subtle OSD progress hairline at bottom of peek pill
-        Rectangle {
-            visible: NotchController.peekAlert?.kind === "osd"
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            anchors.bottomMargin: 4
-            height: 2
-            radius: 1
-            color: Qt.rgba(1, 1, 1, 0.12)
-
-            Rectangle {
-                height: parent.height
-                radius: 1
-                width: Math.max(0, Math.min(parent.width, parent.width * Math.max(0, Math.min(1, Number(NotchController.peekAlert?.progress ?? 0)))))
-                color: "#f4f4f6"
-
-                Behavior on width {
-                    NumberAnimation { duration: 100 }
                 }
             }
         }

@@ -26,11 +26,13 @@ ShellRoot {
         return screens[0];
     }
 
-    // Touch singletons at root boot so Config watch, IPC, MPRIS, and Lyrics register immediately
+    // Touch singletons at root boot so Config watch, IPC, MPRIS, Lyrics, OSD, and Privacy register immediately
     readonly property string _bootMode: Config.mode
     readonly property string _bootState: NotchController.surfaceState
     readonly property bool _bootMedia: MediaService.playing
     readonly property bool _bootLyrics: LyricsService.available
+    readonly property string _bootOsd: OsdService.kind
+    readonly property bool _bootPrivacy: PrivacyService.micActive || PrivacyService.recordingActive
 
     Loader {
         active: root.targetScreen !== null && root.targetScreen !== undefined
