@@ -120,7 +120,7 @@ Singleton {
         if (active.indexOf("wl-screenrec") !== -1)
             Quickshell.execDetached(["pkill", "-INT", "-x", "wl-screenrec"]);
         if (active.indexOf("gpu-screen-recorder") !== -1)
-            Quickshell.execDetached(["pkill", "-INT", "-x", "gpu-screen-recorder"]);
+            Quickshell.execDetached(["pkill", "-INT", "-x", "gpu-screen-reco"]);
         if (active.indexOf("obs") !== -1)
             Quickshell.execDetached(["pkill", "-TERM", "-x", "obs"]);
 
@@ -231,7 +231,7 @@ Singleton {
         id: recProc
 
         running: false
-        command: ["pgrep", "-xa", "wf-recorder|obs|wl-screenrec|gpu-screen-recorder"]
+        command: ["pgrep", "-xa", "wf-recorder|obs|wl-screenrec|gpu-screen-reco"]
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -241,10 +241,10 @@ Singleton {
                     const line = lines[i].trim();
                     if (line.length === 0)
                         continue;
-                    const parts = line.split(/\s+/);
-                    if (parts.length < 2)
+                    const match = line.match(/(?:^|\/|\s)(wf-recorder|wl-screenrec|gpu-screen-recorder|gpu-screen-reco|obs)(?:\s|$)/);
+                    if (!match)
                         continue;
-                    const cmdBase = parts[1].split("/").pop();
+                    const cmdBase = match[1] === "gpu-screen-reco" ? "gpu-screen-recorder" : match[1];
                     if (found.indexOf(cmdBase) === -1)
                         found.push(cmdBase);
                 }

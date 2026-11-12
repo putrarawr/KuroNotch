@@ -32,7 +32,10 @@ Singleton {
     property real _lastBrightness: 0
     property int _brightnessMax: 0
     property bool _brightnessRereadPending: false
+    property bool _brightnessSettlePending: false
     property real _pendingWriteBrightness: -1
+    property int _brightnessWriteSeq: 0
+    property int _readStartedWriteSeq: 0
 
     property bool _batteryInitialized: false
     property bool _lastOnBattery: false
@@ -172,15 +175,22 @@ Singleton {
     }
 
     function _requestBrightnessRead(): void {
+        if (writeBrightnessProc.running || root._pendingWriteBrightness >= 0 || brightnessSettleTimer.running) {
+            root._brightnessSettlePending = true;
+            return;
+        }
         if (readBrightnessProc.running) {
             root._brightnessRereadPending = true;
             return;
         }
+        root._readStartedWriteSeq = root._brightnessWriteSeq;
         readBrightnessProc.running = true;
     }
 
     function _applyBrightness(ratio: real): void {
         const clamped = Math.max(0.01, Math.min(1.0, ratio));
+        root._brightnessWriteSeq += 1;
+        brightnessSettleTimer.stop();
         if (writeBrightnessProc.running) {
             root._pendingWriteBrightness = clamped;
             return;
@@ -513,6 +523,10 @@ Singleton {
                 if (!root._brightnessInitialized) {
                     root._lastBrightness = ratio;
                     root._brightnessInitialized = true;
+                } else if (writeBrightnessProc.running
+                    || root._pendingWriteBrightness >= 0
+                    || root._readStartedWriteSeq !== root._brightnessWriteSeq) {
+                    root._brightnessSettlePending = true;
                 } else if (Math.abs(ratio - root._lastBrightness) >= 0.004) {
                     root._lastBrightness = ratio;
                     root._emitBrightnessOsd(ratio);
@@ -538,6 +552,22 @@ Singleton {
                 const queued = root._pendingWriteBrightness;
                 root._pendingWriteBrightness = -1;
                 root._applyBrightness(queued);
+            } else {
+                root._brightnessSettlePending = true;
+                brightnessSettleTimer.restart();
+            }
+        }
+    }
+
+    Timer {
+        id: brightnessSettleTimer
+
+        interval: 90
+        repeat: false
+        onTriggered: {
+            if (root._brightnessSettlePending && !writeBrightnessProc.running && root._pendingWriteBrightness < 0) {
+                root._brightnessSettlePending = false;
+                root._requestBrightnessRead();
             }
         }
     }

@@ -16,7 +16,7 @@ Singleton {
         presetMode: Config.mode,
         autoHideEnabled: Config.autoHide.enabled,
         context: HyprContext.windowContext,
-        hovered: (root.hovered || root.sensorHovered) && !root.osdPeekActive,
+        hovered: (root.hovered || root.sensorHovered) && !(Boolean(root.peekAlert?.active) && !root.expanded),
         sensorReady: root.sensorReady,
         expanded: root.expanded,
         dragActive: root.dragActive,
@@ -231,7 +231,6 @@ Singleton {
         if (!NotchState.shouldPeekAlert(kind, normalizedUrgency, HyprContext.windowContext))
             return;
 
-        const wasOsdPeek = root.osdPeekActive;
         const p = (payload && typeof payload === "object") ? payload : {};
         const title = (typeof p.title === "string")
             ? p.title
@@ -262,11 +261,8 @@ Singleton {
 
         if (kind === "osd" && !root.expanded && (root.hovered || root.peekInteracting)) {
             peekTimer.stop();
-        } else if (wasOsdPeek && kind !== "osd" && root.hovered && !root.expanded) {
-            root.peekInteracting = false;
-            root.sensorReady = true;
-            root.enterExpandedFromInteraction();
         } else {
+            root.peekInteracting = false;
             peekTimer.restart();
         }
     }
