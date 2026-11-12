@@ -998,15 +998,29 @@ PopupWindow {
                         }
 
                         SettingToggleRow {
-                            label: "Drag & Drop File Shelf"
-                            subtitle: "Stage files & copy/drag back out"
-                            iconName: "inventory_2"
-                            checked: Config.widgets.shelf
-                            selected: root.previewWidget === "shelf"
-                            onHovered: root.previewWidget = "shelf"
+                            label: "Sync Lyrics"
+                            subtitle: "Spotify-style lyrics panel & collapsed lyric ticker"
+                            iconName: "lyrics"
+                            checked: Config.lyrics.enabled
+                            selected: root.previewWidget === "lyrics"
+                            onHovered: root.previewWidget = "lyrics"
                             onToggled: {
-                                root.previewWidget = "shelf";
-                                Config.widgets.shelf = !Config.widgets.shelf;
+                                root.previewWidget = "lyrics";
+                                Config.lyrics.enabled = !Config.lyrics.enabled;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Control Center & Monitor"
+                            subtitle: "CPU, RAM, Temp, Power Profile, Volume/Brightness & BT"
+                            iconName: "monitoring"
+                            checked: Config.widgets.controls
+                            selected: root.previewWidget === "controls"
+                            onHovered: root.previewWidget = "controls"
+                            onToggled: {
+                                root.previewWidget = "controls";
+                                Config.widgets.controls = !Config.widgets.controls;
                                 Config.save();
                             }
                         }
@@ -1021,6 +1035,34 @@ PopupWindow {
                             onToggled: {
                                 root.previewWidget = "pomodoro";
                                 Config.widgets.pomodoro = !Config.widgets.pomodoro;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Mini Calendar & Agenda"
+                            subtitle: "Monthly view, to-do checklist, and timed reminder alerts"
+                            iconName: "calendar_month"
+                            checked: Config.widgets.calendar
+                            selected: root.previewWidget === "calendar"
+                            onHovered: root.previewWidget = "calendar"
+                            onToggled: {
+                                root.previewWidget = "calendar";
+                                Config.widgets.calendar = !Config.widgets.calendar;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Drag & Drop File Shelf"
+                            subtitle: "Stage files & copy/drag back out"
+                            iconName: "inventory_2"
+                            checked: Config.widgets.shelf
+                            selected: root.previewWidget === "shelf"
+                            onHovered: root.previewWidget = "shelf"
+                            onToggled: {
+                                root.previewWidget = "shelf";
+                                Config.widgets.shelf = !Config.widgets.shelf;
                                 Config.save();
                             }
                         }
@@ -1049,48 +1091,6 @@ PopupWindow {
                             onToggled: {
                                 root.previewWidget = "notifications";
                                 Config.widgets.notifications = !Config.widgets.notifications;
-                                Config.save();
-                            }
-                        }
-
-                        SettingToggleRow {
-                            label: "Control Center & Monitor"
-                            subtitle: "CPU, RAM, Temp, Power Profile, Volume/Brightness & BT"
-                            iconName: "monitoring"
-                            checked: Config.widgets.controls
-                            selected: root.previewWidget === "controls"
-                            onHovered: root.previewWidget = "controls"
-                            onToggled: {
-                                root.previewWidget = "controls";
-                                Config.widgets.controls = !Config.widgets.controls;
-                                Config.save();
-                            }
-                        }
-
-                        SettingToggleRow {
-                            label: "Mini Calendar & Agenda"
-                            subtitle: "Monthly view, to-do checklist, and timed reminder alerts"
-                            iconName: "calendar_month"
-                            checked: Config.widgets.calendar
-                            selected: root.previewWidget === "calendar"
-                            onHovered: root.previewWidget = "calendar"
-                            onToggled: {
-                                root.previewWidget = "calendar";
-                                Config.widgets.calendar = !Config.widgets.calendar;
-                                Config.save();
-                            }
-                        }
-
-                        SettingToggleRow {
-                            label: "Sync Lyrics"
-                            subtitle: "Spotify-style lyrics panel & collapsed lyric ticker"
-                            iconName: "lyrics"
-                            checked: Config.lyrics.enabled
-                            selected: root.previewWidget === "lyrics"
-                            onHovered: root.previewWidget = "lyrics"
-                            onToggled: {
-                                root.previewWidget = "lyrics";
-                                Config.lyrics.enabled = !Config.lyrics.enabled;
                                 Config.save();
                             }
                         }

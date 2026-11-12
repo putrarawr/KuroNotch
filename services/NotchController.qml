@@ -63,15 +63,33 @@ Singleton {
     property int activePage: 0
 
     readonly property var enabledPages: {
-        const list = [0]; // Media + Sync Lyrics is always available
-        if (Config.widgets.shelf) list.push(1);
-        if (Config.widgets.pomodoro) list.push(2);
-        if (Config.widgets.clipboard) list.push(3);
-        if (Config.widgets.notifications) list.push(4);
-        if (Config.widgets.controls) list.push(5);
-        if (Config.widgets.calendar) list.push(6);
+        const list = [0]; // 0: Media & Lyrics
+        if (Config.widgets.controls) list.push(5); // System & Controls
+        if (Config.widgets.pomodoro) list.push(2); // Focus & Quick Tools
+        if (Config.widgets.calendar) list.push(6); // Calendar & To-Do
+        if (Config.widgets.shelf) list.push(1);    // File Shelf
+        if (Config.widgets.clipboard) list.push(3); // Clipboard Stash
+        if (Config.widgets.notifications) list.push(4); // Notifications
         return list;
     }
+
+    readonly property int activeSlotIndex: Math.max(0, root.enabledPages.indexOf(root.activePage))
+
+    function pageMeta(pageId: int): var {
+        switch (pageId) {
+        case 0: return { title: "Media & Lyrics", icon: "music_note" };
+        case 5: return { title: "System & Controls", icon: "monitoring" };
+        case 2: return { title: "Focus & Tools", icon: "timer" };
+        case 6: return { title: "Calendar & To-Do", icon: "calendar_month" };
+        case 1: return { title: "File Shelf", icon: "inventory_2" };
+        case 3: return { title: "Clipboard", icon: "content_paste" };
+        case 4: return { title: "Notifications", icon: "notifications" };
+        default: return { title: "Island", icon: "auto_awesome" };
+        }
+    }
+
+    readonly property string activePageTitle: root.pageMeta(root.activePage).title
+    readonly property string activePageIcon: root.pageMeta(root.activePage).icon
 
     onEnabledPagesChanged: {
         if (enabledPages.indexOf(root.activePage) === -1)

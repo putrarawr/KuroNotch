@@ -198,7 +198,7 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            spacing: 6
+            spacing: 2
             visible: NotificationService.notifications.length > 0
             model: NotificationService.notifications
 
@@ -207,11 +207,20 @@ Item {
                 required property var modelData
 
                 width: notifList.width
-                implicitHeight: cardContent.implicitHeight + 16
+                implicitHeight: cardContent.implicitHeight + 12
                 radius: 8
-                color: "#121218"
-                border.width: 1
-                border.color: cardHoverArea.containsMouse ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.07)
+                color: cardHoverArea.containsMouse ? Qt.rgba(1, 1, 1, 0.045) : "transparent"
+                border.width: 0
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.leftMargin: 6
+                    anchors.rightMargin: 6
+                    height: 1
+                    color: Qt.rgba(1, 1, 1, 0.05)
+                }
 
                 HoverHandler {
                     id: cardHoverArea
@@ -220,8 +229,8 @@ Item {
                 ColumnLayout {
                     id: cardContent
                     anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 5
+                    anchors.margins: 6
+                    spacing: 4
 
                     // Header row: App icon, app name, urgency indicator, timestamp, dismiss button
                     RowLayout {

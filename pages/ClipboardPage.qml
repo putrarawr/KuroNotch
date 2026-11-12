@@ -185,7 +185,7 @@ Item {
             clip: true
             boundsBehavior: Flickable.StopAtBounds
             model: ClipboardService.filteredEntries
-            spacing: 4
+            spacing: 2
 
             delegate: Rectangle {
                 id: itemDelegate
@@ -195,14 +195,23 @@ Item {
 
                 width: clipList.width
                 height: 34
-                radius: 8
-                color: rowMouse.containsMouse ? "#181822" : "#0d0d11"
-                border.width: 1
-                border.color: rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.06)
+                radius: 7
+                color: rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.05) : "transparent"
+                border.width: 0
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.leftMargin: 6
+                    anchors.rightMargin: 6
+                    height: 1
+                    color: Qt.rgba(1, 1, 1, 0.05)
+                }
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 8
+                    anchors.leftMargin: 6
                     anchors.rightMargin: 6
                     spacing: 8
 

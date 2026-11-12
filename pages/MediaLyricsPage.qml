@@ -93,10 +93,7 @@ Item {
     RowLayout {
         visible: root.hasPlayer
         anchors.fill: parent
-        anchors.leftMargin: 6
-        anchors.rightMargin: 6
-        anchors.topMargin: 8
-        anchors.bottomMargin: 10
+        anchors.margins: 10
         spacing: 10
 
         // Left Column: Album Art, Track Info, Cava Bars, Scrub Bar, Transport + Sink Switcher
@@ -419,9 +416,8 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 24
                 radius: 8
-                color: Qt.rgba(1, 1, 1, 0.035)
-                border.width: 1
-                border.color: Qt.rgba(1, 1, 1, 0.06)
+                color: Qt.rgba(1, 1, 1, 0.03)
+                border.width: 0
 
                 RowLayout {
                     anchors.fill: parent
@@ -595,6 +591,15 @@ Item {
                     Layout.maximumWidth: 118
                 }
             }
+        }
+
+        // Hairline Vertical Divider (matches open-canvas 2-column rhythm)
+        Rectangle {
+            Layout.fillHeight: true
+            Layout.topMargin: 4
+            Layout.bottomMargin: 4
+            width: 1
+            color: Qt.rgba(1, 1, 1, 0.07)
         }
 
         // Right Column: Transparent Spotify-style Auto-centering Sync Lyrics

@@ -107,6 +107,38 @@ Item {
             }
         }
 
+        // Active Section Breadcrumb (connects dots to current page context)
+        Row {
+            Layout.alignment: Qt.AlignVCenter
+            Layout.leftMargin: 4
+            spacing: 4
+
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 1
+                height: 10
+                color: Qt.rgba(1, 1, 1, 0.10)
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                leftPadding: 3
+                text: NotchController.activePageIcon
+                font.family: "Material Symbols Rounded"
+                font.pixelSize: 12
+                color: root.accentColor
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: NotchController.activePageTitle
+                font.family: "Rubik"
+                font.pixelSize: 10
+                font.weight: Font.Medium
+                color: "#9a9aa6"
+            }
+        }
+
         Item {
             Layout.fillWidth: true
         }

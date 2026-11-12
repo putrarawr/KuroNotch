@@ -66,7 +66,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
+        anchors.margins: 10
         spacing: 8
 
         // Compact Shelf Header Toolbar

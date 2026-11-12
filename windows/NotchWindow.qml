@@ -506,7 +506,7 @@ PanelWindow {
                         anchors.rightMargin: 22
                         clip: true
 
-                        property real animatedPageIndex: NotchController.activePage
+                        property real animatedPageIndex: NotchController.activeSlotIndex
 
                         Behavior on animatedPageIndex {
                             NumberAnimation {
@@ -523,44 +523,50 @@ PanelWindow {
                             y: 0
                             height: carouselViewport.height
 
-                            // Page 0: Media + Sync Lyrics (Task 5)
+                            // Page 0: Media + Sync Lyrics (Entertainment)
                             MediaLyricsPage {
                                 width: carouselViewport.width
                                 height: carouselViewport.height
                             }
 
-                            // Page 1: Drag-and-Drop File Shelf (Task 7)
-                            FileShelfPage {
-                                width: carouselViewport.width
-                                height: carouselViewport.height
-                            }
-
-                            // Page 2: Pomodoro & Quick Tools (Task 8)
-                            PomodoroToolsPage {
-                                width: carouselViewport.width
-                                height: carouselViewport.height
-                            }
-
-                            // Page 3: Clipboard Stash (Task 8)
-                            ClipboardPage {
-                                width: carouselViewport.width
-                                height: carouselViewport.height
-                            }
-
-                            // Page 4: Notification Island (Task 9)
-                            NotificationsPage {
-                                width: carouselViewport.width
-                                height: carouselViewport.height
-                            }
-
-                            // Page 5: System Monitor & Quick Control Center
+                            // Page 5: System Monitor & Quick Control Center (System)
                             ControlMonitorPage {
+                                visible: Config.widgets.controls
                                 width: carouselViewport.width
                                 height: carouselViewport.height
                             }
 
-                            // Page 6: Mini Calendar & Agenda / To-Do
+                            // Page 2: Pomodoro & Quick Tools (Productivity & Capture)
+                            PomodoroToolsPage {
+                                visible: Config.widgets.pomodoro
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
+                            // Page 6: Mini Calendar & Agenda / To-Do (Schedule)
                             CalendarPage {
+                                visible: Config.widgets.calendar
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
+                            // Page 1: Drag-and-Drop File Shelf (Workspace Stash)
+                            FileShelfPage {
+                                visible: Config.widgets.shelf
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
+                            // Page 3: Clipboard Stash (Copy History)
+                            ClipboardPage {
+                                visible: Config.widgets.clipboard
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
+                            // Page 4: Notification Island (Alerts & DND)
+                            NotificationsPage {
+                                visible: Config.widgets.notifications
                                 width: carouselViewport.width
                                 height: carouselViewport.height
                             }
