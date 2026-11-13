@@ -103,6 +103,21 @@ Script ini akan otomatis mengambil pembaruan terbaru dari repository GitHub dan 
 
 ---
 
+## 🗑️ Uninstall (Penghapusan Bersih)
+
+Jika kamu ingin mencopot KuroNotch dan mengembalikan seluruh konfigurasi sistem ke kondisi awal:
+
+```bash
+kuronotch uninstall
+```
+*(atau via 1-liner langsung):*
+```bash
+curl -sSL https://raw.githubusercontent.com/putrarawr/KuroNotch/main/scripts/uninstall.sh | bash
+```
+*(Gunakan flag `--purge` jika ingin sekaligus menghapus seluruh data cache dan konfigurasi lokal: `kuronotch uninstall --purge`)*
+
+---
+
 ## ⌨️ Pintasan Keyboard & Kontrol
 
 | Shortcut / Aksi | Fungsi |

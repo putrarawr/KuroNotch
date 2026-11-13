@@ -52,9 +52,17 @@ for cmd in island-notch kuronotch kuro-island; do
 if [ "${1:-}" = "update" ] || [ "${1:-}" = "--update" ]; then
     UPDATE_SCRIPT="$HOME/.config/quickshell/island-notch/scripts/update.sh"
     if [ -x "$UPDATE_SCRIPT" ]; then
-        exec "$UPDATE_SCRIPT"
+        exec "$UPDATE_SCRIPT" "${@:2}"
     else
-        curl -sSL https://raw.githubusercontent.com/putrarawr/KuroNotch/main/scripts/update.sh | bash
+        curl -sSL https://raw.githubusercontent.com/putrarawr/KuroNotch/main/scripts/update.sh | bash -s -- "${@:2}"
+        exit $?
+    fi
+elif [ "${1:-}" = "uninstall" ] || [ "${1:-}" = "--uninstall" ]; then
+    UNINSTALL_SCRIPT="$HOME/.config/quickshell/island-notch/scripts/uninstall.sh"
+    if [ -x "$UNINSTALL_SCRIPT" ]; then
+        exec "$UNINSTALL_SCRIPT" "${@:2}"
+    else
+        curl -sSL https://raw.githubusercontent.com/putrarawr/KuroNotch/main/scripts/uninstall.sh | bash -s -- "${@:2}"
         exit $?
     fi
 fi

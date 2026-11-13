@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# KuroNotch Uninstaller
-# Uninstalls KuroNotch and restores Caelestia / Hyprland configuration.
+# KuroNotch Clean Uninstaller
+# Uninstalls KuroNotch, restores Caelestia and Hyprland configurations cleanly.
 
 cat << "EOF"
   /\_/\   
@@ -10,6 +10,11 @@ cat << "EOF"
   > ^ <   https://github.com/putrarawr/KuroNotch
 EOF
 echo ""
+
+PURGE=false
+if [ "${1:-}" = "--purge" ] || [ "${1:-}" = "-p" ]; then
+    PURGE=true
+fi
 
 echo "==> Stopping running KuroNotch processes..."
 pkill -f "quickshell.*island-notch" 2>/dev/null || true
@@ -22,15 +27,15 @@ rm -f "$HOME/.local/bin/kuronotch"
 rm -f "$HOME/.local/bin/kuro-island"
 rm -f "$HOME/.local/bin/restore-wallpaper"
 
-echo "==> Removing Quickshell configuration symlinks..."
-rm -f "$HOME/.config/quickshell/island-notch"
+echo "==> Removing Quickshell configuration..."
+rm -rf "$HOME/.config/quickshell/island-notch"
 rm -f "$HOME/.config/quickshell/KuroNotch"
 rm -f "$HOME/.config/quickshell/kuro-island"
 
 # Restore Hyprland configuration if autostart lines exist
 HYPR_CONF="$HOME/.config/hypr/hyprland.conf"
 if [ -f "$HYPR_CONF" ]; then
-    echo "==> Cleaning KuroNotch entries from hyprland.conf..."
+    echo "==> Cleaning KuroNotch autostart and keybind entries from hyprland.conf..."
     python3 - << 'EOF'
 import os
 
@@ -63,8 +68,14 @@ for line in lines:
 
 with open(path, "w", encoding="utf-8") as f:
     f.writelines(new_lines)
-print("  -> hyprland.conf cleaned.")
+print("  -> hyprland.conf restored.")
 EOF
+fi
+
+# Reload Hyprland configuration to release keybinds
+if command -v hyprctl >/dev/null 2>&1; then
+    echo "==> Reloading Hyprland configuration..."
+    hyprctl reload 2>/dev/null || true
 fi
 
 # Restore Caelestia Notifs.qml if disabled
@@ -122,5 +133,36 @@ print("  -> Caelestia shell.json restored.")
 EOF
 fi
 
+# Reload Caelestia if running so it reclaims native notifications & OSD cleanly
+if pgrep -f "quickshell.*caelestia" >/dev/null 2>&1; then
+    echo "==> Reloading Caelestia instance..."
+    pkill -f "quickshell.*caelestia" 2>/dev/null || true
+    sleep 0.8
+    if [ -x "$HOME/.local/bin/caelestia-shell" ]; then
+        nohup "$HOME/.local/bin/caelestia-shell" >/dev/null 2>&1 &
+    fi
+fi
+
+# Unmask swaync.service if was masked
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl --user unmask swaync.service 2>/dev/null || true
+fi
+
+# Optional purge of state & cache
+if [ "$PURGE" = true ]; then
+    echo "==> Purging KuroNotch state, cache, and settings directories..."
+    rm -rf "$HOME/.config/island-notch"
+    rm -rf "$HOME/.config/kuro-island"
+    rm -rf "$HOME/.local/state/island-notch"
+    rm -rf "$HOME/.local/state/kuro-island"
+    rm -rf "$HOME/.cache/island-notch"
+    rm -rf "$HOME/.cache/kuro-island"
+    echo "  -> All local data purged."
+else
+    echo "==> Note: User settings & data kept in ~/.config/island-notch and ~/.local/state/island-notch."
+    echo "    (To wipe completely, run: ./scripts/uninstall.sh --purge)"
+fi
+
 echo ""
 echo "✨ KuroNotch uninstalled cleanly!"
+echo "Konfigurasi sistem dan desktop kamu telah dikembalikan ke kondisi awal."
