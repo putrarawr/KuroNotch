@@ -614,6 +614,10 @@ Singleton {
             root.triggerGreeting(false, true);
         }
 
+        function wave(): void {
+            root.waveHands();
+        }
+
         function setAgentStatus(phase: string, label: string): void {
             AgentService.setAgentStatus(phase, label);
         }
