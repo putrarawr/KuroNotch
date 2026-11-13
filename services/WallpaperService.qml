@@ -10,8 +10,12 @@ Singleton {
 
     readonly property string wallDir: `${Quickshell.env("HOME")}/wallpapers`
     readonly property string thumbDir: `${Quickshell.env("HOME")}/.cache/wall_gtk_thumbs`
-    readonly property string stateDir: `${Quickshell.env("HOME")}/.local/state/caelestia/wallpaper`
-    readonly property string stateFile: `${stateDir}/path.txt`
+    readonly property string kuroStateDir: `${Quickshell.env("HOME")}/.local/state/kuro-island/wallpaper`
+    readonly property string kuroStateFile: `${kuroStateDir}/path.txt`
+    readonly property string caelestiaStateDir: `${Quickshell.env("HOME")}/.local/state/caelestia/wallpaper`
+    readonly property string caelestiaStateFile: `${caelestiaStateDir}/path.txt`
+    readonly property string stateDir: kuroStateDir
+    readonly property string stateFile: kuroStateFile
     readonly property string schemeFile: `${Quickshell.env("HOME")}/.local/state/caelestia/scheme.json`
 
     property var wallpapers: [] // Array<{ path, name, thumbUrl }>
@@ -77,6 +81,13 @@ subprocess.run([
 os.makedirs(os.path.dirname(state_file), exist_ok=True)
 with open(state_file, "w", encoding="utf-8") as f:
     f.write(img + "\\n")
+caelestia_state = os.path.expanduser("~/.local/state/caelestia/wallpaper/path.txt")
+if os.path.isdir(os.path.dirname(caelestia_state)):
+    try:
+        with open(caelestia_state, "w", encoding="utf-8") as cf:
+            cf.write(img + "\\n")
+    except Exception:
+        pass
 
 try:
     subprocess.run(["wal", "-i", img, "--backend", "haishoku", "-n", "-q"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -166,11 +177,12 @@ if os.path.exists(wal_colors):
         running: false
         command: [
             "sh", "-c",
-            'mkdir -p "$1" "$2" && touch "$3"',
+            'mkdir -p "$1" "$2"; if [ ! -f "$3" ] && [ -f "$4" ]; then cp "$4" "$3"; fi; touch "$3"',
             "sh",
             root.stateDir,
             root.thumbDir,
-            root.stateFile
+            root.stateFile,
+            root.caelestiaStateFile
         ]
         onExited: {
             root._dirReady = true;

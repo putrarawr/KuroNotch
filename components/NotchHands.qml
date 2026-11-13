@@ -67,6 +67,118 @@ Item {
         NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
     }
 
+    // Kuro Left Cat Ear (Peaking above the left shoulder)
+    Item {
+        id: leftEar
+
+        readonly property real targetX: root.notchX + (root.surfaceState === "notch" ? 22 : 26)
+        readonly property real targetY: root.handsActive ? root.notchY - 14 : root.notchY + 12
+
+        x: targetX
+        y: targetY
+        width: 18
+        height: 20
+        rotation: -20
+        transformOrigin: Item.Bottom
+
+        Behavior on x {
+            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+        }
+
+        Behavior on y {
+            NumberAnimation { duration: 240; easing.type: Easing.OutBack }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: 7
+            color: "#0a0a12"
+            border.width: 1
+            border.color: Qt.rgba(
+                Qt.color(root.accentColor).r,
+                Qt.color(root.accentColor).g,
+                Qt.color(root.accentColor).b,
+                0.35
+            )
+
+            // Inner ear tint
+            Rectangle {
+                anchors.centerIn: parent
+                width: parent.width * 0.5
+                height: parent.height * 0.5
+                radius: 4
+                color: root.accentColor
+                opacity: 0.25
+            }
+        }
+
+        // Playful ear twitch when waving
+        SequentialAnimation on rotation {
+            running: root.isWaving
+            loops: Animation.Infinite
+            NumberAnimation { to: -26; duration: 180; easing.type: Easing.InOutQuad }
+            NumberAnimation { to: -16; duration: 180; easing.type: Easing.InOutQuad }
+            NumberAnimation { to: -20; duration: 220; easing.type: Easing.OutCubic }
+            PauseAnimation { duration: 350 }
+        }
+    }
+
+    // Kuro Right Cat Ear (Peaking above the right shoulder)
+    Item {
+        id: rightEar
+
+        readonly property real targetX: root.notchX + root.notchWidth - (root.surfaceState === "notch" ? 40 : 44)
+        readonly property real targetY: root.handsActive ? root.notchY - 14 : root.notchY + 12
+
+        x: targetX
+        y: targetY
+        width: 18
+        height: 20
+        rotation: 20
+        transformOrigin: Item.Bottom
+
+        Behavior on x {
+            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+        }
+
+        Behavior on y {
+            NumberAnimation { duration: 240; easing.type: Easing.OutBack }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: 7
+            color: "#0a0a12"
+            border.width: 1
+            border.color: Qt.rgba(
+                Qt.color(root.accentColor).r,
+                Qt.color(root.accentColor).g,
+                Qt.color(root.accentColor).b,
+                0.35
+            )
+
+            // Inner ear tint
+            Rectangle {
+                anchors.centerIn: parent
+                width: parent.width * 0.5
+                height: parent.height * 0.5
+                radius: 4
+                color: root.accentColor
+                opacity: 0.25
+            }
+        }
+
+        // Playful ear twitch when waving
+        SequentialAnimation on rotation {
+            running: root.isWaving
+            loops: Animation.Infinite
+            NumberAnimation { to: 16; duration: 180; easing.type: Easing.InOutQuad }
+            NumberAnimation { to: 26; duration: 180; easing.type: Easing.InOutQuad }
+            NumberAnimation { to: 20; duration: 220; easing.type: Easing.OutCubic }
+            PauseAnimation { duration: 350 }
+        }
+    }
+
     // Left Paw (Resting comfortably on the left shoulder of the notch)
     Item {
         id: leftHand

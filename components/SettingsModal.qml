@@ -121,20 +121,19 @@ PopupWindow {
                     Layout.preferredWidth: modalCard.width - 32
                     spacing: 10
 
-                    Rectangle {
-                        Layout.preferredWidth: 32
-                        Layout.preferredHeight: 32
-                        radius: 10
-                        color: Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.16)
-                        border.width: 1
-                        border.color: Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.38)
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "tune"
-                            font.family: "Material Symbols Rounded"
-                            font.pixelSize: 18
-                            color: Config.activePalette.accent
+                    KuroMascot {
+                        Layout.preferredWidth: 34
+                        Layout.preferredHeight: 34
+                        mascotSize: 34
+                        accentColor: Config.activePalette.accent
+                        mascotState: {
+                            if (MediaService.playing)
+                                return "music";
+                            if (PomodoroService.running)
+                                return "pomodoro";
+                            if (NotchController.companionVisible)
+                                return "idle";
+                            return "normal";
                         }
                     }
 
@@ -144,7 +143,7 @@ PopupWindow {
 
                         Text {
                             Layout.fillWidth: true
-                            text: "Island Notch Settings"
+                            text: "Kuro Island Settings"
                             font.family: "Rubik"
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
@@ -153,7 +152,7 @@ PopupWindow {
 
                         Text {
                             Layout.fillWidth: true
-                            text: "Layout mode, color palette, live widgets & interactive behaviors"
+                            text: "Layout mode, color palette, live widgets & Kuro companion"
                             elide: Text.ElideRight
                             font.family: "Rubik"
                             font.pixelSize: 10
