@@ -272,10 +272,10 @@ describe("notchState.js - Pure State Machine", () => {
         assert.equal(expandedLyricsGeo.height, 245);
         assert.equal(expandedLyricsGeo.x, Math.round((1366 - 560) / 2));
 
-        // Expanded on page 0 without lyrics -> width: 560, height: 210
+        // Expanded on page 0 without lyrics -> width: 560, height: 245 (comfortably accommodates media transport deck)
         const expandedNoLyricsGeo = computeGeometry("expanded", screenWidth, 0, false);
         assert.equal(expandedNoLyricsGeo.width, 560);
-        assert.equal(expandedNoLyricsGeo.height, 210);
+        assert.equal(expandedNoLyricsGeo.height, 245);
         assert.equal(expandedNoLyricsGeo.x, Math.round((1366 - 560) / 2));
 
         // Expanded on page 1 with lyrics flag (lyrics only affects page 0) -> height: 210

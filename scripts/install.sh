@@ -69,8 +69,15 @@ if [ -f "$REPO_DIR/scripts/install-integration.sh" ]; then
     bash "$REPO_DIR/scripts/install-integration.sh"
 fi
 
+# Automatically start KuroNotch immediately in the background
+echo "==> Starting KuroNotch..."
+pkill -f "quickshell.*island-notch" 2>/dev/null || true
+sleep 0.5
+nohup "$HOME/.local/bin/island-notch" >/dev/null 2>&1 &
+
 echo ""
-echo "✨ KuroNotch (Kuro Island) installed successfully!"
-echo "To start now, run: ~/.local/bin/island-notch (or kuronotch)"
-echo "Or reload Hyprland to launch via autostart (exec-once)."
+echo "✨ KuroNotch (Kuro Island) installed & launched successfully!"
+echo "Notch sekarang sudah aktif di bagian atas layar kamu!"
+echo "Pintasan cepat: Tekan Super+I untuk membuka/menutup Notch."
+echo "Untuk mengontrol via terminal: ~/.local/bin/island-notch (atau kuronotch)"
 echo "Kuro says: nya~ (Enjoy your new dynamic desktop!)"

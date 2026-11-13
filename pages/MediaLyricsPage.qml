@@ -86,7 +86,10 @@ Item {
     RowLayout {
         visible: root.hasPlayer
         anchors.fill: parent
-        anchors.margins: 10
+        anchors.leftMargin: 8
+        anchors.rightMargin: 8
+        anchors.topMargin: 8
+        anchors.bottomMargin: 4
         spacing: 10
 
         // Left Column: Album Art, Track Info, Cava Bars, Scrub Bar, Transport + Sink Switcher
@@ -95,8 +98,7 @@ Item {
             Layout.minimumWidth: 220
             Layout.maximumWidth: 236
             Layout.fillHeight: true
-            spacing: 8
-            clip: true
+            spacing: 5
 
             // Top: Album art + Title / Artist / Album + 14-bar Cava Visualizer
             RowLayout {
@@ -105,8 +107,8 @@ Item {
                 spacing: 8
 
                 Item {
-                    Layout.preferredWidth: 64
-                    Layout.preferredHeight: 64
+                    Layout.preferredWidth: 58
+                    Layout.preferredHeight: 58
 
                     Rectangle {
                         id: artMask
@@ -418,7 +420,7 @@ Item {
 
                 Layout.fillWidth: true
                 Layout.maximumWidth: 236
-                Layout.preferredHeight: 24
+                Layout.preferredHeight: 22
                 radius: 8
                 color: Qt.rgba(1, 1, 1, 0.03)
                 border.width: 0

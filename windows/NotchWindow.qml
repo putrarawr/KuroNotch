@@ -528,7 +528,7 @@ PanelWindow {
                         anchors.fill: parent
                         anchors.leftMargin: 22
                         anchors.rightMargin: 22
-                        anchors.bottomMargin: 24
+                        anchors.bottomMargin: 28
                         clip: true
 
                         property real animatedPageIndex: NotchController.activeSlotIndex

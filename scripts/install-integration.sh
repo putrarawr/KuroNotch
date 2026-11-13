@@ -162,6 +162,16 @@ if command -v systemctl >/dev/null 2>&1; then
     systemctl --user mask swaync.service 2>/dev/null || true
 fi
 
+# Reload Caelestia if currently running so it cleanly releases org.freedesktop.Notifications
+if pgrep -f "quickshell.*caelestia" >/dev/null 2>&1; then
+    echo "  -> Reloading running Caelestia instance to release org.freedesktop.Notifications..."
+    pkill -f "quickshell.*caelestia" 2>/dev/null || true
+    sleep 0.8
+    if [ -x "$HOME/.local/bin/caelestia-shell" ]; then
+        nohup "$HOME/.local/bin/caelestia-shell" >/dev/null 2>&1 &
+    fi
+fi
+
 # 5. Update hyprland.conf autostart, wallpaper restoration, and wl-paste watchers
 echo "[5/6] Configuring Hyprland autostart & wallpaper restore in hyprland.conf..."
 chmod +x "$REPO_DIR/scripts/restore-wallpaper"
