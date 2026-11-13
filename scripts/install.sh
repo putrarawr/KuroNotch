@@ -11,8 +11,28 @@ cat << "EOF"
 EOF
 echo ""
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+SCRIPT_DIR=""
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
+
+TARGET_DIR="$HOME/.config/quickshell/island-notch"
+
+# Check if running from inside an existing cloned repo
+if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/../shell.qml" ]; then
+    REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+else
+    echo "==> Cloning KuroNotch repository into $TARGET_DIR..."
+    mkdir -p "$HOME/.config/quickshell"
+    if [ -d "$TARGET_DIR/.git" ]; then
+        echo "  -> Existing git repo found in $TARGET_DIR, pulling latest changes..."
+        git -C "$TARGET_DIR" pull --rebase origin main || true
+    else
+        rm -rf "$TARGET_DIR"
+        git clone https://github.com/putrarawr/KuroNotch.git "$TARGET_DIR"
+    fi
+    REPO_DIR="$TARGET_DIR"
+fi
 
 echo "==> Preparing installation directories..."
 mkdir -p "$HOME/.config/island-notch"
@@ -26,7 +46,9 @@ mkdir -p "$HOME/.config/quickshell"
 
 # Symlink config so Quickshell can locate it by any alias
 echo "==> Linking Quickshell configuration..."
-ln -sfn "$REPO_DIR" "$HOME/.config/quickshell/island-notch"
+if [ "$REPO_DIR" != "$TARGET_DIR" ]; then
+    ln -sfn "$REPO_DIR" "$TARGET_DIR"
+fi
 ln -sfn "$REPO_DIR" "$HOME/.config/quickshell/KuroNotch"
 ln -sfn "$REPO_DIR" "$HOME/.config/quickshell/kuro-island"
 
