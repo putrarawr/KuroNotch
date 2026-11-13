@@ -1,7 +1,7 @@
-# Kuro Island 🐱 (黒アイランド)
+# KuroNotch 🐱 (Kuro Island • 黒アイランド)
 
 <p align="center">
-  <img src="marketing/public/mascot_banner.svg" alt="Kuro Island Banner" width="600" />
+  <img src="assets/mascot_banner.svg" alt="KuroNotch Banner" width="600" />
 </p>
 
 <p align="center">
@@ -16,14 +16,6 @@
   <img src="https://img.shields.io/badge/Mascot-Kuro%20the%20Cat-38bdf8?style=flat-square" alt="Mascot Kuro" />
   <img src="https://img.shields.io/badge/License-GPL--3.0-10b981?style=flat-square" alt="License" />
 </p>
-
----
-
-## 🎬 Marketing Showcase Video
-
-Programmatic marketing videos created with **Remotion** (complete with audio effects, lo-fi groove, dynamic island mockup, and animated subtitles):
-- 📺 **[16:9 Landscape Video (YouTube, Reddit r/unixporn, Twitter/X)](marketing/out/kuro-island-16x9.mp4)**
-- 📱 **[9:16 Vertical Video (TikTok, Instagram Reels, YouTube Shorts)](marketing/out/kuro-island-9x16.mp4)**
 
 ---
 
@@ -77,17 +69,24 @@ Pilih gaya tampilan yang paling cocok dengan setup desktop kamu:
 
 Pastikan kamu menggunakan **Linux Wayland** dengan **Hyprland** dan **Quickshell 0.3.1**.
 
+### Opsi A: 1-Liner Otomatis (Direkomendasikan)
 ```bash
-git clone https://github.com/putrarawr/KuroNotch ~/.config/quickshell/kuro-island
-cd ~/.config/quickshell/kuro-island
+curl -sSL https://raw.githubusercontent.com/putrarawr/KuroNotch/main/scripts/install.sh | bash
+```
+
+### Opsi B: Clone Manual
+```bash
+git clone https://github.com/putrarawr/KuroNotch.git ~/.config/quickshell/island-notch
+cd ~/.config/quickshell/island-notch
 ./scripts/install.sh
 ```
 
 Installer otomatis akan:
-1. Menyiapkan direktori state dan cache (`~/.local/state/kuro-island/`).
-2. Memasang binary wrapper `~/.local/bin/kuro-island`.
-3. Mengonfigurasi autostart pada `~/.config/hypr/hyprland.conf`.
-4. Menyinkronkan integrasi desktop dan swww wallpaper.
+1. Menyiapkan direktori state dan cache (`~/.local/state/island-notch/`).
+2. Menautkan konfigurasi Quickshell (`~/.config/quickshell/island-notch`).
+3. Memasang binary wrapper (`~/.local/bin/island-notch` & `~/.local/bin/kuronotch`).
+4. Mengonfigurasi autostart pada `~/.config/hypr/hyprland.conf`.
+5. Menyinkronkan integrasi desktop dan swww wallpaper.
 
 ---
 
@@ -101,27 +100,6 @@ Installer otomatis akan:
 | `Hover Dock Dots` | Preview icon dan judul kategori halaman |
 | `Right Click Notch` | Buka menu aksi cepat |
 | `Klik Maskot Kuro` | Lambaian tangan dan sapaan interaktif |
-
----
-
-## 🎥 Remotion Video Marketing Suite
-
-Project ini menyertakan generator video pemasaran otomatis berbasis React dan TypeScript menggunakan **Remotion**:
-
-```bash
-cd marketing
-# Install dependensi video
-npm install
-
-# Synthesize audio effects (pop, click, chime, whoosh, beat)
-npm run audio
-
-# Render video 16:9 Landscape (1920x1080)
-npm run build
-
-# Render video 9:16 Vertical Shorts/Reels/TikTok (1080x1920)
-npm run build:shorts
-```
 
 ---
 

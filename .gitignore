@@ -2,3 +2,7 @@
 *.log
 .superpowers/
 node_modules/
+marketing/
+website/
+out/
+*.mp4
