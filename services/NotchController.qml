@@ -610,6 +610,10 @@ Singleton {
             root.openSettings();
         }
 
+        function closeSettings(): void {
+            root.closeSettings();
+        }
+
         function greet(): void {
             root.triggerGreeting(false, true);
         }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
-import { DynamicIslandMockup } from '../components/DynamicIslandMockup';
+import { RealNotchPlayer } from '../components/RealNotchPlayer';
 import { SubtitlesOverlay } from '../components/SubtitlesOverlay';
 
 interface SceneProps {
@@ -17,7 +17,7 @@ export const Scene4DockUtilities: React.FC<SceneProps> = ({ isVertical = false }
     config: { damping: 14, stiffness: 95 },
   });
 
-  const islandY = interpolate(entrance, [0, 1], [-50, isVertical ? 110 : 40]);
+  const islandY = interpolate(entrance, [0, 1], [-50, isVertical ? 110 : 36]);
 
   return (
     <div
@@ -32,7 +32,7 @@ export const Scene4DockUtilities: React.FC<SceneProps> = ({ isVertical = false }
         overflow: 'hidden',
       }}
     >
-      {/* Expanded Carousel Island Deck */}
+      {/* Real Live Desktop Captured Notch */}
       <div
         style={{
           position: 'absolute',
@@ -42,11 +42,9 @@ export const Scene4DockUtilities: React.FC<SceneProps> = ({ isVertical = false }
           alignItems: 'center',
         }}
       >
-        <DynamicIslandMockup
-          mode="carousel"
-          accentColor="#10b981"
+        <RealNotchPlayer
           isVertical={isVertical}
-          scale={isVertical ? 0.95 : 1.15}
+          scale={isVertical ? 0.88 : 1.05}
         />
       </div>
 
@@ -104,8 +102,8 @@ export const Scene4DockUtilities: React.FC<SceneProps> = ({ isVertical = false }
       </div>
 
       <SubtitlesOverlay
-        badge="⚡ ALL-IN-ONE UTILITIES"
-        text="File Shelf, Pomodoro, Wallpaper Switcher, & morphing dock dots!"
+        badge="🔴 REAL LIVE DESKTOP RECORDING"
+        text="Rekaman live desktop asli: kontrol mouse & hover dock dots berubah jadi icon!"
         isVertical={isVertical}
       />
     </div>

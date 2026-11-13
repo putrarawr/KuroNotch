@@ -7,7 +7,8 @@
     "build": "remotion render KuroShowcase16x9 out/kuro-island-16x9.mp4",
     "build:shorts": "remotion render KuroShowcase9x16 out/kuro-island-9x16.mp4",
     "preview": "remotion preview src/index.ts",
-    "audio": "python3 scripts/generate-audio.py"
+    "audio": "python3 scripts/generate-audio.py",
+    "record": "python3 scripts/record_live_showcase.py"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.240",
