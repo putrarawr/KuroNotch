@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kuro Island — The Dynamic Island for Linux Hyprland</title>
+  <meta name="description" content="Dynamic Island native Wayland untuk Hyprland berbasis Quickshell 0.3.1. Media deck, lirik sinkron, OSD cerdas, rak file, dan maskot Kuro.">
+  <link rel="icon" href="assets/mascot_banner.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ====================================================================
+       1. CINEMATIC OPENING INTRO
+       ==================================================================== -->
+  <div id="cinematic-intro">
+    <button class="intro-skip-btn" id="intro-skip-btn">Lewati Intro ➔</button>
+    <div class="intro-stage">
+      <div class="intro-terminal-log" id="intro-terminal-log">[SYS_BOOT]: Initializing Wayland Layer...</div>
+
+      <!-- Morphing Notch in Intro -->
+      <div class="intro-notch-capsule" id="intro-notch-capsule">
+        <div class="intro-kuro-face">
+          <div class="intro-kuro-eye" id="intro-kuro-eye-l"></div>
+          <div class="intro-kuro-eye" id="intro-kuro-eye-r"></div>
+        </div>
+        <div class="intro-notch-text">KURO ISLAND</div>
+        <div style="font-size: 14px;">🐾</div>
+      </div>
+
+      <div class="intro-brand-reveal" id="intro-brand-reveal">
+        <h1 class="intro-title">KURO ISLAND</h1>
+        <p class="intro-subtitle">Native Wayland Dynamic Island for Hyprland • Quickshell 0.3.1</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       2. NAVIGATION BAR
+       ==================================================================== -->
+  <nav class="site-nav">
+    <div class="nav-container">
+      <a href="#" class="nav-logo">
+        <img src="assets/mascot_banner.svg" alt="Kuro Mascot" width="28" height="28" style="border-radius: 50%;">
+        <span>Kuro Island</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#playground" class="nav-link">Simulator</a></li>
+        <li><a href="#showcase" class="nav-link">Video Demo</a></li>
+        <li><a href="#features" class="nav-link">Fitur Utama</a></li>
+        <li><a href="#docs" class="nav-link">Cara Penggunaan</a></li>
+        <li><a href="#faq" class="nav-link">FAQ</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="btn-sound-toggle" id="btn-sound-toggle" title="Nyalakan/Bisukan Efek Suara">🔊</button>
+        <button class="btn-replay-intro" id="btn-replay-intro">Putar Ulang Intro</button>
+        <a href="https://github.com/putrarawr/KuroNotch" target="_blank" rel="noopener noreferrer" class="btn-github">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span>Star on GitHub</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ====================================================================
+       3. HERO SECTION
+       ==================================================================== -->
+  <header class="hero-section">
+    <div class="hero-pill-badge">✨ 100% Free & Open Source for Hyprland Wayland</div>
+    <h1 class="hero-title">
+      Pulau Interaktif di Puncak <span>Desktop Hyprland Kamu</span>
+    </h1>
+    <p class="hero-desc">
+      Bukan sekadar notch tiruan. <strong>Kuro Island</strong> adalah dynamic island native Linux berbasis <strong>Quickshell 0.3.1</strong> dengan kendali musik realtime, lirik Spotify otomatis, Cava visualizer reaktif, smart OSD, dan ditemani maskot Kuro yang ekspresif.
+    </p>
+
+    <div class="hero-actions">
+      <a href="#docs" class="btn-primary">
+        <span>🚀 Pasang Sekarang</span>
+      </a>
+      <a href="#playground" class="btn-secondary">
+        <span>🐱 Coba Simulator Interaktif</span>
+      </a>
+      <a href="https://github.com/putrarawr/KuroNotch" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+        <span>⭐ Buka Repositori GitHub</span>
+      </a>
+    </div>
+
+    <!-- Quick One-Liner Box -->
+    <div class="hero-code-box">
+      <span style="color: #64748b; font-family: var(--font-mono); font-size: 13px;">$</span>
+      <code id="hero-cmd-install">curl -sSL https://raw.githubusercontent.com/putrarawr/KuroNotch/main/scripts/install.sh | bash</code>
+      <button class="btn-copy-code" data-target="hero-cmd-install" title="Salin Perintah">
+        <span>Salin</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       4. INTERACTIVE SIMULATOR (PLAYGROUND)
+       ==================================================================== -->
+  <section class="playground-section" id="playground">
+    <div class="section-header">
+      <span class="section-badge">PLAYGROUND LIVE</span>
+      <h2 class="section-title">Coba Langsung di Browser Kamu</h2>
+      <p class="section-desc">Klik notch di bawah untuk membuka kartu expanded, ganti preset bentuk, atur musik, coba timer, dan sapa Kuro!</p>
+    </div>
+
+    <!-- Simulator Frame -->
+    <div class="sim-viewport" id="sim-viewport">
+      <div class="sim-backdrop-overlay"></div>
+
+      <!-- Hyprland Titlebar -->
+      <div class="sim-titlebar">
+        <div class="sim-dots">
+          <div class="sim-dot red"></div>
+          <div class="sim-dot yellow"></div>
+          <div class="sim-dot green"></div>
+        </div>
+
+        <div class="sim-window-label">
+          <span>eDP-1 1366×768</span>
+          <span style="opacity: 0.3;">|</span>
+          <span style="color: #fff;">Kuro Island Desktop Simulator</span>
+        </div>
+
+        <div class="sim-mode-pills">
+          <button class="sim-mode-btn active" data-preset="notch">Notch</button>
+          <button class="sim-mode-btn" data-preset="pill">Pill</button>
+          <button class="sim-mode-btn" data-preset="strip">Strip</button>
+        </div>
+      </div>
+
+      <!-- Interactive Notch Stage -->
+      <div class="sim-notch-stage">
+        <div class="sim-notch preset-notch" id="sim-notch" title="Klik untuk membuka/menutup kartu!">
+          
+          <!-- Collapsed State Content -->
+          <div class="notch-collapsed-bar">
+            <div class="notch-mini-music">
+              <div class="notch-album-thumb">🎵</div>
+              <div class="notch-cava-bars">
+                <div class="cava-bar" style="height: 6px;"></div>
+                <div class="cava-bar" style="height: 12px;"></div>
+                <div class="cava-bar" style="height: 8px;"></div>
+                <div class="cava-bar" style="height: 14px;"></div>
+                <div class="cava-bar" style="height: 5px;"></div>
+              </div>
+              <div class="notch-mini-ticker" id="notch-ticker-text">Kita Lewati Berdua</div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; color: #22c55e; font-weight: 700;">LIVE</span>
+              <div id="sim-kuro-mascot" style="cursor: pointer;" title="Klik Kuro!">
+                <svg width="22" height="22" viewBox="0 0 40 40">
+                  <polygon points="6,14 14,4 18,16" fill="#000" stroke="#38bdf8" stroke-width="1.5"/>
+                  <polygon points="34,14 26,4 22,16" fill="#000" stroke="#38bdf8" stroke-width="1.5"/>
+                  <circle cx="20" cy="22" r="14" fill="#000" stroke="#38bdf8" stroke-width="1.5"/>
+                  <circle cx="15" cy="20" r="2.5" fill="#22c55e"/>
+                  <circle cx="25" cy="20" r="2.5" fill="#22c55e"/>
+                  <path d="M 17 25 Q 20 28 23 25" stroke="#38bdf8" stroke-width="1.5" fill="none"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expanded Deck State -->
+          <div class="notch-expanded-deck">
+            <div class="deck-header">
+              <div class="deck-title">
+                <span id="deck-current-title">Media & Lirik Sinkron</span>
+              </div>
+              <div class="deck-controls">
+                <button class="deck-btn-icon" id="deck-btn-pin" title="Kunci Terbuka (Pin)">📌</button>
+                <button class="deck-btn-icon" id="deck-btn-collapse" title="Tutup / Collapse">✕</button>
+              </div>
+            </div>
+
+            <!-- Carousel Pages -->
+            <div class="deck-body">
+              
+              <!-- Tab 0: Media & Lyrics -->
+              <div class="deck-page active" id="page-0">
+                <div class="media-deck-grid">
+                  <div class="media-left-col">
+                    <div class="media-track-header">
+                      <div class="track-art">🎧</div>
+                      <div class="track-info-texts">
+                        <h4>Kita Lewati Berdua</h4>
+                        <p>Overnight • Spotify</p>
+                      </div>
+                    </div>
+
+                    <div style="margin: 8px 0;">
+                      <div class="track-scrub-bar">
+                        <div class="track-scrub-progress"></div>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 4px;">
+                        <span>1:18</span>
+                        <span>3:59</span>
+                      </div>
+                    </div>
+
+                    <div class="media-controls-row">
+                      <button class="btn-ctrl">⏮</button>
+                      <button class="btn-ctrl btn-play-pause" id="btn-sim-play">❚❚</button>
+                      <button class="btn-ctrl">⏭</button>
+                      <span style="font-size: 11px; color: #38bdf8; background: rgba(56, 189, 248, 0.15); padding: 2px 8px; border-radius: 999px;">
+                        Headphones ⇄
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="media-right-lyrics">
+                    <div class="lyric-line">Sepi menerpa</div>
+                    <div class="lyric-line active">Selimuti kabut jiwa</div>
+                    <div class="lyric-line">Menjelma dirimu</div>
+                    <div class="lyric-line">Dalam untaian kata rindu</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 1: Wallpaper Switcher -->
+              <div class="deck-page" id="page-1">
+                <div style="display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: center; gap: 14px;">
+                  <div style="font-size: 13px; font-weight: 700; color: #fff;">Ganti Wallpaper Desktop Seketika:</div>
+                  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                    <button class="sim-wp-choice sim-pill-btn" style="height: 65px; background: #1e1b4b;">Cyberpunk</button>
+                    <button class="sim-wp-choice sim-pill-btn" style="height: 65px; background: #0f172a;">Dark Minimal</button>
+                    <button class="sim-wp-choice sim-pill-btn" style="height: 65px; background: #312e81;">Anime Rain</button>
+                    <button class="sim-wp-choice sim-pill-btn" style="height: 65px; background: #14532d;">Forest Wayland</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 2: Pomodoro & Quick Tools -->
+              <div class="deck-page" id="page-2">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 100%;">
+                  <div>
+                    <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 700;">POMODORO TIMER</span>
+                    <div style="font-size: 32px; font-weight: 900; color: #fff; font-family: var(--font-mono);" id="sim-pomo-display">50:00</div>
+                    <button class="sim-pill-btn active" id="btn-sim-pomodoro" style="margin-top: 6px;">Mulai</button>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button class="sim-quick-tool-btn sim-pill-btn" data-tool="color">🎨 Color Picker (Hyprpicker)</button>
+                    <button class="sim-quick-tool-btn sim-pill-btn" data-tool="screenshot">📸 Screenshot (Grim + Slurp)</button>
+                    <button class="sim-quick-tool-btn sim-pill-btn" data-tool="dnd">🌙 Jangan Ganggu (DND)</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 3: Weather, Calendar & Water -->
+              <div class="deck-page" id="page-3">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 100%;">
+                  <div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Cuaca Hari Ini:</div>
+                    <div style="font-size: 26px; font-weight: 800; color: #fff;">🌧️ 30°C • Hujan Ringan</div>
+                    <div style="font-size: 11px; color: #38bdf8; margin-top: 4px;">Kelembaban 82% • Angin 14 km/h</div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                    <div style="font-size: 12px; font-weight: 700; color: #fff;">Target Minum Air:</div>
+                    <div style="display: flex; gap: 6px;">
+                      <button class="sim-water-cup sim-pill-btn" style="padding: 4px 8px;">💧 1</button>
+                      <button class="sim-water-cup sim-pill-btn" style="padding: 4px 8px;">💧 2</button>
+                      <button class="sim-water-cup sim-pill-btn" style="padding: 4px 8px;">💧 3</button>
+                      <button class="sim-water-cup sim-pill-btn" style="padding: 4px 8px;">💧 4</button>
+                      <button class="sim-water-cup sim-pill-btn" style="padding: 4px 8px;">💧 5</button>
+                    </div>
+                    <span id="sim-water-label" style="font-size: 12px; color: #38bdf8; font-weight: 700;">3/8 Gelas Terisi</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 4: Drag & Drop File Shelf -->
+              <div class="deck-page" id="page-4">
+                <div style="display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: center; gap: 10px;">
+                  <div style="font-size: 13px; font-weight: 700; color: #fff;">📁 Rak File Drag-and-Drop:</div>
+                  <div style="border: 2px dashed rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 18px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                    Tarik file ke sini dari Thunar / Dolphin / Nautilus untuk disematkan sementara di notch
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 5: Settings Modal -->
+              <div class="deck-page" id="page-5">
+                <div style="display: flex; flex-direction: column; width: 100%; height: 100%; gap: 12px;">
+                  <div style="font-size: 13px; font-weight: 700; color: #fff;">Pilihan Warna Aksen Kuro:</div>
+                  <div style="display: flex; gap: 10px;">
+                    <button class="sim-theme-swatch sim-pill-btn" data-color="#38bdf8" title="Obsidian Sky" style="border-left: 4px solid #38bdf8;">Sky Blue</button>
+                    <button class="sim-theme-swatch sim-pill-btn" data-color="#c084fc" title="Violet Dream" style="border-left: 4px solid #c084fc;">Violet</button>
+                    <button class="sim-theme-swatch sim-pill-btn" data-color="#22c55e" title="Forest Mint" style="border-left: 4px solid #22c55e;">Mint</button>
+                    <button class="sim-theme-swatch sim-pill-btn" data-color="#f59e0b" title="Amber Sun" style="border-left: 4px solid #f59e0b;">Amber</button>
+                    <button class="sim-theme-swatch sim-pill-btn" data-color="#f43f5e" title="Crimson Rose" style="border-left: 4px solid #f43f5e;">Crimson</button>
+                  </div>
+                  <div style="font-size: 12px; color: var(--text-muted);">
+                    Semua pengaturan otomatis tersimpan di <code>~/.config/island-notch/config.json</code>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Page Indicator Dots -->
+            <div class="deck-footer-dots">
+              <div class="deck-dot active" data-page="0"></div>
+              <div class="deck-dot" data-page="1"></div>
+              <div class="deck-dot" data-page="2"></div>
+              <div class="deck-dot" data-page="3"></div>
+              <div class="deck-dot" data-page="4"></div>
+              <div class="deck-dot" data-page="5"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Simulator Control Buttons Underneath -->
+    <div class="sim-controls-panel">
+      <div class="sim-control-group">
+        <span class="sim-control-label">Gaya Preset:</span>
+        <button class="sim-preset-btn sim-pill-btn active" data-preset="notch">Notch</button>
+        <button class="sim-preset-btn sim-pill-btn" data-preset="pill">Pill</button>
+        <button class="sim-preset-btn sim-pill-btn" data-preset="strip">Micro-Strip</button>
+      </div>
+
+      <div class="sim-control-group">
+        <span class="sim-control-label">Buka Kartu:</span>
+        <button class="sim-tab-jump-btn sim-pill-btn" data-tab="0">🎵 Musik</button>
+        <button class="sim-tab-jump-btn sim-pill-btn" data-tab="1">🖼️ Wallpaper</button>
+        <button class="sim-tab-jump-btn sim-pill-btn" data-tab="2">🍅 Pomodoro</button>
+        <button class="sim-tab-jump-btn sim-pill-btn" data-tab="3">🌧️ Cuaca</button>
+        <button class="sim-tab-jump-btn sim-pill-btn" data-tab="4">📁 File</button>
+        <button class="sim-tab-jump-btn sim-pill-btn" data-tab="5">⚙️ Pengaturan</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       5. VIDEO SHOWCASE SECTION
+       ==================================================================== -->
+  <section class="video-showcase-section" id="showcase">
+    <div class="section-header">
+      <span class="section-badge">REKAMAN ASLI HYPRLAND</span>
+      <h2 class="section-title">Video Showcase Vertikal 9:16</h2>
+      <p class="section-desc">Tonton Kuro Island beraksi langsung di desktop Hyprland asli dengan lirik Spotify sinkron dan Cava visualizer.</p>
+    </div>
+
+    <div class="video-container-wrap">
+      <video controls poster="assets/preview-music.png" preload="metadata">
+        <source src="assets/kuro-island-9x16.mp4" type="video/mp4">
+        Browser kamu tidak mendukung tag video.
+      </video>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <a href="assets/kuro-island-9x16.mp4" download="kuro-island-9x16.mp4" class="btn-secondary" style="display: inline-flex;">
+        <span>📥 Unduh Video Format 9:16 (6.9 MB)</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       6. FEATURE HIGHLIGHTS (DEEP DIVES)
+       ==================================================================== -->
+  <section class="features-section" id="features">
+    <div class="section-header">
+      <span class="section-badge">ARSITEKTUR & KEUNGGULAN</span>
+      <h2 class="section-title">Dibuat Khusus untuk Pengguna Linux Modern</h2>
+      <p class="section-desc">Ringan, hemat daya, dan terintegrasi mulus dengan ekosistem Wayland.</p>
+    </div>
+
+    <div class="features-grid">
+      <!-- Feature 1 -->
+      <div class="feature-card">
+        <div class="feature-icon-bubble">⚡</div>
+        <h3 class="feature-title">Zero Idle CPU (Cava On-Demand)</h3>
+        <p class="feature-text">
+          Visualizer audio Cava hanya berjalan saat pemutar musik berstatus <code>Playing</code>. Begitu lagu dijeda atau dihentikan, proses Cava langsung dimatikan sehingga CPU tetap 0% saat idle.
+        </p>
+        <span class="feature-tag">EFISIENSI BATERAI</span>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="feature-card">
+        <div class="feature-icon-bubble">🎵</div>
+        <h3 class="feature-title">Live Synced Karaoke Lyrics</h3>
+        <p class="feature-text">
+          Membaca metadata lagu dari Spotify atau pemutar MPRIS lain, mengambil berkas lirik LRC tersinkron, dan menyajikan lirik karaoke berjalan baik saat notch collapsed maupun expanded.
+        </p>
+        <span class="feature-tag">MPRIS & LRC ENGINE</span>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="feature-card">
+        <div class="feature-icon-bubble">🛡️</div>
+        <h3 class="feature-title">Privacy Indicator & Smart OSD</h3>
+        <p class="feature-text">
+          Titik hijau untuk kamera/layar aktif dan titik jingga untuk mikrofon aktif. OSD volume dan kecerahan interaktif dapat digulir langsung di dalam notch tanpa mengganggu jendela yang sedang aktif.
+        </p>
+        <span class="feature-tag">PIPEWIRE & PRIVACY</span>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="feature-card">
+        <div class="feature-icon-bubble">📁</div>
+        <h3 class="feature-title">Drag-and-Drop File Shelf</h3>
+        <p class="feature-text">
+          Tarik berkas apa saja ke arah notch atas untuk menyimpannya di rak sementara. Klik untuk membuka, salin URI dengan aman ke clipboard Wayland, atau seret keluar ke aplikasi lain.
+        </p>
+        <span class="feature-tag">WAYLAND CLIPBOARD</span>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="feature-card">
+        <div class="feature-icon-bubble">🐱</div>
+        <h3 class="feature-title">Kuro Companion Mascot</h3>
+        <p class="feature-text">
+          Kuro bukan sekadar gambar mati. Maskot ini memiliki mata berkedip yang hidup, ekspresi sesuai musik, tangan yang bisa menyapa (wave), dan mendampingi aktivitas harianmu di desktop.
+        </p>
+        <span class="feature-tag">KARAKTER INTERAKTIF</span>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="feature-card">
+        <div class="feature-icon-bubble">💻</div>
+        <h3 class="feature-title">Smart Fullscreen Auto-Hide</h3>
+        <p class="feature-text">
+          Saat kamu membuka video layar penuh atau bermain game, notch otomatis mengkerut menjadi strip 4px tak kasat mata sehingga area visual layar tidak terhalang.
+        </p>
+        <span class="feature-tag">HYPRLAND IPC</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       7. COMPLETE DOCUMENTATION & USAGE GUIDE
+       ==================================================================== -->
+  <section class="docs-section" id="docs">
+    <div class="section-header">
+      <span class="section-badge">DOKUMENTASI LENGKAP</span>
+      <h2 class="section-title">Cara Penggunaan & Instalasi</h2>
+      <p class="section-desc">Pilih panduan di bawah untuk melihat langkah instalasi, pintasan tombol, konfigurasi, dan arsitektur.</p>
+    </div>
+
+    <!-- Documentation Navigation Tabs -->
+    <div class="docs-tabs-row">
+      <button class="doc-tab-btn active" data-doc="install">1. Instalasi Cepat</button>
+      <button class="doc-tab-btn" data-doc="requirements">2. Prasyarat Sistem</button>
+      <button class="doc-tab-btn" data-doc="gestures">3. Gestur & Pintasan</button>
+      <button class="doc-tab-btn" data-doc="ipc">4. Perintah CLI / IPC</button>
+      <button class="doc-tab-btn" data-doc="config">5. Konfigurasi JSON</button>
+    </div>
+
+    <!-- Tab Pane 1: Instalasi Cepat -->
+    <div class="doc-pane active" id="doc-install">
+      <h3>🚀 Instalasi Otomatis (Satu Baris Perintah)</h3>
+      <p>Cukup jalankan perintah berikut di terminal Linux kamu. Skrip ini akan memeriksa dependensi, membuat symlink ke Quickshell, dan mengonfigurasi autostart:</p>
+      
+      <div class="code-block-wrap">
+        <pre id="code-install-oneliner">curl -sSL https://raw.githubusercontent.com/putrarawr/KuroNotch/main/scripts/install.sh | bash</pre>
+        <button class="btn-copy-code" data-target="code-install-oneliner" style="position: absolute; top: 12px; right: 12px;">Salin</button>
+      </div>
+
+      <h3 style="margin-top: 32px;">Integrasi dengan Caelestia Shell (Jika Memakai)</h3>
+      <p>Jika kamu sudah memasang <strong>Caelestia</strong>, gunakan skrip integrasi agar notification server tidak bentrok:</p>
+      <div class="code-block-wrap">
+        <pre id="code-install-caelestia">~/.config/quickshell/island-notch/scripts/install-integration.sh</pre>
+        <button class="btn-copy-code" data-target="code-install-caelestia" style="position: absolute; top: 12px; right: 12px;">Salin</button>
+      </div>
+    </div>
+
+    <!-- Tab Pane 2: Prasyarat Sistem -->
+    <div class="doc-pane" id="doc-requirements">
+      <h3>📋 Prasyarat Sistem</h3>
+      <p>Kuro Island dirancang khusus untuk ekosistem Wayland modern dengan daftar dependensi berikut:</p>
+
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th>Komponen</th>
+            <th>Paket / Binary</th>
+            <th>Fungsi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Compositor</strong></td>
+            <td>Hyprland</td>
+            <td>Wayland compositor dengan dukungan Layer Shell</td>
+          </tr>
+          <tr>
+            <td><strong>GUI Engine</strong></td>
+            <td>Quickshell 0.3.1</td>
+            <td>Runtime QML Qt6 yang cepat dan native</td>
+          </tr>
+          <tr>
+            <td><strong>Audio / MPRIS</strong></td>
+            <td>Pipewire & playerctl</td>
+            <td>Kendali pemutar musik dan slider volume</td>
+          </tr>
+          <tr>
+            <td><strong>Visualizer</strong></td>
+            <td>cava (opsional)</td>
+            <td>Visualizer bar reaktif (on-demand)</td>
+          </tr>
+          <tr>
+            <td><strong>Alat Screenshot</strong></td>
+            <td>grim & slurp</td>
+            <td>Tangkapan layar area atau penuh</td>
+          </tr>
+          <tr>
+            <td><strong>Color Picker</strong></td>
+            <td>hyprpicker</td>
+            <td>Pengambil kode warna hex di layar</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tab Pane 3: Gestur & Pintasan -->
+    <div class="doc-pane" id="doc-gestures">
+      <h3>🖱️ Gestur Mouse & Pintasan Keyboard</h3>
+      <p>Kuro Island menyediakan navigasi yang halus tanpa perlu klik tombol kecil:</p>
+
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th>Aksi</th>
+            <th>Input / Gestur</th>
+            <th>Hasil</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Buka / Tutup Notch</td>
+            <td><span class="badge-key">Hover Mouse</span> atau <span class="badge-key">Klik Notch</span></td>
+            <td>Membuka kartu expanded deck</td>
+          </tr>
+          <tr>
+            <td>Ganti Halaman Kartu</td>
+            <td><span class="badge-key">Shift</span> + <span class="badge-key">Scroll Roda Mouse</span></td>
+            <td>Menggeser antar kartu (Musik, Wallpaper, Pomodoro, dll.)</td>
+          </tr>
+          <tr>
+            <td>Scroll Konten Lirik</td>
+            <td><span class="badge-key">Scroll Vertikal Biasa</span> di kolom lirik</td>
+            <td>Menggulir lirik tanpa memicu ganti kartu carousel</td>
+          </tr>
+          <tr>
+            <td>Kunci Posisi Expanded</td>
+            <td>Klik ikon pin <span class="badge-key">📌</span> di header kartu</td>
+            <td>Mencegah notch menutup otomatis saat kursor keluar</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tab Pane 4: Perintah CLI / IPC -->
+    <div class="doc-pane" id="doc-ipc">
+      <h3>⌨️ Perintah CLI & Integrasi Hyprland Binding</h3>
+      <p>Kamu bisa memanggil Kuro Island melalui baris perintah atau menetapkannya ke hotkey di <code>hyprland.conf</code>:</p>
+
+      <div class="code-block-wrap">
+        <pre id="code-hyprland-bindings"># Tambahkan baris ini di ~/.config/hypr/hyprland.conf:
+
+# Buka/tutup notch dengan Super + I
+bind = $mainMod, I, exec, island-notch --toggle
+
+# Langsung lompat ke halaman musik (page 0)
+bind = $mainMod, M, exec, island-notch --page 0
+
+# Suruh maskot Kuro menyapa / melambaikan tangan!
+bind = $mainMod SHIFT, W, exec, island-notch --wave</pre>
+        <button class="btn-copy-code" data-target="code-hyprland-bindings" style="position: absolute; top: 12px; right: 12px;">Salin</button>
+      </div>
+    </div>
+
+    <!-- Tab Pane 5: Konfigurasi JSON -->
+    <div class="doc-pane" id="doc-config">
+      <h3>⚙️ Konfigurasi JSON</h3>
+      <p>Konfigurasi disimpan di berkas <code>~/.config/island-notch/config.json</code>. Kamu bisa mengubahnya lewat modal pengaturan di notch atau mengedit berkasnya langsung:</p>
+
+      <div class="code-block-wrap">
+        <pre>{
+  "preset": "notch",          // Pilihan: "notch", "pill", "strip"
+  "palette": "obsidian",       // Pilihan: "obsidian", "midnight", "forest", "crimson", "amber", "violet"
+  "adaptiveGlow": true,        // Aksen warna berpendar sesuai cover album lagu
+  "pomodoro": {
+    "focusMin": 50,
+    "breakMin": 10,
+    "chimeEnabled": true
+  },
+  "lyrics": {
+    "enabled": true,
+    "showInCollapsed": true
+  },
+  "companion": {
+    "enabled": true,
+    "waving": true
+  }
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       8. FAQ SECTION
+       ==================================================================== -->
+  <section class="docs-section" id="faq" style="margin-top: 20px;">
+    <div class="section-header">
+      <span class="section-badge">TANYA JAWAB</span>
+      <h2 class="section-title">Pertanyaan yang Sering Diajukan</h2>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; max-width: 800px; margin: 30px auto 0 auto;">
+      <div class="feature-card" style="padding: 24px;">
+        <h4 style="font-size: 16px; color: #fff; margin-bottom: 8px;">Apakah harus menggunakan Caelestia untuk menjalankan Kuro Island?</h4>
+        <p style="font-size: 14px; color: var(--text-muted); margin: 0;">
+          <strong>Tidak!</strong> Kuro Island sepenuhnya mandiri (standalone). Kamu hanya membutuhkan Linux dengan Hyprland dan Quickshell 0.3.1. Namun jika kamu pengguna Caelestia, skrip integrasi kami sudah menyediakan penyesuaian otomatis agar tidak bentrok.
+        </p>
+      </div>
+
+      <div class="feature-card" style="padding: 24px;">
+        <h4 style="font-size: 16px; color: #fff; margin-bottom: 8px;">Apakah lirik lagu mendukung pemutar selain Spotify?</h4>
+        <p style="font-size: 14px; color: var(--text-muted); margin: 0;">
+          <strong>Ya!</strong> Semua pemutar yang mendukung standar MPRIS Linux (seperti Spotify, Cmus, MPD, Firefox, Chromium) didukung. Berkas lirik format LRC otomatis di-cache di <code>~/.cache/island-notch/lyrics/</code>.
+        </p>
+      </div>
+
+      <div class="feature-card" style="padding: 24px;">
+        <h4 style="font-size: 16px; color: #fff; margin-bottom: 8px;">Berapa konsumsi daya dan memori Kuro Island?</h4>
+        <p style="font-size: 14px; color: var(--text-muted); margin: 0;">
+          Sangat ringan. Berkat arsitektur event-driven berbasis soket C++ Quickshell tanpa polling loop, konsumsi RAM hanya ~45–60 MB dan CPU 0.0% saat idle.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       9. FOOTER
+       ==================================================================== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="assets/mascot_banner.svg" alt="Kuro Mascot" width="24" height="24" style="border-radius: 50%;">
+        <span>Kuro Island (KuroNotch)</span>
+      </div>
+
+      <div class="footer-copy">
+        Dibuat dengan ❤️ oleh <a href="https://github.com/putrarawr" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan); font-weight: 700;">putrarawr</a> untuk komunitas Linux & Hyprland. Lisensi MIT.
+      </div>
+
+      <div>
+        <a href="https://github.com/putrarawr/KuroNotch" target="_blank" rel="noopener noreferrer" class="btn-github">
+          <span>GitHub Repository ➔</span>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- App Script -->
+  <script src="app.js"></script>
+</body>
+</html>
