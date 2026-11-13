@@ -81,6 +81,10 @@ PanelWindow {
         Region {
             item: topBridge
         }
+
+        Region {
+            item: handsHitbox
+        }
     }
 
     onWidthChanged: {
@@ -343,6 +347,15 @@ PanelWindow {
     }
 
     Item {
+        id: handsHitbox
+
+        x: notchSurface.x
+        y: Math.max(0, notchSurface.y - 18)
+        width: notchHands.handsActive ? Math.max(1, notchSurface.width) : 0
+        height: notchHands.handsActive ? 18 : 0
+    }
+
+    Item {
         id: rootFocusItem
 
         anchors.fill: parent
@@ -375,6 +388,17 @@ PanelWindow {
                 enabled: sensorZone.width > 0 && sensorZone.height > 0
                 onHoveredChanged: NotchController.setSensorHovered(hovered)
             }
+        }
+
+        NotchHands {
+            id: notchHands
+
+            notchX: notchSurface.x
+            notchY: notchSurface.y
+            notchWidth: notchSurface.width
+            notchHeight: notchSurface.height
+            accentColor: notchSurface.accentColor
+            surfaceState: NotchController.surfaceState
         }
 
         NotchSurface {
@@ -504,6 +528,7 @@ PanelWindow {
                         anchors.fill: parent
                         anchors.leftMargin: 22
                         anchors.rightMargin: 22
+                        anchors.bottomMargin: 24
                         clip: true
 
                         property real animatedPageIndex: NotchController.activeSlotIndex
@@ -705,6 +730,18 @@ PanelWindow {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: NotchController.stepPage(1)
                         }
+                    }
+
+                    // Bottom-Center Floating Morphing Page Indicator
+                    ExpandedPageIndicator {
+                        id: bottomIndicator
+
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 4
+                        z: 35
+                        accentColor: notchSurface.accentColor
+                        visible: NotchController.enabledPages.length > 1
                     }
                 }
             }

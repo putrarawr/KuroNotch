@@ -122,18 +122,18 @@ PopupWindow {
                     spacing: 10
 
                     Rectangle {
-                        Layout.preferredWidth: 28
-                        Layout.preferredHeight: 28
-                        radius: 9
-                        color: Config.activePalette.elevated
+                        Layout.preferredWidth: 32
+                        Layout.preferredHeight: 32
+                        radius: 10
+                        color: Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.16)
                         border.width: 1
-                        border.color: Qt.rgba(1, 1, 1, 0.12)
+                        border.color: Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.38)
 
                         Text {
                             anchors.centerIn: parent
                             text: "tune"
                             font.family: "Material Symbols Rounded"
-                            font.pixelSize: 16
+                            font.pixelSize: 18
                             color: Config.activePalette.accent
                         }
                     }
@@ -144,16 +144,16 @@ PopupWindow {
 
                         Text {
                             Layout.fillWidth: true
-                            text: "Notch Settings"
+                            text: "Island Notch Settings"
                             font.family: "Rubik"
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
-                            color: "#f4f4f6"
+                            color: "#ffffff"
                         }
 
                         Text {
                             Layout.fillWidth: true
-                            text: "Layout mode, color palette, and widgets on/off"
+                            text: "Layout mode, color palette, live widgets & interactive behaviors"
                             elide: Text.ElideRight
                             font.family: "Rubik"
                             font.pixelSize: 10
@@ -205,22 +205,53 @@ PopupWindow {
 
                 // Segmented Navigation Tabs: Appearance | Widgets | Behavior
                 Rectangle {
+                    id: tabSegmentBar
+
                     Layout.fillWidth: true
-                    height: 32
-                    radius: 10
-                    color: Config.activePalette.elevated
+                    height: 36
+                    radius: 11
+                    color: "#0c0c14"
                     border.width: 1
                     border.color: Qt.rgba(1, 1, 1, 0.08)
 
+                    // Animated sliding indicator pill
+                    Rectangle {
+                        id: activeTabSlider
+
+                        readonly property real tabWidth: (tabSegmentBar.width - 8) / Math.max(1, root.tabs.length)
+                        x: 4 + root.activeTab * tabWidth
+                        y: 4
+                        width: tabWidth
+                        height: tabSegmentBar.height - 8
+                        radius: 8
+                        color: Qt.rgba(
+                            Qt.color(Config.activePalette.accent).r,
+                            Qt.color(Config.activePalette.accent).g,
+                            Qt.color(Config.activePalette.accent).b,
+                            0.20
+                        )
+                        border.width: 1
+                        border.color: Qt.rgba(
+                            Qt.color(Config.activePalette.accent).r,
+                            Qt.color(Config.activePalette.accent).g,
+                            Qt.color(Config.activePalette.accent).b,
+                            0.45
+                        )
+
+                        Behavior on x {
+                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        }
+                    }
+
                     RowLayout {
                         anchors.fill: parent
-                        anchors.margins: 3
-                        spacing: 4
+                        anchors.margins: 4
+                        spacing: 0
 
                         Repeater {
                             model: root.tabs
 
-                            delegate: Rectangle {
+                            delegate: Item {
                                 id: tabBtn
 
                                 required property var modelData
@@ -228,16 +259,6 @@ PopupWindow {
 
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
-                                radius: 7
-                                color: active
-                                    ? Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.18)
-                                    : (tabMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.05) : "transparent")
-                                border.width: active ? 1 : 0
-                                border.color: Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.45)
-
-                                Behavior on color {
-                                    ColorAnimation { duration: 120 }
-                                }
 
                                 Row {
                                     anchors.centerIn: parent
@@ -247,8 +268,12 @@ PopupWindow {
                                         anchors.verticalCenter: parent.verticalCenter
                                         text: tabBtn.modelData.icon
                                         font.family: "Material Symbols Rounded"
-                                        font.pixelSize: 14
+                                        font.pixelSize: 15
                                         color: tabBtn.active ? Config.activePalette.accent : "#8e8e98"
+
+                                        Behavior on color {
+                                            ColorAnimation { duration: 140 }
+                                        }
                                     }
 
                                     Text {
@@ -257,7 +282,11 @@ PopupWindow {
                                         font.family: "Rubik"
                                         font.pixelSize: 11
                                         font.weight: tabBtn.active ? Font.DemiBold : Font.Medium
-                                        color: tabBtn.active ? "#f4f4f6" : "#9e9eaa"
+                                        color: tabBtn.active ? "#ffffff" : "#9e9eaa"
+
+                                        Behavior on color {
+                                            ColorAnimation { duration: 140 }
+                                        }
                                     }
                                 }
 
@@ -324,12 +353,12 @@ PopupWindow {
                                         readonly property bool active: Config.mode === modelData.id
 
                                         Layout.fillWidth: true
-                                        height: 36
-                                        radius: 10
+                                        height: 40
+                                        radius: 11
                                         color: active
                                             ? Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.16)
-                                            : (styleMouse.containsMouse ? "#171720" : Config.activePalette.elevated)
-                                        border.width: 1
+                                            : (styleMouse.containsMouse ? "#171722" : Config.activePalette.elevated)
+                                        border.width: active ? 1.5 : 1
                                         border.color: active
                                             ? Config.activePalette.accent
                                             : Qt.rgba(1, 1, 1, 0.08)
@@ -338,25 +367,34 @@ PopupWindow {
                                             ColorAnimation { duration: 120 }
                                         }
 
-                                        Row {
+                                        RowLayout {
                                             anchors.centerIn: parent
                                             spacing: 6
 
-                                            Text {
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                text: styleBtn.modelData.icon
-                                                font.family: "Material Symbols Rounded"
-                                                font.pixelSize: 15
-                                                color: styleBtn.active ? Config.activePalette.accent : "#8e8e98"
+                                            // Miniature Silhouette Icon of the Notch
+                                            Rectangle {
+                                                width: 18
+                                                height: styleBtn.modelData.id === "strip" ? 4 : (styleBtn.modelData.id === "pill" ? 11 : 11)
+                                                radius: styleBtn.modelData.id === "strip" ? 2 : (styleBtn.modelData.id === "pill" ? 5.5 : 3)
+                                                color: styleBtn.active ? Config.activePalette.accent : "#2c2c38"
+                                                border.width: 1
+                                                border.color: styleBtn.active ? Qt.rgba(1, 1, 1, 0.4) : Qt.rgba(1, 1, 1, 0.15)
                                             }
 
                                             Text {
-                                                anchors.verticalCenter: parent.verticalCenter
                                                 text: styleBtn.modelData.label
                                                 font.family: "Rubik"
                                                 font.pixelSize: 11
                                                 font.weight: styleBtn.active ? Font.DemiBold : Font.Normal
-                                                color: styleBtn.active ? "#f4f4f6" : "#b8b8c4"
+                                                color: styleBtn.active ? "#ffffff" : "#b8b8c4"
+                                            }
+
+                                            Text {
+                                                visible: styleBtn.active
+                                                text: "check"
+                                                font.family: "Material Symbols Rounded"
+                                                font.pixelSize: 13
+                                                color: Config.activePalette.accent
                                             }
                                         }
 
@@ -402,7 +440,7 @@ PopupWindow {
                                         readonly property bool active: Config.theme.palette === modelData.id
 
                                         Layout.fillWidth: true
-                                        height: 34
+                                        height: 36
                                         radius: 10
                                         color: modelData.elevated
                                         border.width: active ? 1.5 : 1
@@ -415,13 +453,22 @@ PopupWindow {
                                             spacing: 6
 
                                             Rectangle {
-                                                width: 11
-                                                height: 11
-                                                radius: 5.5
+                                                width: 12
+                                                height: 12
+                                                radius: 6
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 color: swatchCard.modelData.accent
                                                 border.width: 1
-                                                border.color: Qt.rgba(1, 1, 1, 0.28)
+                                                border.color: Qt.rgba(1, 1, 1, 0.35)
+
+                                                Text {
+                                                    visible: swatchCard.active
+                                                    anchors.centerIn: parent
+                                                    text: "check"
+                                                    font.family: "Material Symbols Rounded"
+                                                    font.pixelSize: 9
+                                                    color: "#050507"
+                                                }
                                             }
 
                                             Text {
@@ -1149,6 +1196,7 @@ PopupWindow {
                             label: "Sync Lyrics"
                             subtitle: "Spotify-style lyrics panel & collapsed lyric ticker"
                             iconName: "lyrics"
+                            iconTint: "#c084fc"
                             checked: Config.lyrics.enabled
                             selected: root.previewWidget === "lyrics"
                             onHovered: root.previewWidget = "lyrics"
@@ -1163,6 +1211,7 @@ PopupWindow {
                             label: "Control Center & Monitor"
                             subtitle: "CPU, RAM, Temp, Weather, Battery Watt & Controls"
                             iconName: "monitoring"
+                            iconTint: "#34d399"
                             checked: Config.widgets.controls
                             selected: root.previewWidget === "controls"
                             onHovered: root.previewWidget = "controls"
@@ -1177,6 +1226,7 @@ PopupWindow {
                             label: "Wallpaper Switcher"
                             subtitle: "Switch ~/wallpapers thumbnails, random shuffle & auto swww sync"
                             iconName: "wallpaper"
+                            iconTint: "#38bdf8"
                             checked: Config.widgets.wallpaper
                             selected: root.previewWidget === "wallpaper"
                             onHovered: root.previewWidget = "wallpaper"
@@ -1191,6 +1241,7 @@ PopupWindow {
                             label: "Pomodoro & Quick Tools"
                             subtitle: "Timer, ambient sound, screenshot, color picker, Night Light"
                             iconName: "timer"
+                            iconTint: "#fbbf24"
                             checked: Config.widgets.pomodoro
                             selected: root.previewWidget === "pomodoro"
                             onHovered: root.previewWidget = "pomodoro"
@@ -1205,6 +1256,7 @@ PopupWindow {
                             label: "Mini Calendar & Agenda"
                             subtitle: "Monthly view, to-do checklist, and timed reminder alerts"
                             iconName: "calendar_month"
+                            iconTint: "#818cf8"
                             checked: Config.widgets.calendar
                             selected: root.previewWidget === "calendar"
                             onHovered: root.previewWidget = "calendar"
@@ -1219,6 +1271,7 @@ PopupWindow {
                             label: "Weather & Water Reminder"
                             subtitle: "Hourly forecast, city search, clickable cup tracker & alerts"
                             iconName: "water_drop"
+                            iconTint: "#22d3ee"
                             checked: Config.widgets.weatherWater
                             selected: root.previewWidget === "weatherWater"
                             onHovered: root.previewWidget = "weatherWater"
@@ -1233,6 +1286,7 @@ PopupWindow {
                             label: "Quick Notes & Open Windows"
                             subtitle: "Auto-saved scratchpad & Hyprland window switcher"
                             iconName: "edit_note"
+                            iconTint: "#f472b6"
                             checked: Config.widgets.notes
                             selected: root.previewWidget === "notes"
                             onHovered: root.previewWidget = "notes"
@@ -1247,6 +1301,7 @@ PopupWindow {
                             label: "Drag & Drop File Shelf"
                             subtitle: "Stage files & copy/drag back out"
                             iconName: "inventory_2"
+                            iconTint: "#60a5fa"
                             checked: Config.widgets.shelf
                             selected: root.previewWidget === "shelf"
                             onHovered: root.previewWidget = "shelf"
@@ -1261,6 +1316,7 @@ PopupWindow {
                             label: "Clipboard Stash (cliphist)"
                             subtitle: "Searchable text & image clipboard history"
                             iconName: "content_paste"
+                            iconTint: "#a78bfa"
                             checked: Config.widgets.clipboard
                             selected: root.previewWidget === "clipboard"
                             onHovered: root.previewWidget = "clipboard"
@@ -1275,6 +1331,7 @@ PopupWindow {
                             label: "Notification Island"
                             subtitle: "Interactive notification center & alert bursts"
                             iconName: "notifications"
+                            iconTint: "#fb923c"
                             checked: Config.widgets.notifications
                             selected: root.previewWidget === "notifications"
                             onHovered: root.previewWidget = "notifications"
@@ -1289,6 +1346,7 @@ PopupWindow {
                             label: "Idle Companion Eyes"
                             subtitle: `After ${Config.companion.idleSeconds}s idle · wakes when mouse/keys move`
                             iconName: "visibility"
+                            iconTint: "#e879f9"
                             checked: Config.companion.enabled
                             selected: root.previewWidget === "companion"
                             onHovered: root.previewWidget = "companion"
@@ -1321,6 +1379,7 @@ PopupWindow {
                             label: "Smart Auto-Hide"
                             subtitle: "Shrink into thin top sensor while using browser or fullscreen"
                             iconName: "visibility_off"
+                            iconTint: "#94a3b8"
                             checked: Config.autoHide.enabled
                             onToggled: {
                                 Config.autoHide.enabled = !Config.autoHide.enabled;
@@ -1332,6 +1391,7 @@ PopupWindow {
                             label: "Auto-Hide When Window Below"
                             subtitle: "Hide automatically whenever any window occupies area beneath notch"
                             iconName: "layers"
+                            iconTint: "#38bdf8"
                             checked: Config.autoHide.smartOverlap
                             onToggled: {
                                 Config.autoHide.smartOverlap = !Config.autoHide.smartOverlap;
@@ -1343,6 +1403,7 @@ PopupWindow {
                             label: "Show Lyrics in Collapsed Notch"
                             subtitle: "Display active lyric line inside collapsed pill"
                             iconName: "subtitles"
+                            iconTint: "#c084fc"
                             checked: Config.lyrics.showInCollapsed
                             onToggled: {
                                 Config.lyrics.showInCollapsed = !Config.lyrics.showInCollapsed;
@@ -1354,6 +1415,7 @@ PopupWindow {
                             label: "Do Not Disturb"
                             subtitle: "Silence incoming notification peeks"
                             iconName: "notifications_off"
+                            iconTint: "#f87171"
                             checked: Config.dnd
                             onToggled: NotchController.toggleDnd()
                         }
@@ -1362,6 +1424,7 @@ PopupWindow {
                             label: "Pomodoro Completion Chime"
                             subtitle: "Play gentle tone when focus/break finishes"
                             iconName: "music_note"
+                            iconTint: "#fbbf24"
                             checked: Config.pomodoro.chimeEnabled
                             onToggled: {
                                 Config.pomodoro.chimeEnabled = !Config.pomodoro.chimeEnabled;
@@ -1373,6 +1436,7 @@ PopupWindow {
                             label: "AI Agent Live Status"
                             subtitle: "Show live indicator while Antigravity is working"
                             iconName: "auto_awesome"
+                            iconTint: "#a78bfa"
                             checked: Config.agent.enabled
                             onToggled: {
                                 Config.agent.enabled = !Config.agent.enabled;
@@ -1384,6 +1448,7 @@ PopupWindow {
                             label: "AI Agent Completion Sound"
                             subtitle: "Play chime + popup when AI response completes"
                             iconName: "campaign"
+                            iconTint: "#4ade80"
                             checked: Config.agent.soundEnabled
                             onToggled: {
                                 Config.agent.soundEnabled = !Config.agent.soundEnabled;
@@ -1395,9 +1460,22 @@ PopupWindow {
                             label: "Startup & Periodic Greeting"
                             subtitle: "Show friendly greeting at boot and every few idle minutes"
                             iconName: "waving_hand"
+                            iconTint: "#fcd34d"
                             checked: Config.companion.greetingEnabled
                             onToggled: {
                                 Config.companion.greetingEnabled = !Config.companion.greetingEnabled;
+                                Config.save();
+                            }
+                        }
+
+                        SettingToggleRow {
+                            label: "Animated Waving Hands"
+                            subtitle: "Show cute waving paws on greeting, hover & companion wake"
+                            iconName: "waving_hand"
+                            iconTint: "#e879f9"
+                            checked: Config.companion.handsEnabled
+                            onToggled: {
+                                Config.companion.handsEnabled = !Config.companion.handsEnabled;
                                 Config.save();
                             }
                         }
@@ -1544,41 +1622,59 @@ PopupWindow {
         required property string iconName
         required property bool checked
         property bool selected: false
+        property color iconTint: Config.activePalette.accent
         signal toggled()
         signal hovered()
 
         Layout.fillWidth: true
-        implicitHeight: 40
-        height: 40
-        radius: 10
-        color: rowMouse.containsMouse || selected ? "#161620" : Config.activePalette.elevated
+        implicitHeight: 44
+        height: 44
+        radius: 11
+        color: rowMouse.containsMouse || selected
+            ? "#171724"
+            : (rowRoot.checked ? "#11111a" : Config.activePalette.elevated)
         border.width: 1
         border.color: selected
-            ? Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.42)
-            : Qt.rgba(1, 1, 1, 0.07)
+            ? Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.45)
+            : (rowRoot.checked ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(1, 1, 1, 0.05))
 
         Behavior on color {
-            ColorAnimation { duration: 110 }
+            ColorAnimation { duration: 130 }
         }
 
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: 10
             anchors.rightMargin: 10
-            spacing: 9
+            spacing: 10
 
-            Text {
+            // Category Icon Badge with soft glow
+            Rectangle {
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
                 Layout.alignment: Qt.AlignVCenter
-                text: rowRoot.iconName
-                font.family: "Material Symbols Rounded"
-                font.pixelSize: 16
-                color: rowRoot.checked ? Config.activePalette.accent : "#6c6c78"
+                radius: 8
+                color: rowRoot.checked
+                    ? Qt.rgba(Qt.color(rowRoot.iconTint).r, Qt.color(rowRoot.iconTint).g, Qt.color(rowRoot.iconTint).b, 0.18)
+                    : "#15151e"
+                border.width: 1
+                border.color: rowRoot.checked
+                    ? Qt.rgba(Qt.color(rowRoot.iconTint).r, Qt.color(rowRoot.iconTint).g, Qt.color(rowRoot.iconTint).b, 0.40)
+                    : Qt.rgba(1, 1, 1, 0.06)
+
+                Text {
+                    anchors.centerIn: parent
+                    text: rowRoot.iconName
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 15
+                    color: rowRoot.checked ? rowRoot.iconTint : "#6c6c78"
+                }
             }
 
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
-                spacing: 0
+                spacing: 1
 
                 Text {
                     Layout.fillWidth: true
@@ -1600,26 +1696,27 @@ PopupWindow {
                 }
             }
 
+            // Modern iOS-style toggle switch
             Rectangle {
-                Layout.preferredWidth: 34
-                Layout.preferredHeight: 19
+                Layout.preferredWidth: 36
+                Layout.preferredHeight: 20
                 Layout.alignment: Qt.AlignVCenter
-                radius: 9.5
+                radius: 10
                 color: rowRoot.checked
                     ? Config.activePalette.accent
-                    : "#24242f"
+                    : "#22222d"
 
                 Behavior on color {
                     ColorAnimation { duration: 150 }
                 }
 
                 Rectangle {
-                    width: 13
-                    height: 13
-                    radius: 6.5
+                    width: 14
+                    height: 14
+                    radius: 7
                     anchors.verticalCenter: parent.verticalCenter
                     x: rowRoot.checked ? parent.width - width - 3 : 3
-                    color: rowRoot.checked ? Config.activePalette.surface : "#c8c8d4"
+                    color: rowRoot.checked ? Config.activePalette.surface : "#d0d0dc"
 
                     Behavior on x {
                         NumberAnimation { duration: 150; easing.type: Easing.OutCubic }

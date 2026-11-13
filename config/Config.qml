@@ -48,6 +48,7 @@ Singleton {
         property bool greetingEnabled: true
         property int greetingIntervalMin: 5
         property string greetingName: ""
+        property bool handsEnabled: true
     }
 
     readonly property string resolvedGreetingName: {
@@ -158,7 +159,8 @@ Singleton {
                 "idleSeconds": root.companion.idleSeconds,
                 "greetingEnabled": root.companion.greetingEnabled,
                 "greetingIntervalMin": root.companion.greetingIntervalMin,
-                "greetingName": root.companion.greetingName
+                "greetingName": root.companion.greetingName,
+                "handsEnabled": root.companion.handsEnabled
             },
             "pomodoro": {
                 "focusMin": root.pomodoro.focusMin,
@@ -225,6 +227,7 @@ Singleton {
             if (typeof data.companion.greetingEnabled === "boolean") root.companion.greetingEnabled = data.companion.greetingEnabled;
             if (typeof data.companion.greetingIntervalMin === "number") root.companion.greetingIntervalMin = data.companion.greetingIntervalMin;
             if (typeof data.companion.greetingName === "string") root.companion.greetingName = data.companion.greetingName;
+            if (typeof data.companion.handsEnabled === "boolean") root.companion.handsEnabled = data.companion.handsEnabled;
         }
 
         if (data.pomodoro && typeof data.pomodoro === "object") {

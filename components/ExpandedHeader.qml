@@ -60,82 +60,35 @@ Item {
         anchors.rightMargin: 14
         spacing: 8
 
-        // Minimal spatial page indicator dots (no menu tabs)
+        // Active Section Breadcrumb
         Row {
             Layout.alignment: Qt.AlignVCenter
-            spacing: 5
-
-            Repeater {
-                model: NotchController.enabledPages
-
-                delegate: Item {
-                    id: dotWrapper
-
-                    required property int modelData
-                    readonly property bool active: NotchController.activePage === modelData
-
-                    width: active ? 16 : 6
-                    height: 16
-
-                    Behavior on width {
-                        NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
-                    }
-
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: parent.width
-                        height: 4
-                        radius: 2
-                        color: dotWrapper.active
-                            ? root.accentColor
-                            : (dotMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.45) : Qt.rgba(1, 1, 1, 0.18))
-
-                        Behavior on color {
-                            ColorAnimation { duration: 150 }
-                        }
-                    }
-
-                    MouseArea {
-                        id: dotMouse
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: NotchController.setPage(dotWrapper.modelData)
-                    }
-                }
-            }
-        }
-
-        // Active Section Breadcrumb (connects dots to current page context)
-        Row {
-            Layout.alignment: Qt.AlignVCenter
-            Layout.leftMargin: 4
-            spacing: 4
+            spacing: 6
 
             Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 1
-                height: 10
-                color: Qt.rgba(1, 1, 1, 0.10)
-            }
+                width: 20
+                height: 20
+                radius: 6
+                color: Qt.rgba(Qt.color(root.accentColor).r, Qt.color(root.accentColor).g, Qt.color(root.accentColor).b, 0.16)
+                border.width: 1
+                border.color: Qt.rgba(Qt.color(root.accentColor).r, Qt.color(root.accentColor).g, Qt.color(root.accentColor).b, 0.32)
 
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                leftPadding: 3
-                text: NotchController.activePageIcon
-                font.family: "Material Symbols Rounded"
-                font.pixelSize: 12
-                color: root.accentColor
+                Text {
+                    anchors.centerIn: parent
+                    text: NotchController.activePageIcon
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 13
+                    color: root.accentColor
+                }
             }
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: NotchController.activePageTitle
                 font.family: "Rubik"
-                font.pixelSize: 10
-                font.weight: Font.Medium
-                color: "#9a9aa6"
+                font.pixelSize: 11
+                font.weight: Font.DemiBold
+                color: "#f4f4f6"
             }
         }
 

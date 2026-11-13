@@ -58,6 +58,12 @@ Singleton {
     property bool dragActive: false
     property bool menuOpen: false
     property bool settingsOpen: false
+
+    signal waveHandsRequested()
+
+    function waveHands(): void {
+        root.waveHandsRequested();
+    }
     property bool inputFocused: false
     property bool peekInteracting: false
     property int activePage: 0
@@ -504,6 +510,7 @@ Singleton {
             durationMs: 3800,
             alertHint: { width: 320, height: 48 }
         });
+        root.waveHands();
     }
 
     Component.onCompleted: {
