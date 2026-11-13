@@ -78,7 +78,7 @@ Pilih gaya tampilan yang paling cocok dengan setup desktop kamu:
 Pastikan kamu menggunakan **Linux Wayland** dengan **Hyprland** dan **Quickshell 0.3.1**.
 
 ```bash
-git clone https://github.com/putrapad/kuro-island.git ~/.config/quickshell/kuro-island
+git clone https://github.com/putrarawr/KuroNotch ~/.config/quickshell/kuro-island
 cd ~/.config/quickshell/kuro-island
 ./scripts/install.sh
 ```
