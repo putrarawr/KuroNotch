@@ -1,6 +1,7 @@
 import React from 'react';
 import { Composition } from 'remotion';
 import { VideoComposition } from './VideoComposition';
+import { VerticalShowcase9x16 } from './VerticalShowcase9x16';
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -18,17 +19,14 @@ export const RemotionRoot: React.FC = () => {
         }}
       />
 
-      {/* 9:16 Vertical Composition for TikTok, Instagram Reels, & YouTube Shorts */}
+      {/* 9:16 Vertical Composition for TikTok, Instagram Reels, & YouTube Shorts (60s @ 30fps) */}
       <Composition
         id="KuroShowcase9x16"
-        component={VideoComposition}
-        durationInFrames={1050}
+        component={VerticalShowcase9x16}
+        durationInFrames={1800}
         fps={30}
         width={1080}
         height={1920}
-        defaultProps={{
-          isVertical: true,
-        }}
       />
     </>
   );

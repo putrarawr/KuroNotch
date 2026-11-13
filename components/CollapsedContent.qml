@@ -881,6 +881,17 @@ Item {
             }
         }
 
+        // Mini Kuro Mascot vibing to the music in collapsed notch
+        KuroMascot {
+            Layout.preferredWidth: 20
+            Layout.preferredHeight: 20
+            Layout.alignment: Qt.AlignVCenter
+            mascotSize: 20
+            accentColor: root.activeAccent
+            mascotState: "music"
+            interactive: true
+        }
+
         // 1-line live active lyric or track title fallback
         Text {
             Layout.fillWidth: true
@@ -1005,6 +1016,14 @@ Item {
         Row {
             Layout.alignment: Qt.AlignVCenter
             spacing: 6
+
+            KuroMascot {
+                anchors.verticalCenter: parent.verticalCenter
+                mascotSize: 18
+                accentColor: Config.activePalette.accent
+                mascotState: root.pomodoroText.length > 0 ? "pomodoro" : "normal"
+                interactive: true
+            }
 
             Item {
                 visible: (!root.recordingActive && !NotchController.agentActive) || root.pomodoroText.length > 0

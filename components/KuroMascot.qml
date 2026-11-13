@@ -37,26 +37,24 @@ Item {
     Item {
         id: bodyContainer
 
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.verticalCenterOffset: root.bounceY
         width: root.mascotSize
         height: root.mascotSize
-        y: parent.height / 2 + root.bounceY
         scale: root.bounceScale
-
-        Behavior on y {
-            NumberAnimation { duration: 180; easing.type: Easing.OutBack }
-        }
 
         // Left Cat Ear
         Rectangle {
             id: leftEar
 
-            width: root.mascotSize * 0.28
-            height: root.mascotSize * 0.32
-            radius: width * 0.35
-            x: root.mascotSize * 0.12
-            y: root.mascotSize * 0.04
-            rotation: -24
+            width: Math.max(3, Math.round(root.mascotSize * 0.26))
+            height: Math.max(4, Math.round(root.mascotSize * 0.30))
+            radius: Math.max(2, Math.round(width * 0.35))
+            x: Math.round(root.mascotSize * 0.14)
+            y: Math.round(root.mascotSize * 0.04)
+            transformOrigin: Item.Bottom
+            rotation: -16
             color: "#0c0c16"
             border.width: 1
             border.color: Qt.rgba(
@@ -69,9 +67,9 @@ Item {
             // Inner ear tint
             Rectangle {
                 anchors.centerIn: parent
-                width: parent.width * 0.55
-                height: parent.height * 0.55
-                radius: width * 0.3
+                width: Math.max(2, Math.round(parent.width * 0.55))
+                height: Math.max(2, Math.round(parent.height * 0.55))
+                radius: Math.max(1, Math.round(width * 0.3))
                 color: root.accentColor
                 opacity: 0.25
             }
@@ -81,12 +79,13 @@ Item {
         Rectangle {
             id: rightEar
 
-            width: root.mascotSize * 0.28
-            height: root.mascotSize * 0.32
-            radius: width * 0.35
-            x: root.mascotSize * 0.60
-            y: root.mascotSize * 0.04
-            rotation: 24
+            width: Math.max(3, Math.round(root.mascotSize * 0.26))
+            height: Math.max(4, Math.round(root.mascotSize * 0.30))
+            radius: Math.max(2, Math.round(width * 0.35))
+            x: Math.round(root.mascotSize * 0.60)
+            y: Math.round(root.mascotSize * 0.04)
+            transformOrigin: Item.Bottom
+            rotation: 16
             color: "#0c0c16"
             border.width: 1
             border.color: Qt.rgba(
@@ -99,9 +98,9 @@ Item {
             // Inner ear tint
             Rectangle {
                 anchors.centerIn: parent
-                width: parent.width * 0.55
-                height: parent.height * 0.55
-                radius: width * 0.3
+                width: Math.max(2, Math.round(parent.width * 0.55))
+                height: Math.max(2, Math.round(parent.height * 0.55))
+                radius: Math.max(1, Math.round(width * 0.3))
                 color: root.accentColor
                 opacity: 0.25
             }
@@ -112,10 +111,10 @@ Item {
             id: headShape
 
             anchors.centerIn: parent
-            anchors.verticalCenterOffset: root.mascotSize * 0.06
-            width: root.mascotSize * 0.88
-            height: root.mascotSize * 0.80
-            radius: height * 0.46
+            anchors.verticalCenterOffset: Math.round(root.mascotSize * 0.06)
+            width: Math.max(8, Math.round(root.mascotSize * 0.88))
+            height: Math.max(8, Math.round(root.mascotSize * 0.80))
+            radius: Math.round(height * 0.46)
             color: "#080810"
             border.width: 1.2
             border.color: Qt.rgba(
@@ -128,50 +127,44 @@ Item {
             // Soft glowing center halo
             Rectangle {
                 anchors.centerIn: parent
-                width: parent.width * 0.65
-                height: parent.height * 0.65
-                radius: width * 0.5
+                width: Math.round(parent.width * 0.65)
+                height: Math.round(parent.height * 0.65)
+                radius: Math.round(width * 0.5)
                 color: root.accentColor
                 opacity: 0.06
             }
 
             // --- State-based Eye Expressions ---
-            // 1. Music Playing Eyes: Happy curved slits (^_^)
+            // 1. Music Playing Eyes: Symmetrical curved smiling arches (⌒ ⌒)
             Row {
                 anchors.centerIn: parent
-                anchors.verticalCenterOffset: -root.mascotSize * 0.04
-                spacing: root.mascotSize * 0.20
+                anchors.verticalCenterOffset: -Math.round(root.mascotSize * 0.04)
+                spacing: Math.max(2, Math.round(root.mascotSize * 0.18))
                 visible: root.isMusic
 
                 Repeater {
                     model: 2
 
                     delegate: Item {
-                        width: root.mascotSize * 0.18
-                        height: root.mascotSize * 0.12
+                        width: Math.max(5, Math.round(root.mascotSize * 0.20))
+                        height: Math.max(3, Math.round(root.mascotSize * 0.12))
+                        clip: true
 
                         Rectangle {
-                            anchors.centerIn: parent
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
                             width: parent.width
-                            height: 2.5
-                            radius: 1.25
-                            color: root.accentColor
-                        }
-
-                        // Cute upward eye curve
-                        Rectangle {
-                            anchors.right: parent.right
-                            anchors.bottom: parent.bottom
-                            width: 2.5
-                            height: 3
-                            radius: 1.2
-                            color: root.accentColor
+                            height: parent.width
+                            radius: width * 0.5
+                            color: "transparent"
+                            border.width: Math.max(1.5, root.mascotSize * 0.065)
+                            border.color: root.accentColor
                         }
                     }
                 }
             }
 
-            // 2. Pomodoro Focused Eyes: Intense determined eyes + red/orange headband
+            // 2. Pomodoro Focused Eyes: Intense determined eyes + red focus headband
             Item {
                 anchors.fill: parent
                 visible: root.isPomodoro
@@ -179,19 +172,19 @@ Item {
                 // Mini red focus headband
                 Rectangle {
                     anchors.top: parent.top
-                    anchors.topMargin: root.mascotSize * 0.14
+                    anchors.topMargin: Math.round(root.mascotSize * 0.14)
                     anchors.horizontalCenter: parent.horizontalCenter
-                    width: parent.width * 0.92
-                    height: root.mascotSize * 0.12
+                    width: Math.round(parent.width * 0.92)
+                    height: Math.max(2, Math.round(root.mascotSize * 0.12))
                     radius: height * 0.5
                     color: "#ef4444"
 
                     // Center white dot on headband
                     Rectangle {
                         anchors.centerIn: parent
-                        width: 4
-                        height: 4
-                        radius: 2
+                        width: 3
+                        height: 3
+                        radius: 1.5
                         color: "#ffffff"
                     }
                 }
@@ -199,23 +192,23 @@ Item {
                 // Focused eyes
                 Row {
                     anchors.centerIn: parent
-                    anchors.verticalCenterOffset: root.mascotSize * 0.06
-                    spacing: root.mascotSize * 0.20
+                    anchors.verticalCenterOffset: Math.round(root.mascotSize * 0.06)
+                    spacing: Math.max(2, Math.round(root.mascotSize * 0.20))
 
                     Repeater {
                         model: 2
 
                         delegate: Rectangle {
-                            width: root.mascotSize * 0.14
-                            height: root.mascotSize * 0.14
+                            width: Math.max(3, Math.round(root.mascotSize * 0.14))
+                            height: Math.max(3, Math.round(root.mascotSize * 0.14))
                             radius: width * 0.5
                             color: "#ffffff"
 
                             // Dark pupil looking straight
                             Rectangle {
                                 anchors.centerIn: parent
-                                width: parent.width * 0.6
-                                height: parent.height * 0.6
+                                width: Math.max(2, Math.round(parent.width * 0.6))
+                                height: Math.max(2, Math.round(parent.height * 0.6))
                                 radius: width * 0.5
                                 color: "#080810"
                             }
@@ -224,20 +217,20 @@ Item {
                 }
             }
 
-            // 3. Sleepy / Idle Eyes: Gentle crescent lines (-_-)
+            // 3. Sleepy / Idle Eyes: Gentle horizontal crescent lines (-_-)
             Row {
                 anchors.centerIn: parent
-                anchors.verticalCenterOffset: -root.mascotSize * 0.02
-                spacing: root.mascotSize * 0.22
+                anchors.verticalCenterOffset: -Math.round(root.mascotSize * 0.02)
+                spacing: Math.max(3, Math.round(root.mascotSize * 0.22))
                 visible: root.isIdle
 
                 Repeater {
                     model: 2
 
                     delegate: Rectangle {
-                        width: root.mascotSize * 0.16
-                        height: 2.2
-                        radius: 1.1
+                        width: Math.max(4, Math.round(root.mascotSize * 0.16))
+                        height: Math.max(1.8, root.mascotSize * 0.07)
+                        radius: height * 0.5
                         color: "#8e8e98"
                     }
                 }
@@ -246,8 +239,8 @@ Item {
             // 4. Normal / Greet: Big luminous round eyes with sparkling white catchlights (*_*)
             Row {
                 anchors.centerIn: parent
-                anchors.verticalCenterOffset: -root.mascotSize * 0.02
-                spacing: root.mascotSize * 0.18
+                anchors.verticalCenterOffset: -Math.round(root.mascotSize * 0.02)
+                spacing: Math.max(2, Math.round(root.mascotSize * 0.18))
                 visible: root.isNormal
 
                 Repeater {
@@ -255,17 +248,17 @@ Item {
 
                     delegate: Rectangle {
                         required property int modelData
-                        width: root.mascotSize * 0.18
-                        height: root.mascotSize * 0.22
+                        width: Math.max(4, Math.round(root.mascotSize * 0.18))
+                        height: Math.max(5, Math.round(root.mascotSize * 0.22))
                         radius: width * 0.5
                         color: root.accentColor
 
                         // Sparkle catchlight in top-left
                         Rectangle {
-                            x: 2
-                            y: 2
-                            width: parent.width * 0.4
-                            height: parent.height * 0.4
+                            x: 1
+                            y: 1
+                            width: Math.max(2, Math.round(parent.width * 0.45))
+                            height: Math.max(2, Math.round(parent.height * 0.45))
                             radius: width * 0.5
                             color: "#ffffff"
                         }
@@ -276,10 +269,10 @@ Item {
             // Cute nose / mouth
             Rectangle {
                 anchors.centerIn: parent
-                anchors.verticalCenterOffset: root.mascotSize * 0.18
-                width: 3.5
-                height: 2.5
-                radius: 1.2
+                anchors.verticalCenterOffset: Math.round(root.mascotSize * 0.18)
+                width: Math.max(2.5, Math.round(root.mascotSize * 0.10))
+                height: Math.max(2, Math.round(root.mascotSize * 0.07))
+                radius: height * 0.5
                 color: root.accentColor
                 opacity: 0.65
             }
@@ -289,12 +282,12 @@ Item {
         Text {
             visible: root.isMusic
             anchors.right: parent.right
-            anchors.rightMargin: -6
+            anchors.rightMargin: -Math.max(2, Math.round(root.mascotSize * 0.12))
             anchors.top: parent.top
-            anchors.topMargin: -4
+            anchors.topMargin: -Math.max(1, Math.round(root.mascotSize * 0.08))
             text: "music_note"
             font.family: "Material Symbols Rounded"
-            font.pixelSize: 13
+            font.pixelSize: Math.max(8, Math.round(root.mascotSize * 0.32))
             color: root.accentColor
 
             SequentialAnimation on opacity {
@@ -309,12 +302,12 @@ Item {
         Text {
             visible: root.isIdle
             anchors.right: parent.right
-            anchors.rightMargin: -4
+            anchors.rightMargin: -Math.max(2, Math.round(root.mascotSize * 0.10))
             anchors.top: parent.top
-            anchors.topMargin: -6
+            anchors.topMargin: -Math.max(1, Math.round(root.mascotSize * 0.10))
             text: "zZ"
             font.family: "Rubik"
-            font.pixelSize: 10
+            font.pixelSize: Math.max(7, Math.round(root.mascotSize * 0.26))
             font.weight: Font.DemiBold
             color: "#8e8e98"
 

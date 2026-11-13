@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
+import "../components"
 import "../config"
 import "../services"
 import "../lib/lrcParser.js" as LrcParser
@@ -36,21 +37,13 @@ Item {
                 Layout.fillWidth: true
                 spacing: 12
 
-                Rectangle {
-                    width: 40
-                    height: 40
-                    radius: 11
-                    color: "#15151d"
-                    border.width: 1
-                    border.color: Qt.rgba(1, 1, 1, 0.10)
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "music_note"
-                        font.family: "Material Symbols Rounded"
-                        font.pixelSize: 20
-                        color: root.activeAccent
-                    }
+                KuroMascot {
+                    Layout.preferredWidth: 44
+                    Layout.preferredHeight: 44
+                    mascotSize: 44
+                    accentColor: root.activeAccent
+                    mascotState: "idle"
+                    interactive: true
                 }
 
                 ColumnLayout {
@@ -59,7 +52,7 @@ Item {
 
                     Text {
                         Layout.fillWidth: true
-                        text: "No Media Playing"
+                        text: "Kuro is waiting for music..."
                         font.family: "Rubik"
                         font.pixelSize: 13
                         font.weight: Font.Medium
@@ -68,7 +61,7 @@ Item {
 
                     Text {
                         Layout.fillWidth: true
-                        text: "Play music in Spotify, browser, or mpv for Cava visuals & synced lyrics"
+                        text: "Play music in Spotify, browser, or mpv to listen and groove with Kuro!"
                         wrapMode: Text.WordWrap
                         font.family: "Rubik"
                         font.pixelSize: 11
@@ -98,16 +91,18 @@ Item {
 
         // Left Column: Album Art, Track Info, Cava Bars, Scrub Bar, Transport + Sink Switcher
         ColumnLayout {
-            Layout.preferredWidth: 234
+            Layout.preferredWidth: 236
             Layout.minimumWidth: 220
-            Layout.maximumWidth: 244
+            Layout.maximumWidth: 236
             Layout.fillHeight: true
             spacing: 8
+            clip: true
 
             // Top: Album art + Title / Artist / Album + 14-bar Cava Visualizer
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                Layout.maximumWidth: 236
+                spacing: 8
 
                 Item {
                     Layout.preferredWidth: 64
@@ -160,11 +155,13 @@ Item {
 
                 ColumnLayout {
                     Layout.fillWidth: true
+                    Layout.maximumWidth: 164
                     Layout.alignment: Qt.AlignVCenter
                     spacing: 2
 
                     Text {
                         Layout.fillWidth: true
+                        Layout.minimumWidth: 0
                         text: MediaService.title.length > 0 ? MediaService.title : "Unknown Track"
                         elide: Text.ElideRight
                         font.family: "Rubik"
@@ -175,6 +172,7 @@ Item {
 
                     Text {
                         Layout.fillWidth: true
+                        Layout.minimumWidth: 0
                         text: MediaService.artist.length > 0
                             ? MediaService.artist
                             : (MediaService.playerIdentity.length > 0 ? MediaService.playerIdentity : "Unknown Artist")
@@ -186,11 +184,13 @@ Item {
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 5
+                        Layout.maximumWidth: 164
+                        spacing: 4
                         visible: MediaService.album.trim().length > 0 || MediaService.playerIdentity.trim().length > 0
 
                         Text {
                             Layout.fillWidth: true
+                            Layout.minimumWidth: 0
                             text: MediaService.album.trim().length > 0
                                 ? MediaService.album.trim()
                                 : MediaService.playerIdentity.trim()
@@ -205,7 +205,7 @@ Item {
                             visible: MediaService.playerCount > 1
                             Layout.alignment: Qt.AlignVCenter
                             height: 15
-                            width: playerSwitchRow.implicitWidth + 8
+                            Layout.preferredWidth: Math.min(54, playerSwitchRow.implicitWidth + 8)
                             radius: 5
                             color: playerSwitchMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.14) : Qt.rgba(1, 1, 1, 0.06)
                             border.width: 1
@@ -219,7 +219,9 @@ Item {
 
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
+                                    width: Math.min(implicitWidth, 34)
                                     text: MediaService.playerIdentity.length > 0 ? MediaService.playerIdentity : "Player"
+                                    elide: Text.ElideRight
                                     font.family: "Rubik"
                                     font.pixelSize: 8
                                     font.weight: Font.Medium
@@ -288,7 +290,8 @@ Item {
             // Middle: Interactive Scrub Bar
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 7
+                Layout.maximumWidth: 236
+                spacing: 6
 
                 readonly property real progressRatio: {
                     if (scrubMouse.dragging)
@@ -303,10 +306,10 @@ Item {
                     : MediaService.position
 
                 Text {
-                    Layout.preferredWidth: 30
+                    Layout.preferredWidth: 28
                     text: LrcParser.formatTime(parent.displayedSec)
                     font.family: "Rubik"
-                    font.pixelSize: 10
+                    font.pixelSize: 9
                     color: "#8e8e98"
                     horizontalAlignment: Text.AlignLeft
                 }
@@ -391,10 +394,10 @@ Item {
                 }
 
                 Text {
-                    Layout.preferredWidth: 30
+                    Layout.preferredWidth: 28
                     text: MediaService.length > 0 ? LrcParser.formatTime(MediaService.length) : "--:--"
                     font.family: "Rubik"
-                    font.pixelSize: 10
+                    font.pixelSize: 9
                     color: "#8e8e98"
                     horizontalAlignment: Text.AlignRight
                 }
@@ -414,6 +417,7 @@ Item {
                 readonly property bool sinkMuted: Boolean(MediaService.activeSink?.audio?.muted)
 
                 Layout.fillWidth: true
+                Layout.maximumWidth: 236
                 Layout.preferredHeight: 24
                 radius: 8
                 color: Qt.rgba(1, 1, 1, 0.03)
@@ -423,7 +427,7 @@ Item {
                     anchors.fill: parent
                     anchors.leftMargin: 8
                     anchors.rightMargin: 8
-                    spacing: 7
+                    spacing: 6
 
                     Text {
                         Layout.alignment: Qt.AlignVCenter
@@ -535,18 +539,21 @@ Item {
             // Bottom: Transport Controls + Pipewire Sink Switcher
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 6
+                Layout.maximumWidth: 236
+                spacing: 5
 
                 TransportButton {
+                    Layout.preferredWidth: 26
+                    Layout.preferredHeight: 26
                     iconName: "skip_previous"
                     enabled: MediaService.canGoPrevious
                     onTriggered: MediaService.prev()
                 }
 
                 Rectangle {
-                    Layout.preferredWidth: 34
-                    Layout.preferredHeight: 28
-                    radius: 9
+                    Layout.preferredWidth: 30
+                    Layout.preferredHeight: 26
+                    radius: 8
                     color: MediaService.playing
                         ? (playMouse.containsMouse ? "#ffffff" : "#f4f4f6")
                         : (playMouse.containsMouse ? "#22222d" : "#181822")
@@ -562,7 +569,7 @@ Item {
                         anchors.centerIn: parent
                         text: MediaService.playing ? "pause" : "play_arrow"
                         font.family: "Material Symbols Rounded"
-                        font.pixelSize: 18
+                        font.pixelSize: 17
                         color: MediaService.playing ? "#050507" : "#f4f4f6"
                     }
 
@@ -578,6 +585,8 @@ Item {
                 }
 
                 TransportButton {
+                    Layout.preferredWidth: 26
+                    Layout.preferredHeight: 26
                     iconName: "skip_next"
                     enabled: MediaService.canGoNext
                     onTriggered: MediaService.next()
@@ -587,8 +596,18 @@ Item {
                     Layout.fillWidth: true
                 }
 
+                KuroMascot {
+                    Layout.preferredWidth: 24
+                    Layout.preferredHeight: 24
+                    Layout.alignment: Qt.AlignVCenter
+                    mascotSize: 24
+                    accentColor: root.activeAccent
+                    mascotState: MediaService.playing ? "music" : "idle"
+                    interactive: true
+                }
+
                 SinkSwitcherPill {
-                    Layout.maximumWidth: 118
+                    Layout.maximumWidth: 92
                 }
             }
         }
@@ -1048,7 +1067,7 @@ Item {
         id: sinkBtn
 
         implicitHeight: 26
-        implicitWidth: sinkRow.implicitWidth + 16
+        implicitWidth: Math.min(92, sinkRow.implicitWidth + 12)
         height: 26
         radius: 8
         color: sinkMouse.containsMouse ? "#1b1b24" : "#12121a"
@@ -1063,23 +1082,23 @@ Item {
             id: sinkRow
 
             anchors.centerIn: parent
-            spacing: 5
+            spacing: 4
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "volume_up"
                 font.family: "Material Symbols Rounded"
-                font.pixelSize: 13
+                font.pixelSize: 12
                 color: "#c8c8d4"
             }
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                width: Math.min(implicitWidth, 96)
+                width: Math.min(implicitWidth, 62)
                 text: MediaService.activeSinkName
                 elide: Text.ElideRight
                 font.family: "Rubik"
-                font.pixelSize: 10
+                font.pixelSize: 9
                 font.weight: Font.Medium
                 color: "#e0e0ea"
             }
