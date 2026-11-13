@@ -90,6 +90,19 @@ Installer otomatis akan:
 
 ---
 
+## 🔄 Pembaruan Instan (1-Command Update)
+
+Untuk memperbarui KuroNotch ke versi paling baru dari GitHub secara instan:
+
+```bash
+kuronotch update
+```
+*(atau via 1-liner: `curl -sSL https://raw.githubusercontent.com/putrarawr/KuroNotch/main/scripts/update.sh | bash`)*
+
+Script ini akan otomatis mengambil pembaruan terbaru dari repository GitHub dan me-reload Notch di layar kamu secara mulus.
+
+---
+
 ## ⌨️ Pintasan Keyboard & Kontrol
 
 | Shortcut / Aksi | Fungsi |

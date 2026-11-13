@@ -57,6 +57,15 @@ echo "==> Installing wrapper binaries into ~/.local/bin..."
 for cmd in island-notch kuronotch kuro-island; do
     cat > "$HOME/.local/bin/$cmd" << 'WRAPPER'
 #!/usr/bin/env bash
+if [ "${1:-}" = "update" ] || [ "${1:-}" = "--update" ]; then
+    UPDATE_SCRIPT="$HOME/.config/quickshell/island-notch/scripts/update.sh"
+    if [ -x "$UPDATE_SCRIPT" ]; then
+        exec "$UPDATE_SCRIPT"
+    else
+        curl -sSL https://raw.githubusercontent.com/putrarawr/KuroNotch/main/scripts/update.sh | bash
+        exit $?
+    fi
+fi
 unset LD_LIBRARY_PATH
 exec /usr/local/bin/quickshell -c island-notch "$@"
 WRAPPER
