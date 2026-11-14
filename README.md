@@ -5,13 +5,13 @@
 </p>
 
 <p align="center">
-  <strong>The Dynamic Island & Companion for Linux & Hyprland</strong><br>
-  <em>Native Wayland • Quickshell 0.3.1 • Zero Idle CPU • 100% Open Source</em>
+  <strong>The Universal Dynamic Island & Companion for Linux</strong><br>
+  <em>Wayland & X11 • Hyprland, XFCE & Beyond • Quickshell 0.3.1 • Zero Idle CPU • 100% Open Source</em>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-Linux%20Wayland-007acc?style=flat-square&logo=linux&logoColor=white" alt="Platform Linux Wayland" />
-  <img src="https://img.shields.io/badge/Compositor-Hyprland-00b4d8?style=flat-square" alt="Hyprland" />
+  <img src="https://img.shields.io/badge/Platform-Linux%20Wayland%20%7C%20X11-007acc?style=flat-square&logo=linux&logoColor=white" alt="Platform Linux" />
+  <img src="https://img.shields.io/badge/Desktops-Hyprland%20%7C%20XFCE%20%7C%20KDE-00b4d8?style=flat-square" alt="Desktops" />
   <img src="https://img.shields.io/badge/Engine-Quickshell%200.3.1-f43f5e?style=flat-square" alt="Quickshell" />
   <img src="https://img.shields.io/badge/Mascot-Kuro%20the%20Cat-38bdf8?style=flat-square" alt="Mascot Kuro" />
   <img src="https://img.shields.io/badge/License-GPL--3.0-10b981?style=flat-square" alt="License" />
@@ -67,7 +67,7 @@ Pilih gaya tampilan yang paling cocok dengan setup desktop kamu:
 
 ## 🛠️ Instalasi Cepat (1-Command)
 
-Pastikan kamu menggunakan **Linux Wayland** dengan **Hyprland** dan **Quickshell 0.3.1**.
+Mendukung **Linux Wayland** (Hyprland, Sway, KDE Wayland) & **Linux X11** (Linux Mint XFCE, Cinnamon, MATE, Ubuntu, Arch, Debian) dengan **Quickshell 0.3.1**.
 
 ### Opsi A: 1-Liner Otomatis (Direkomendasikan)
 ```bash
@@ -84,9 +84,19 @@ cd ~/.config/quickshell/island-notch
 Installer otomatis akan:
 1. Menyiapkan direktori state dan cache (`~/.local/state/island-notch/`).
 2. Menautkan konfigurasi Quickshell (`~/.config/quickshell/island-notch`).
-3. Memasang binary wrapper (`~/.local/bin/island-notch` & `~/.local/bin/kuronotch`).
-4. Mengonfigurasi autostart pada `~/.config/hypr/hyprland.conf`.
-5. Menyinkronkan integrasi desktop dan swww wallpaper.
+3. Memasang binary wrapper adaptif (`~/.local/bin/island-notch` & `~/.local/bin/kuronotch`).
+4. Mengonfigurasi autostart pada `~/.config/hypr/hyprland.conf` & `~/.config/autostart/kuronotch.desktop`.
+5. Menjalankan diagnosa sistem otomatis via `kuronotch doctor`.
+
+---
+
+## 🩺 Diagnostik Sistem (System Doctor)
+
+Untuk memeriksa kompatibilitas dan kesehatan lingkungan sistem kamu (Wayland vs X11, status Compositor xfwm4/picom, akselerasi GPU 3D rendering, Quickshell, PipeWire, dan media player):
+
+```bash
+kuronotch doctor
+```
 
 ---
 

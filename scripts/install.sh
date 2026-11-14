@@ -85,3 +85,10 @@ echo "Notch sekarang sudah aktif di bagian atas layar kamu!"
 echo "Pintasan cepat: Tekan Super+I untuk membuka/menutup Notch."
 echo "Untuk mengontrol via terminal: ~/.local/bin/island-notch (atau kuronotch)"
 echo "Kuro says: nya~ (Enjoy your new dynamic desktop!)"
+echo ""
+
+# Run doctor check to show environment health
+if [ -x "$HOME/.local/bin/kuronotch" ]; then
+    "$HOME/.local/bin/kuronotch" doctor || true
+fi
+

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=KuroNotch
+Comment=Dynamic Island & Companion for Linux
+Exec=kuronotch
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Utility;
+NotShowIn=Hyprland;
+X-GNOME-Autostart-enabled=true

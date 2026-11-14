@@ -308,4 +308,13 @@ with open(hooks_path, "w", encoding="utf-8") as f:
 EOF
 echo "  -> Registered island-notch-agent hooks in $GEMINI_HOOKS"
 
+# 7. Install XDG Desktop Autostart for universal Linux desktops (XFCE, Cinnamon, KDE, GNOME)
+echo "[7/7] Installing XDG autostart entry for universal desktop support..."
+mkdir -p "$HOME/.config/autostart"
+if [ -f "$REPO_DIR/assets/kuronotch.desktop" ]; then
+    cp "$REPO_DIR/assets/kuronotch.desktop" "$HOME/.config/autostart/kuronotch.desktop"
+    echo "  -> Installed $HOME/.config/autostart/kuronotch.desktop (with NotShowIn=Hyprland)"
+fi
+
 echo "=== Island Notch Installation Completed Successfully ==="
+
