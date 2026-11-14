@@ -1,3 +1,101 @@
 #!/usr/bin/env bash
+# ==============================================================================
+# KuroNotch (Kuro Island) Adaptive Launcher
+# ==============================================================================
+set -u
+
+SCRIPT_DIR=""
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
+
+# Determine Session Type & Desktop
+SESSION_TYPE="${XDG_SESSION_TYPE:-}"
+if [ -z "$SESSION_TYPE" ]; then
+    if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+        SESSION_TYPE="wayland"
+    elif [ -n "${DISPLAY:-}" ]; then
+        SESSION_TYPE="x11"
+    else
+        SESSION_TYPE="unknown"
+    fi
+fi
+
+DESKTOP="${XDG_CURRENT_DESKTOP:-${DESKTOP_SESSION:-}}"
+DESKTOP_LOWER=$(echo "$DESKTOP" | tr '[:upper:]' '[:lower:]')
+
+# Environment configuration
+if [ "$SESSION_TYPE" = "x11" ]; then
+    export QSG_RHI_BACKEND=opengl
+    export QT_QPA_PLATFORM=xcb
+
+    # XFCE Compositor auto-check and activation
+    if [[ "$DESKTOP_LOWER" == *"xfce"* ]] && command -v xfconf-query >/dev/null 2>&1; then
+        xfwm_comp=$(xfconf-query -c xfwm4 -p /general/use_compositing 2>/dev/null || echo "false")
+        if [ "$xfwm_comp" = "false" ]; then
+            xfconf-query -c xfwm4 -p /general/use_compositing -s true 2>/dev/null || true
+        fi
+    fi
+
+    # Generic X11 compositor start if picom is installed
+    if command -v xprop >/dev/null 2>&1 && command -v picom >/dev/null 2>&1; then
+        if ! xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id" && ! pgrep -x "picom" >/dev/null 2>&1; then
+            nohup picom -b >/dev/null 2>&1 &
+        fi
+    fi
+else
+    export QT_QPA_PLATFORM=wayland
+fi
+
+# Test probe mode
+if [ "${1:-}" = "--env-probe" ]; then
+    echo "SESSION_TYPE=$SESSION_TYPE"
+    echo "QSG_RHI_BACKEND=${QSG_RHI_BACKEND:-}"
+    echo "QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-}"
+    exit 0
+fi
+
+# Subcommands routing
+if [ "${1:-}" = "doctor" ] || [ "${1:-}" = "--doctor" ]; then
+    DOCTOR_SCRIPT=""
+    if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/kuronotch-doctor.sh" ]; then
+        DOCTOR_SCRIPT="$SCRIPT_DIR/kuronotch-doctor.sh"
+    elif [ -f "$HOME/.config/quickshell/island-notch/scripts/kuronotch-doctor.sh" ]; then
+        DOCTOR_SCRIPT="$HOME/.config/quickshell/island-notch/scripts/kuronotch-doctor.sh"
+    fi
+    if [ -n "$DOCTOR_SCRIPT" ] && [ -x "$DOCTOR_SCRIPT" ]; then
+        exec "$DOCTOR_SCRIPT" "${@:2}"
+    else
+        echo "Error: kuronotch-doctor.sh not found." >&2
+        exit 1
+    fi
+elif [ "${1:-}" = "update" ] || [ "${1:-}" = "--update" ]; then
+    UPDATE_SCRIPT=""
+    if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/update.sh" ]; then
+        UPDATE_SCRIPT="$SCRIPT_DIR/update.sh"
+    elif [ -f "$HOME/.config/quickshell/island-notch/scripts/update.sh" ]; then
+        UPDATE_SCRIPT="$HOME/.config/quickshell/island-notch/scripts/update.sh"
+    fi
+    if [ -n "$UPDATE_SCRIPT" ] && [ -x "$UPDATE_SCRIPT" ]; then
+        exec "$UPDATE_SCRIPT" "${@:2}"
+    else
+        curl -sSL https://raw.githubusercontent.com/putrarawr/KuroNotch/main/scripts/update.sh | bash -s -- "${@:2}"
+        exit $?
+    fi
+elif [ "${1:-}" = "uninstall" ] || [ "${1:-}" = "--uninstall" ]; then
+    UNINSTALL_SCRIPT=""
+    if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/uninstall.sh" ]; then
+        UNINSTALL_SCRIPT="$SCRIPT_DIR/uninstall.sh"
+    elif [ -f "$HOME/.config/quickshell/island-notch/scripts/uninstall.sh" ]; then
+        UNINSTALL_SCRIPT="$HOME/.config/quickshell/island-notch/scripts/uninstall.sh"
+    fi
+    if [ -n "$UNINSTALL_SCRIPT" ] && [ -x "$UNINSTALL_SCRIPT" ]; then
+        exec "$UNINSTALL_SCRIPT" "${@:2}"
+    else
+        curl -sSL https://raw.githubusercontent.com/putrarawr/KuroNotch/main/scripts/uninstall.sh | bash -s -- "${@:2}"
+        exit $?
+    fi
+fi
+
 unset LD_LIBRARY_PATH
-exec /usr/local/bin/quickshell -c island-notch "$@"
+exec /usr/local/bin/quickshell -n -c island-notch "$@"
