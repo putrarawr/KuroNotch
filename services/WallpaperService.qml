@@ -59,24 +59,31 @@ if not os.path.isfile(img):
     raise SystemExit(0)
 
 subprocess.run(["pkill", "-x", "hyprpaper"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-q = subprocess.run(["swww", "query"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-if q.returncode != 0:
-    subprocess.Popen(["swww-daemon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    for _ in range(25):
-        time.sleep(0.1)
-        if subprocess.run(["swww", "query"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
-            break
+has_swww = subprocess.run(["which", "swww"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+if has_swww:
+    q = subprocess.run(["swww", "query"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if q.returncode != 0:
+        subprocess.Popen(["swww-daemon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        for _ in range(25):
+            time.sleep(0.1)
+            if subprocess.run(["swww", "query"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+                break
 
-t_type = random.choice(["wipe", "wave", "grow", "outer", "center"])
-t_angle = str(random.choice([0, 30, 45, 90, 135, 210, 315]))
-subprocess.run([
-    "swww", "img", img,
-    "--transition-type", t_type,
-    "--transition-angle", t_angle,
-    "--transition-step", "90",
-    "--transition-fps", "120",
-    "--transition-bezier", "0.13,0.99,0.29,1.1"
-], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    t_type = random.choice(["wipe", "wave", "grow", "outer", "center"])
+    t_angle = str(random.choice([0, 30, 45, 90, 135, 210, 315]))
+    subprocess.run([
+        "swww", "img", img,
+        "--transition-type", t_type,
+        "--transition-angle", t_angle,
+        "--transition-step", "90",
+        "--transition-fps", "120",
+        "--transition-bezier", "0.13,0.99,0.29,1.1"
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+elif subprocess.run(["which", "feh"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+    subprocess.run(["feh", "--bg-fill", img], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+elif subprocess.run(["which", "xfconf-query"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+    subprocess.run(["sh", "-c", 'for p in $(xfconf-query -c xfce4-desktop -l | grep last-image); do xfconf-query -c xfce4-desktop -p "$p" -s "$1"; done', "sh", img], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
 
 os.makedirs(os.path.dirname(state_file), exist_ok=True)
 with open(state_file, "w", encoding="utf-8") as f:

@@ -46,7 +46,7 @@ Singleton {
 
         Quickshell.execDetached([
             "sh", "-c",
-            'cliphist decode "$1" | wl-copy',
+            'if command -v wl-copy >/dev/null 2>&1; then cliphist decode "$1" | wl-copy; elif command -v xclip >/dev/null 2>&1; then cliphist decode "$1" | xclip -selection clipboard; fi',
             "sh",
             cleanId
         ]);
