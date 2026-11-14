@@ -170,7 +170,7 @@ if pgrep -f "quickshell.*caelestia" >/dev/null 2>&1; then
     pkill -f "quickshell.*caelestia" 2>/dev/null || true
     sleep 0.8
     if [ -x "$HOME/.local/bin/caelestia-shell" ]; then
-        nohup "$HOME/.local/bin/caelestia-shell" >/dev/null 2>&1 &
+        setsid -f "$HOME/.local/bin/caelestia-shell" </dev/null >/dev/null 2>&1 || nohup "$HOME/.local/bin/caelestia-shell" >/dev/null 2>&1 &
     fi
 fi
 
