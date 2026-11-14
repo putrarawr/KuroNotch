@@ -69,12 +69,12 @@ fi
 
 # 4. Launch / Verify island-notch process & D-Bus ownership
 echo "[Check 4/6] Verifying island-notch process and D-Bus ownership..."
-ISLAND_PID=$(pgrep -f "quickshell -c island-notch" || true)
+ISLAND_PID=$(pgrep -f "quickshell.*island-notch" | head -n 1 || true)
 if [ -z "$ISLAND_PID" ]; then
     echo "  -> Launching island-notch via $BIN_DIR/island-notch..."
     setsid "$BIN_DIR/island-notch" </dev/null >"$LOG_FILE" 2>&1 &
     sleep 3
-    ISLAND_PID=$(pgrep -f "quickshell -c island-notch" || true)
+    ISLAND_PID=$(pgrep -f "quickshell.*island-notch" | head -n 1 || true)
 fi
 
 if [ -n "$ISLAND_PID" ]; then

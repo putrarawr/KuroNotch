@@ -335,13 +335,14 @@ Item {
             }
         }
 
-        // Notification / peek layout WITH actions (height ~64px)
+        // Notification / peek layout WITH actions (height ~80px)
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 6
-            anchors.leftMargin: 12
-            anchors.rightMargin: 10
-            spacing: 4
+            anchors.topMargin: 8
+            anchors.bottomMargin: 10
+            anchors.leftMargin: 14
+            anchors.rightMargin: 12
+            spacing: 5
             visible: !peekPillContainer.isOsdPeek && peekPillContainer.hasActions
 
             // Top Row: App icon, Title, Subtitle, Expand & Close buttons
@@ -383,28 +384,40 @@ Item {
                     }
                 }
 
-                ColumnLayout {
+                MouseArea {
                     Layout.fillWidth: true
-                    spacing: 0
+                    Layout.preferredHeight: peekActionableTextCol.implicitHeight
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: NotchController.expandFromPeek()
 
-                    Text {
-                        Layout.fillWidth: true
-                        text: peekPillContainer.notifTitle
-                        elide: Text.ElideRight
-                        font.family: "Rubik"
-                        font.pixelSize: 11
-                        font.weight: Font.Medium
-                        color: "#f4f4f6"
-                    }
+                    ColumnLayout {
+                        id: peekActionableTextCol
+                        anchors.fill: parent
+                        spacing: 1
 
-                    Text {
-                        Layout.fillWidth: true
-                        visible: text.length > 0
-                        text: peekPillContainer.notifSubtitle
-                        elide: Text.ElideRight
-                        font.family: "Rubik"
-                        font.pixelSize: 10
-                        color: "#8e8e98"
+                        Text {
+                            Layout.fillWidth: true
+                            text: peekPillContainer.notifTitle
+                            elide: Text.ElideRight
+                            font.family: "Rubik"
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                            color: "#f4f4f6"
+                        }
+
+                        Text {
+                            id: peekActionableSubtitle
+                            Layout.fillWidth: true
+                            visible: text.length > 0
+                            text: peekPillContainer.notifSubtitle
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: (peekPillContainer.height >= 90) ? 2 : 1
+                            elide: Text.ElideRight
+                            lineHeight: 1.15
+                            font.family: "Rubik"
+                            font.pixelSize: 10
+                            color: "#8e8e98"
+                        }
                     }
                 }
 
@@ -470,11 +483,11 @@ Item {
                         required property var modelData
 
                         Layout.preferredHeight: 22
-                        Layout.preferredWidth: peekActionText.implicitWidth + 14
-                        radius: 5
-                        color: peekActionMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.20) : Qt.rgba(255, 255, 255, 0.10)
+                        Layout.preferredWidth: peekActionText.implicitWidth + 18
+                        radius: 6
+                        color: peekActionMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.22) : Qt.rgba(255, 255, 255, 0.12)
                         border.width: 1
-                        border.color: Qt.rgba(255, 255, 255, 0.12)
+                        border.color: Qt.rgba(255, 255, 255, 0.16)
 
                         Text {
                             id: peekActionText
@@ -720,11 +733,11 @@ Item {
             }
         }
 
-        // Notification / peek layout WITHOUT actions (standard 40px height)
+        // Notification / peek layout WITHOUT actions
         RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: 12
-            anchors.rightMargin: 10
+            anchors.leftMargin: 14
+            anchors.rightMargin: 12
             spacing: 8
             visible: !peekPillContainer.isOsdPeek && !peekPillContainer.isGreetPeek && !peekPillContainer.isAgentPeek && !peekPillContainer.hasActions
 
@@ -762,29 +775,41 @@ Item {
                 }
             }
 
-            ColumnLayout {
+            MouseArea {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
-                spacing: 0
+                implicitHeight: peekCompactTextCol.implicitHeight
+                cursorShape: Qt.PointingHandCursor
+                onClicked: NotchController.expandFromPeek()
 
-                Text {
-                    Layout.fillWidth: true
-                    text: peekPillContainer.notifTitle
-                    elide: Text.ElideRight
-                    font.family: "Rubik"
-                    font.pixelSize: 11
-                    font.weight: Font.Medium
-                    color: "#f4f4f6"
-                }
+                ColumnLayout {
+                    id: peekCompactTextCol
+                    anchors.fill: parent
+                    spacing: 1
 
-                Text {
-                    Layout.fillWidth: true
-                    visible: text.length > 0
-                    text: peekPillContainer.notifSubtitle
-                    elide: Text.ElideRight
-                    font.family: "Rubik"
-                    font.pixelSize: 10
-                    color: "#8e8e98"
+                    Text {
+                        Layout.fillWidth: true
+                        text: peekPillContainer.notifTitle
+                        elide: Text.ElideRight
+                        font.family: "Rubik"
+                        font.pixelSize: 11
+                        font.weight: Font.Medium
+                        color: "#f4f4f6"
+                    }
+
+                    Text {
+                        id: peekCompactSubtitle
+                        Layout.fillWidth: true
+                        visible: text.length > 0
+                        text: peekPillContainer.notifSubtitle
+                        wrapMode: Text.WordWrap
+                        maximumLineCount: (peekPillContainer.height >= 55) ? 2 : 1
+                        elide: Text.ElideRight
+                        lineHeight: 1.15
+                        font.family: "Rubik"
+                        font.pixelSize: 10
+                        color: "#8e8e98"
+                    }
                 }
             }
 

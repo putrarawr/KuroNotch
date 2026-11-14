@@ -113,6 +113,10 @@ Singleton {
         && root.peekAlert.kind === "osd"
         && !root.expanded
 
+    readonly property bool notifPeekActive: Boolean(root.peekAlert?.active)
+        && root.peekAlert.kind === "notif"
+        && !root.expanded
+
     // Activity inputs bound by feature services (Tasks 5-9)
     property bool mediaPlaying: false
     property bool hasLyrics: false
@@ -225,7 +229,7 @@ Singleton {
         if (next) {
             if (root.settingsOpen)
                 return;
-            if (root.osdPeekActive) {
+            if (root.osdPeekActive || root.notifPeekActive) {
                 peekTimer.stop();
                 return;
             }
@@ -245,7 +249,7 @@ Singleton {
             }
         } else {
             sensorDebounceTimer.stop();
-            if (root.osdPeekActive && !root.peekInteracting)
+            if ((root.osdPeekActive || root.notifPeekActive) && !root.peekInteracting)
                 peekTimer.restart();
             root.collapseIfAllowed();
         }
@@ -580,7 +584,7 @@ Singleton {
         interval: Config.autoHide.peekDurationMs > 0 ? Config.autoHide.peekDurationMs : 2500
         repeat: false
         onTriggered: {
-            if (root.osdPeekActive && (root.hovered || root.peekInteracting))
+            if ((root.osdPeekActive || root.notifPeekActive) && (root.hovered || root.peekInteracting))
                 return;
             root.dismissPeek();
         }

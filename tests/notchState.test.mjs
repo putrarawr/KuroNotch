@@ -385,5 +385,19 @@ describe("notchState.js - Pure State Machine", () => {
         assert.equal(expandedPage1Geo.width, 560);
         assert.equal(expandedPage1Geo.height, 210);
         assert.equal(expandedPage1Geo.x, Math.round((1366 - 560) / 2));
+
+        // Peek alert with dimension hint (e.g. actionable notification 420x80) -> radius adapts to 22
+        const actionableNotifPeekGeo = computeGeometry("peek", screenWidth, 0, false, { width: 420, height: 80 });
+        assert.equal(actionableNotifPeekGeo.width, 420);
+        assert.equal(actionableNotifPeekGeo.height, 80);
+        assert.equal(actionableNotifPeekGeo.radius, 22);
+        assert.equal(actionableNotifPeekGeo.x, Math.round((1366 - 420) / 2));
+
+        // Large / multi-line notification peek (e.g. 460x96) -> radius adapts to 24
+        const largeNotifPeekGeo = computeGeometry("peek", screenWidth, 0, false, { width: 460, height: 96 });
+        assert.equal(largeNotifPeekGeo.width, 460);
+        assert.equal(largeNotifPeekGeo.height, 96);
+        assert.equal(largeNotifPeekGeo.radius, 24);
+        assert.equal(largeNotifPeekGeo.x, Math.round((1366 - 460) / 2));
     });
 });

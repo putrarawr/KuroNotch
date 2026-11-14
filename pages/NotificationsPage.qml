@@ -205,6 +205,7 @@ Item {
             delegate: Rectangle {
                 id: cardDelegate
                 required property var modelData
+                property bool isExpanded: false
 
                 width: notifList.width
                 implicitHeight: cardContent.implicitHeight + 12
@@ -363,7 +364,8 @@ Item {
                                 font.pixelSize: 11
                                 font.weight: Font.Medium
                                 color: "#f4f4f6"
-                                elide: Text.ElideRight
+                                elide: cardDelegate.isExpanded ? Text.ElideNone : Text.ElideRight
+                                wrapMode: cardDelegate.isExpanded ? Text.WordWrap : Text.NoWrap
                             }
 
                             Text {
@@ -374,8 +376,27 @@ Item {
                                 font.pixelSize: 10
                                 color: "#a0a0ab"
                                 wrapMode: Text.WordWrap
-                                maximumLineCount: 2
+                                maximumLineCount: cardDelegate.isExpanded ? 24 : 2
                                 elide: Text.ElideRight
+                                lineHeight: 1.2
+                            }
+
+                            // Show more / Show less toggle for long notifications
+                            Text {
+                                visible: Boolean(cardDelegate.modelData?.body && (cardDelegate.modelData.body.length > 65 || cardDelegate.modelData.body.indexOf("\n") !== -1))
+                                text: cardDelegate.isExpanded ? "Tutup ringkasan ▲" : "Lihat selengkapnya ▼"
+                                font.family: "Rubik"
+                                font.pixelSize: 9
+                                font.weight: Font.Medium
+                                color: expandToggleMouse.containsMouse ? "#f4f4f6" : "#a78bfa"
+
+                                MouseArea {
+                                    id: expandToggleMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: cardDelegate.isExpanded = !cardDelegate.isExpanded
+                                }
                             }
                         }
 

@@ -118,11 +118,65 @@ Singleton {
         // Trigger peek alert unless DND is active
         if (!Config.dnd) {
             const hasActions = actionList.length > 0;
-            const peekWidth = hasActions ? 340 : (notifItem.body.length > 30 ? 320 : 280);
-            const peekHeight = hasActions ? 64 : 40;
-            const timeout = (typeof notif.expireTimeout === "number" && notif.expireTimeout > 0)
-                ? notif.expireTimeout
-                : (uInt === 2 ? 6000 : 3500);
+            const bodyTrimmed = notifItem.body.trim();
+            const hasBody = bodyTrimmed.length > 0;
+            const titleLen = notifItem.summary.length;
+            const bodyLen = bodyTrimmed.length;
+            const hasNewline = bodyTrimmed.indexOf("\n") !== -1;
+            const isLongBody = bodyLen > 36 || hasNewline;
+            const isVeryLongBody = bodyLen > 75;
+            const isLongTitle = titleLen > 26;
+            const isVeryLongTitle = titleLen > 42;
+
+            // Width calculation: adapt dynamically up to 480px on long text
+            let peekWidth = 320;
+            if (hasActions) {
+                if (isVeryLongTitle || isVeryLongBody) {
+                    peekWidth = 480;
+                } else if (isLongTitle || isLongBody) {
+                    peekWidth = 430;
+                } else {
+                    peekWidth = 380;
+                }
+            } else if (hasBody) {
+                if (isVeryLongTitle || isVeryLongBody) {
+                    peekWidth = 460;
+                } else if (isLongTitle || isLongBody) {
+                    peekWidth = 400;
+                } else {
+                    peekWidth = 340;
+                }
+            } else {
+                if (isVeryLongTitle) {
+                    peekWidth = 420;
+                } else if (isLongTitle) {
+                    peekWidth = 360;
+                } else {
+                    peekWidth = 300;
+                }
+            }
+
+            // Height calculation: adapt to 2 lines of wrapped body without button/content clipping
+            let peekHeight = 42;
+            if (hasActions) {
+                peekHeight = isLongBody ? 96 : 80;
+            } else if (hasBody) {
+                peekHeight = isLongBody ? 62 : 48;
+            } else {
+                peekHeight = 42;
+            }
+
+            // Timeout: give extra reading time for long notifications (up to 5.5s, or 7s if critical)
+            let timeout = 3500;
+            if (typeof notif.expireTimeout === "number" && notif.expireTimeout > 0) {
+                timeout = notif.expireTimeout;
+            } else if (uInt === 2) {
+                timeout = 7000;
+            } else if (isVeryLongBody || isVeryLongTitle) {
+                timeout = 5500;
+            } else if (isLongBody || isLongTitle) {
+                timeout = 4500;
+            }
 
             const payload = {
                 title: notifItem.summary,
