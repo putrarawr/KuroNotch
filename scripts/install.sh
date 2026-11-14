@@ -47,6 +47,9 @@ mkdir -p "$HOME/.config/quickshell"
 # Symlink config so Quickshell can locate it by any alias
 echo "==> Linking Quickshell configuration..."
 if [ "$REPO_DIR" != "$TARGET_DIR" ]; then
+    if [ -d "$TARGET_DIR" ] && [ ! -L "$TARGET_DIR" ]; then
+        rm -rf "$TARGET_DIR"
+    fi
     ln -sfn "$REPO_DIR" "$TARGET_DIR"
 fi
 ln -sfn "$REPO_DIR" "$HOME/.config/quickshell/KuroNotch"
@@ -77,7 +80,7 @@ fi
 echo "==> Starting KuroNotch..."
 pkill -f "quickshell.*island-notch" 2>/dev/null || true
 sleep 0.5
-nohup "$HOME/.local/bin/island-notch" >/dev/null 2>&1 &
+setsid -f "$HOME/.local/bin/island-notch" </dev/null >/dev/null 2>&1 || nohup "$HOME/.local/bin/island-notch" >/dev/null 2>&1 &
 
 echo ""
 echo "✨ KuroNotch (Kuro Island) installed & launched successfully!"

@@ -26,12 +26,14 @@ mkdir -p "$QUICKSHELL_DIR"
 ln -sfn "$REPO_DIR" "$QUICKSHELL_DIR/island-notch"
 echo "  -> Symlinked $QUICKSHELL_DIR/island-notch to $REPO_DIR"
 
-# 2. Install wrapper executable ~/.local/bin/island-notch
+# 2. Install wrapper executable ~/.local/bin/island-notch, kuronotch, kuro-island
 echo "[2/5] Installing wrapper binary ~/.local/bin/island-notch..."
 mkdir -p "$BIN_DIR"
-cp "$REPO_DIR/scripts/island-notch" "$BIN_DIR/island-notch"
-chmod +x "$BIN_DIR/island-notch"
-echo "  -> Installed and made executable $BIN_DIR/island-notch"
+for b in island-notch kuronotch kuro-island; do
+    cp "$REPO_DIR/scripts/island-notch" "$BIN_DIR/$b"
+    chmod +x "$BIN_DIR/$b"
+done
+echo "  -> Installed and made executable $BIN_DIR/island-notch, kuronotch, kuro-island"
 
 # 3. Update ~/.config/caelestia/shell.json cleanly (merge, preserve other settings)
 echo "[3/5] Updating Caelestia shell.json..."
