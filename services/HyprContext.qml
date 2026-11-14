@@ -123,12 +123,15 @@ Singleton {
         running: !root.isHyprland && Boolean(Quickshell.env("DISPLAY"))
         command: [
             "sh", "-c",
+            "trap 'kill $(jobs -p) 2>/dev/null' EXIT; " +
+            "if ! command -v xprop >/dev/null 2>&1; then exit 0; fi; " +
             "xprop -root -spy _NET_ACTIVE_WINDOW 2>/dev/null | while read -r line; do " +
             "id=$(echo \"$line\" | awk '{print $NF}'); " +
             "if [ -n \"$id\" ] && [ \"$id\" != \"0x0\" ]; then " +
             "cls=$(xprop -id \"$id\" WM_CLASS 2>/dev/null | awk -F\\\" '{print $(NF-1)}'); " +
-            "state=$(xprop -id \"$id\" _NET_WM_STATE 2>/dev/null); " +
-            "echo \"$cls|$state\"; " +
+            "kill $(jobs -p) 2>/dev/null; " +
+            "(xprop -id \"$id\" -spy _NET_WM_STATE 2>/dev/null | while read -r state; do " +
+            "echo \"$cls|$state\"; done) & " +
             "fi; done"
         ]
 

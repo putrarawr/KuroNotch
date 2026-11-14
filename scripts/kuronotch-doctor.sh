@@ -37,14 +37,17 @@ check_distro() {
 }
 
 check_display_session() {
-    local session_type="${XDG_SESSION_TYPE:-unknown}"
+    local raw_session="${XDG_SESSION_TYPE:-}"
+    local session_type=$(echo "$raw_session" | tr '[:upper:]' '[:lower:]' | xargs)
     local desktop="${XDG_CURRENT_DESKTOP:-${DESKTOP_SESSION:-unknown}}"
 
-    if [ "$session_type" = "unknown" ]; then
+    if [ -z "$session_type" ] || [ "$session_type" = "unknown" ]; then
         if [ -n "${WAYLAND_DISPLAY:-}" ]; then
             session_type="wayland"
         elif [ -n "${DISPLAY:-}" ]; then
             session_type="x11"
+        else
+            session_type="unknown"
         fi
     fi
 
@@ -60,8 +63,20 @@ check_display_session() {
 }
 
 check_compositor() {
-    local session_type="${XDG_SESSION_TYPE:-}"
-    if [ "$session_type" = "wayland" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
+    local raw_session="${XDG_SESSION_TYPE:-}"
+    local session_type=$(echo "$raw_session" | tr '[:upper:]' '[:lower:]' | xargs)
+    local desktop="${XDG_CURRENT_DESKTOP:-${DESKTOP_SESSION:-}}"
+    local desktop_lower=$(echo "$desktop" | tr '[:upper:]' '[:lower:]')
+
+    if [ -z "$session_type" ]; then
+        if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+            session_type="wayland"
+        elif [ -n "${DISPLAY:-}" ]; then
+            session_type="x11"
+        fi
+    fi
+
+    if [ "$session_type" = "wayland" ]; then
         if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
             echo -e "$OK Compositor: ${COLOR_BOLD}Hyprland${COLOR_RESET} (Native Wayland layer-shell active)"
         else
@@ -70,7 +85,7 @@ check_compositor() {
     else
         # X11 Session checks
         local compositor_found=0
-        if command -v xfconf-query >/dev/null 2>&1; then
+        if [[ "$desktop_lower" == *"xfce"* ]] && command -v xfconf-query >/dev/null 2>&1; then
             local xfwm_comp
             xfwm_comp=$(xfconf-query -c xfwm4 -p /general/use_compositing 2>/dev/null || echo "false")
             if [ "$xfwm_comp" = "true" ]; then
@@ -157,6 +172,34 @@ check_audio_mpris() {
     fi
 }
 
+check_utilities() {
+    local raw_session="${XDG_SESSION_TYPE:-}"
+    local session_type=$(echo "$raw_session" | tr '[:upper:]' '[:lower:]' | xargs)
+    if [ -z "$session_type" ]; then
+        if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+            session_type="wayland"
+        elif [ -n "${DISPLAY:-}" ]; then
+            session_type="x11"
+        fi
+    fi
+
+    if [ "$session_type" = "x11" ]; then
+        if command -v xprop >/dev/null 2>&1; then
+            echo -e "$OK Window Tracker: ${COLOR_BOLD}xprop${COLOR_RESET} (Active window auto-hide enabled)"
+        else
+            echo -e "$WARN Window Tracker: ${COLOR_BOLD}xprop not found${COLOR_RESET}"
+            echo -e "       ${COLOR_GRAY}-> Tip: Install 'x11-utils' or 'xprop' for browser auto-hide support.${COLOR_RESET}"
+            HAS_WARNINGS=1
+        fi
+        if command -v xclip >/dev/null 2>&1 || command -v wl-copy >/dev/null 2>&1; then
+            echo -e "$OK Clipboard Tool: ${COLOR_BOLD}Installed${COLOR_RESET}"
+        else
+            echo -e "$WARN Clipboard Tool: Neither xclip nor wl-copy found${COLOR_RESET}"
+            HAS_WARNINGS=1
+        fi
+    fi
+}
+
 main() {
     print_header
     echo -e "${COLOR_BOLD}--- System Diagnostics Check ---${COLOR_RESET}"
@@ -166,6 +209,7 @@ main() {
     check_gpu
     check_quickshell
     check_audio_mpris
+    check_utilities
     echo ""
 
     if [ "$HAS_WARNINGS" -eq 0 ]; then

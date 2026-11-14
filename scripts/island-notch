@@ -10,7 +10,7 @@ if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
 fi
 
 # Determine Session Type & Desktop
-SESSION_TYPE="${XDG_SESSION_TYPE:-}"
+SESSION_TYPE=$(echo "${XDG_SESSION_TYPE:-}" | tr '[:upper:]' '[:lower:]' | xargs)
 if [ -z "$SESSION_TYPE" ]; then
     if [ -n "${WAYLAND_DISPLAY:-}" ]; then
         SESSION_TYPE="wayland"
