@@ -16,6 +16,7 @@ Singleton {
     readonly property string surfaceState: NotchState.resolveSurfaceState({
         presetMode: Config.mode,
         autoHideEnabled: Config.autoHide.enabled,
+        smartBrowserStrip: Config.autoHide.smartBrowserStrip,
         context: HyprContext.windowContext,
         hovered: (root.hovered || root.sensorHovered) && !(Boolean(root.peekAlert?.active) && !root.expanded),
         sensorReady: root.sensorReady,
@@ -229,6 +230,9 @@ Singleton {
                 return;
             }
             const isAutoHide = Config.autoHide.enabled && Boolean(HyprContext.windowContext?.autoHideActive);
+            const isBrowserStrip = isAutoHide && Config.autoHide.smartBrowserStrip
+                && Boolean(HyprContext.windowContext?.isBrowser)
+                && !Boolean(HyprContext.windowContext?.isTrueFullscreen);
             const hoveringVisiblePeek = Boolean(root.peekAlert?.active) && root.surfaceState === "peek";
             if (!isAutoHide || root.sensorReady || hoveringVisiblePeek) {
                 if (hoveringVisiblePeek) {
@@ -236,8 +240,11 @@ Singleton {
                     root.sensorReady = true;
                 }
                 root.enterExpandedFromInteraction();
+            } else if (isBrowserStrip && !root.sensorReady) {
+                sensorDebounceTimer.restart();
             }
         } else {
+            sensorDebounceTimer.stop();
             if (root.osdPeekActive && !root.peekInteracting)
                 peekTimer.restart();
             root.collapseIfAllowed();
@@ -557,7 +564,7 @@ Singleton {
     Timer {
         id: sensorDebounceTimer
 
-        interval: Math.max(1, Config.autoHide.topSensorDebounceMs)
+        interval: (root.hovered && Config.autoHide.smartBrowserStrip) ? 400 : Math.max(1, Config.autoHide.topSensorDebounceMs)
         repeat: false
         onTriggered: {
             if (root.sensorHovered || root.hovered) {

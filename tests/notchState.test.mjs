@@ -201,6 +201,108 @@ describe("notchState.js - Pure State Machine", () => {
         );
     });
 
+    it("Smart Browser Strip: resolves to strip on browser auto-hide, avoids accidental expansion during casual hover, and preserves sensor in true fullscreen", () => {
+        const browserContext = { isBrowser: true, isTrueFullscreen: false, autoHideActive: true };
+        const videoFullscreenContext = { isBrowser: true, isTrueFullscreen: true, autoHideActive: true };
+        const overlapContext = { isBrowser: false, isTrueFullscreen: false, autoHideActive: true, hasOverlap: true };
+
+        // 1. Browser active & idle with smartBrowserStrip enabled -> resolves to "strip" (not "sensor")
+        assert.equal(
+            resolveSurfaceState({
+                presetMode: "notch",
+                autoHideEnabled: true,
+                smartBrowserStrip: true,
+                context: browserContext,
+                hovered: false,
+                sensorReady: false,
+                expanded: false,
+                dragActive: false,
+                peekAlert: { active: false },
+            }),
+            "strip"
+        );
+
+        // 2. Hovered during casual mouse pass (sensorReady is false) -> stays in "strip", avoids accidental expansion
+        assert.equal(
+            resolveSurfaceState({
+                presetMode: "notch",
+                autoHideEnabled: true,
+                smartBrowserStrip: true,
+                context: browserContext,
+                hovered: true,
+                sensorReady: false,
+                expanded: false,
+                dragActive: false,
+                peekAlert: { active: false },
+            }),
+            "strip"
+        );
+
+        // 3. Deliberate hover / sensorReady or click expand -> expands to "expanded"
+        assert.equal(
+            resolveSurfaceState({
+                presetMode: "notch",
+                autoHideEnabled: true,
+                smartBrowserStrip: true,
+                context: browserContext,
+                hovered: true,
+                sensorReady: true,
+                expanded: false,
+                dragActive: false,
+                peekAlert: { active: false },
+            }),
+            "expanded"
+        );
+
+        // 4. True fullscreen (e.g. F11 or video) -> resolves to "sensor" (clean 100% hidden)
+        assert.equal(
+            resolveSurfaceState({
+                presetMode: "notch",
+                autoHideEnabled: true,
+                smartBrowserStrip: true,
+                context: videoFullscreenContext,
+                hovered: false,
+                sensorReady: false,
+                expanded: false,
+                dragActive: false,
+                peekAlert: { active: false },
+            }),
+            "sensor"
+        );
+
+        // 5. Non-browser overlapping window -> resolves to "sensor"
+        assert.equal(
+            resolveSurfaceState({
+                presetMode: "notch",
+                autoHideEnabled: true,
+                smartBrowserStrip: true,
+                context: overlapContext,
+                hovered: false,
+                sensorReady: false,
+                expanded: false,
+                dragActive: false,
+                peekAlert: { active: false },
+            }),
+            "sensor"
+        );
+
+        // 6. When smartBrowserStrip is disabled -> falls back to "sensor" on browser
+        assert.equal(
+            resolveSurfaceState({
+                presetMode: "notch",
+                autoHideEnabled: true,
+                smartBrowserStrip: false,
+                context: browserContext,
+                hovered: false,
+                sensorReady: false,
+                expanded: false,
+                dragActive: false,
+                peekAlert: { active: false },
+            }),
+            "sensor"
+        );
+    });
+
     it("7. guards auto-collapse: returns false if menuOpen, settingsOpen, dragActive, inputFocused, or pinned is true", () => {
         assert.equal(canAutoCollapse({ menuOpen: false, settingsOpen: false, dragActive: false, inputFocused: false, pinned: false }), true);
         assert.equal(canAutoCollapse({ menuOpen: true, settingsOpen: false, dragActive: false, inputFocused: false, pinned: false }), false);

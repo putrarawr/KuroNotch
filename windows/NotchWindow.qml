@@ -426,6 +426,16 @@ PanelWindow {
                 }
             }
 
+            // Left-click on collapsed surface (notch, pill, strip) expands immediately
+            TapHandler {
+                acceptedButtons: Qt.LeftButton
+                enabled: !NotchController.expanded && NotchController.surfaceState !== "peek"
+                onTapped: {
+                    NotchController.sensorReady = true;
+                    NotchController.enterExpandedFromInteraction();
+                }
+            }
+
             // Right-click opens context menu under cursor
             TapHandler {
                 acceptedButtons: Qt.RightButton

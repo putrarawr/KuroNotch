@@ -34,6 +34,7 @@ Singleton {
         property bool smartOverlap: true
         property int peekDurationMs: 2500
         property int topSensorDebounceMs: 120
+        property bool smartBrowserStrip: true
     }
 
     property QtObject lyrics: QtObject {
@@ -147,7 +148,8 @@ Singleton {
                 "hideOnFullscreen": root.autoHide.hideOnFullscreen,
                 "smartOverlap": root.autoHide.smartOverlap,
                 "peekDurationMs": root.autoHide.peekDurationMs,
-                "topSensorDebounceMs": root.autoHide.topSensorDebounceMs
+                "topSensorDebounceMs": root.autoHide.topSensorDebounceMs,
+                "smartBrowserStrip": root.autoHide.smartBrowserStrip
             },
             "lyrics": {
                 "enabled": root.lyrics.enabled,
@@ -213,6 +215,7 @@ Singleton {
             if (typeof data.autoHide.smartOverlap === "boolean") root.autoHide.smartOverlap = data.autoHide.smartOverlap;
             if (typeof data.autoHide.peekDurationMs === "number") root.autoHide.peekDurationMs = data.autoHide.peekDurationMs;
             if (typeof data.autoHide.topSensorDebounceMs === "number") root.autoHide.topSensorDebounceMs = data.autoHide.topSensorDebounceMs;
+            if (typeof data.autoHide.smartBrowserStrip === "boolean") root.autoHide.smartBrowserStrip = data.autoHide.smartBrowserStrip;
         }
 
         if (data.lyrics && typeof data.lyrics === "object") {
