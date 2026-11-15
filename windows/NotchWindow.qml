@@ -606,6 +606,20 @@ PanelWindow {
                                 height: carouselViewport.height
                             }
 
+                            // Page 11: Productivity Suite (Calculator, Translate, Shalat, Agenda)
+                            ProductivitySuitePage {
+                                visible: Config.widgets.productivitySuite
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
+                            // Page 10: Kuro AI Chat (Assistant)
+                            ChatNotchPage {
+                                visible: Config.widgets.chat
+                                width: carouselViewport.width
+                                height: carouselViewport.height
+                            }
+
                             // Page 1: Drag-and-Drop File Shelf (Workspace Stash)
                             FileShelfPage {
                                 visible: Config.widgets.shelf

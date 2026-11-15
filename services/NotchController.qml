@@ -77,6 +77,8 @@ Singleton {
         if (Config.widgets.calendar) list.push(6); // Calendar & To-Do
         if (Config.widgets.weatherWater) list.push(9); // Weather & Water Reminder
         if (Config.widgets.notes) list.push(7);    // Notes & Windows
+        if (Config.widgets.productivitySuite) list.push(11); // Productivity Suite
+        if (Config.widgets.chat) list.push(10);    // Kuro AI Chat
         if (Config.widgets.shelf) list.push(1);    // File Shelf
         if (Config.widgets.clipboard) list.push(3); // Clipboard Stash
         if (Config.widgets.notifications) list.push(4); // Notifications
@@ -94,6 +96,8 @@ Singleton {
         case 6: return { title: "Calendar & To-Do", icon: "calendar_month" };
         case 9: return { title: "Weather & Water", icon: "water_drop" };
         case 7: return { title: "Notes & Windows", icon: "edit_note" };
+        case 11: return { title: "Productivity", icon: "widgets" };
+        case 10: return { title: "Kuro AI", icon: "smart_toy" };
         case 1: return { title: "File Shelf", icon: "inventory_2" };
         case 3: return { title: "Clipboard", icon: "content_paste" };
         case 4: return { title: "Notifications", icon: "notifications" };

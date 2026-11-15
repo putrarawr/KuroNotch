@@ -148,10 +148,14 @@ Item {
         readonly property bool isGreetPeek: root.isPeek && (NotchController.peekAlert?.kind === "greet")
         readonly property bool isCalendarPeek: root.isPeek && (NotchController.peekAlert?.kind === "calendar")
         readonly property bool isWaterPeek: root.isPeek && (NotchController.peekAlert?.kind === "water")
+        readonly property bool isShalatPeek: root.isPeek && (NotchController.peekAlert?.kind === "shalat")
+        readonly property bool isSchedulePeek: root.isPeek && (NotchController.peekAlert?.kind === "schedule")
         readonly property bool isAgentPeek: root.isPeek
             && (NotchController.peekAlert?.kind === "agent"
                 || NotchController.peekAlert?.kind === "calendar"
-                || NotchController.peekAlert?.kind === "water")
+                || NotchController.peekAlert?.kind === "water"
+                || NotchController.peekAlert?.kind === "shalat"
+                || NotchController.peekAlert?.kind === "schedule")
         readonly property bool isNotifPeek: root.isPeek && (NotchController.peekAlert?.kind === "notif")
         readonly property bool hasActions: Boolean(alertPayload?.actions && alertPayload.actions.length > 0)
         readonly property var notifActions: alertPayload?.actions ?? []
@@ -610,7 +614,9 @@ Item {
             readonly property bool isErr: NotchController.peekAlert?.payload?.phase === "error"
             readonly property bool isCal: peekPillContainer.isCalendarPeek
             readonly property bool isWater: peekPillContainer.isWaterPeek
-            readonly property color badgeTone: isErr ? "#f87171" : ((isCal || isWater) ? "#38bdf8" : "#a78bfa")
+            readonly property bool isShalat: peekPillContainer.isShalatPeek
+            readonly property bool isSchedule: peekPillContainer.isSchedulePeek
+            readonly property color badgeTone: isErr ? "#f87171" : (isShalat ? "#34d399" : (isSchedule ? "#a78bfa" : ((isCal || isWater) ? "#38bdf8" : "#a78bfa")))
 
             anchors.fill: parent
             anchors.leftMargin: 12
@@ -631,7 +637,7 @@ Item {
                     anchors.centerIn: parent
                     text: agentPeekLayout.isErr
                         ? "error"
-                        : (agentPeekLayout.isWater ? "water_drop" : (agentPeekLayout.isCal ? "event_upcoming" : "auto_awesome"))
+                        : (agentPeekLayout.isShalat ? "mosque" : (agentPeekLayout.isSchedule ? "event_upcoming" : (agentPeekLayout.isWater ? "water_drop" : (agentPeekLayout.isCal ? "event_upcoming" : "auto_awesome"))))
                     font.family: "Material Symbols Rounded"
                     font.pixelSize: 16
                     color: agentPeekLayout.badgeTone
@@ -1243,6 +1249,30 @@ Item {
                 font.family: "Material Symbols Rounded"
                 font.pixelSize: 12
                 color: "#d4845a"
+            }
+
+            // Subtle Shalat reminder chip in collapsed notch
+            Row {
+                visible: !root.recordingActive && !NotchController.agentActive && Boolean(Config.widgets.shalat) && Boolean(ShalatService.nextPrayer && ShalatService.nextPrayer.name && ShalatService.nextPrayer.name !== "Shalat")
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 3
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "mosque"
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 11
+                    color: "#34d399"
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: `${ShalatService.nextPrayer.name} ${ShalatService.nextPrayer.time}`
+                    font.family: "Rubik"
+                    font.pixelSize: 10
+                    font.weight: Font.Medium
+                    color: "#a7f3d0"
+                }
             }
 
             Row {

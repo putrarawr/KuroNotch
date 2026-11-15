@@ -45,6 +45,11 @@ ShellRoot {
     readonly property int _bootNotes: NotesService.charCount
     readonly property string _bootWallpaper: WallpaperService.currentPath
     readonly property int _bootWater: WaterService.count
+    readonly property string _bootCalc: CalculatorService.formattedResult
+    readonly property string _bootTranslate: TranslateService.targetLang
+    readonly property string _bootShalat: ShalatService.activeCity
+    readonly property int _bootSchedule: ScheduleService.upcoming?.length ?? 0
+    readonly property int _bootChat: ChatNotchService.messageCount
 
     Loader {
         active: root.targetScreen !== null && root.targetScreen !== undefined
