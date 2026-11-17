@@ -49,6 +49,25 @@ PopupWindow {
         NotchController.closeSettings();
     }
 
+    function toggleWidget(propName: string): void {
+        const current = Config.widgets[propName];
+        if (!current) {
+            if (!Config.canActivateMoreWidgets()) {
+                NotchController.triggerPeek("osd", 1, {
+                    title: "Slot Widget Penuh",
+                    subtitle: "Maksimal " + Config.widgets.maxActive + " widget aktif. Nonaktifkan widget lain dahulu.",
+                    icon: "warning",
+                    progress: 1
+                });
+                return;
+            }
+            Config.widgets[propName] = true;
+        } else {
+            Config.widgets[propName] = false;
+        }
+        Config.save();
+    }
+
     HyprlandFocusGrab {
         id: modalFocusGrab
 
@@ -609,116 +628,295 @@ PopupWindow {
                                     ColumnLayout {
                                         visible: root.activeTab === 1
                                         Layout.fillWidth: true
-                                        spacing: 6
+                                        spacing: 8
+
+                                        // Quota Manager Header Card
+                                        Rectangle {
+                                            Layout.fillWidth: true
+                                            height: 74
+                                            radius: 12
+                                            color: "#0c0c14"
+                                            border.width: 1
+                                            border.color: Config.countActiveWidgets() >= Config.widgets.maxActive
+                                                ? Qt.rgba(239 / 255, 68 / 255, 68 / 255, 0.35)
+                                                : Qt.rgba(Qt.color(Config.activePalette.accent).r, Qt.color(Config.activePalette.accent).g, Qt.color(Config.activePalette.accent).b, 0.25)
+
+                                            RowLayout {
+                                                anchors.fill: parent
+                                                anchors.margins: 12
+                                                spacing: 12
+
+                                                Rectangle {
+                                                    width: 44
+                                                    height: 44
+                                                    radius: 10
+                                                    color: Config.countActiveWidgets() >= Config.widgets.maxActive
+                                                        ? Qt.rgba(239 / 255, 68 / 255, 68 / 255, 0.16)
+                                                        : Qt.rgba(74 / 255, 222 / 255, 128 / 255, 0.16)
+                                                    border.width: 1
+                                                    border.color: Config.countActiveWidgets() >= Config.widgets.maxActive
+                                                        ? "#ef4444"
+                                                        : "#4ade80"
+
+                                                    Text {
+                                                        anchors.centerIn: parent
+                                                        text: "pie_chart"
+                                                        font.family: "Material Symbols Rounded"
+                                                        font.pixelSize: 22
+                                                        color: Config.countActiveWidgets() >= Config.widgets.maxActive
+                                                            ? "#ef4444"
+                                                            : "#4ade80"
+                                                    }
+                                                }
+
+                                                ColumnLayout {
+                                                    Layout.fillWidth: true
+                                                    spacing: 3
+
+                                                    RowLayout {
+                                                        spacing: 6
+                                                        Text {
+                                                            text: "Slot Kuota Widget Aktif"
+                                                            font.family: "Rubik"
+                                                            font.pixelSize: 12
+                                                            font.weight: Font.DemiBold
+                                                            color: "#ffffff"
+                                                        }
+
+                                                        Rectangle {
+                                                            height: 18
+                                                            width: quotaTxt.implicitWidth + 10
+                                                            radius: 5
+                                                            color: Config.countActiveWidgets() >= Config.widgets.maxActive
+                                                                ? Qt.rgba(239 / 255, 68 / 255, 68 / 255, 0.20)
+                                                                : Qt.rgba(74 / 255, 222 / 255, 128 / 255, 0.20)
+                                                            border.width: 1
+                                                            border.color: Config.countActiveWidgets() >= Config.widgets.maxActive
+                                                                ? "#ef4444"
+                                                                : "#4ade80"
+
+                                                            Text {
+                                                                id: quotaTxt
+                                                                anchors.centerIn: parent
+                                                                text: Config.countActiveWidgets() + " / " + Config.widgets.maxActive + (Config.countActiveWidgets() >= Config.widgets.maxActive ? " Penuh" : " Aktif")
+                                                                font.family: "JetBrains Mono"
+                                                                font.pixelSize: 9
+                                                                font.weight: Font.Bold
+                                                                color: Config.countActiveWidgets() >= Config.widgets.maxActive
+                                                                    ? "#ef4444"
+                                                                    : "#4ade80"
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Text {
+                                                        text: "Membatasi widget aktif menjaga performa notch tetap ringan dan cepat"
+                                                        font.family: "Rubik"
+                                                        font.pixelSize: 10
+                                                        color: "#8e8e98"
+                                                    }
+
+                                                    // Visual progress bar
+                                                    Rectangle {
+                                                        Layout.fillWidth: true
+                                                        height: 4
+                                                        radius: 2
+                                                        color: "#181824"
+
+                                                        Rectangle {
+                                                            height: parent.height
+                                                            width: Math.min(parent.width, parent.width * (Config.countActiveWidgets() / Math.max(1, Config.widgets.maxActive)))
+                                                            radius: 2
+                                                            color: Config.countActiveWidgets() >= Config.widgets.maxActive ? "#ef4444" : Config.activePalette.accent
+                                                            Behavior on width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                                        }
+                                                    }
+                                                }
+
+                                                // Stepper for maxActive
+                                                RowLayout {
+                                                    spacing: 4
+
+                                                    Rectangle {
+                                                        width: 26
+                                                        height: 26
+                                                        radius: 6
+                                                        color: minusMouse.containsMouse ? "#20202e" : "#14141e"
+                                                        border.width: 1
+                                                        border.color: Qt.rgba(1, 1, 1, 0.1)
+
+                                                        Text {
+                                                            anchors.centerIn: parent
+                                                            text: "remove"
+                                                            font.family: "Material Symbols Rounded"
+                                                            font.pixelSize: 16
+                                                            color: Config.widgets.maxActive > 2 ? "#ffffff" : "#52525b"
+                                                        }
+
+                                                        MouseArea {
+                                                            id: minusMouse
+                                                            anchors.fill: parent
+                                                            enabled: Config.widgets.maxActive > 2
+                                                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                                            onClicked: {
+                                                                if (Config.widgets.maxActive > 2) {
+                                                                    Config.widgets.maxActive--;
+                                                                    Config.save();
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Text {
+                                                        text: `${Config.widgets.maxActive}`
+                                                        font.family: "JetBrains Mono"
+                                                        font.pixelSize: 12
+                                                        font.weight: Font.Bold
+                                                        color: "#ffffff"
+                                                        Layout.preferredWidth: 20
+                                                        horizontalAlignment: Text.AlignHCenter
+                                                    }
+
+                                                    Rectangle {
+                                                        width: 26
+                                                        height: 26
+                                                        radius: 6
+                                                        color: plusMouse.containsMouse ? "#20202e" : "#14141e"
+                                                        border.width: 1
+                                                        border.color: Qt.rgba(1, 1, 1, 0.1)
+
+                                                        Text {
+                                                            anchors.centerIn: parent
+                                                            text: "add"
+                                                            font.family: "Material Symbols Rounded"
+                                                            font.pixelSize: 16
+                                                            color: Config.widgets.maxActive < 8 ? "#ffffff" : "#52525b"
+                                                        }
+
+                                                        MouseArea {
+                                                            id: plusMouse
+                                                            anchors.fill: parent
+                                                            enabled: Config.widgets.maxActive < 8
+                                                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                                            onClicked: {
+                                                                if (Config.widgets.maxActive < 8) {
+                                                                    Config.widgets.maxActive++;
+                                                                    Config.save();
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Text {
+                                            Layout.topMargin: 4
+                                            text: "DAFTAR WIDGET NOTCH"
+                                            font.family: "Rubik"
+                                            font.pixelSize: 10
+                                            font.weight: Font.DemiBold
+                                            font.letterSpacing: 0.8
+                                            color: "#8e8e98"
+                                        }
 
                                         SettingToggleRow {
-                                            label: "Media Deck & Lirik Sinkron"
-                                            subtitle: "Pemutar musik MPRIS, visualizer Cava & karaoke lirik otomatis"
-                                            iconName: "music_note"
-                                            checked: Config.lyrics.enabled
-                                            onToggled: {
-                                                Config.lyrics.enabled = !Config.lyrics.enabled;
-                                                Config.save();
-                                            }
+                                            label: "Productivity Suite"
+                                            subtitle: "Kalkulator instan, auto translate, jadwal shalat, screen time & agenda"
+                                            iconName: "bolt"
+                                            iconTint: "#ff9f0a"
+                                            checked: Config.widgets.productivitySuite
+                                            onToggled: root.toggleWidget("productivitySuite")
+                                        }
+
+                                        SettingToggleRow {
+                                            label: "Kuro AI Assistant (Chat)"
+                                            subtitle: "Tanya jawab cerdas langsung dari notch dengan DeepSeek AI"
+                                            iconName: "auto_awesome"
+                                            iconTint: "#818cf8"
+                                            checked: Config.widgets.chat
+                                            onToggled: root.toggleWidget("chat")
                                         }
 
                                         SettingToggleRow {
                                             label: "File Shelf (Drag & Drop)"
                                             subtitle: "Rak berkas sementara untuk memindahkan file antar aplikasi"
                                             iconName: "folder_open"
+                                            iconTint: "#38bdf8"
                                             checked: Config.widgets.shelf
-                                            onToggled: {
-                                                Config.widgets.shelf = !Config.widgets.shelf;
-                                                Config.save();
-                                            }
+                                            onToggled: root.toggleWidget("shelf")
                                         }
 
                                         SettingToggleRow {
                                             label: "Pomodoro & Quick Tools"
                                             subtitle: "Timer fokus 25 menit, pemilih warna layar & pintasan rekam"
                                             iconName: "timer"
+                                            iconTint: "#f43f5e"
                                             checked: Config.widgets.pomodoro
-                                            onToggled: {
-                                                Config.widgets.pomodoro = !Config.widgets.pomodoro;
-                                                Config.save();
-                                            }
+                                            onToggled: root.toggleWidget("pomodoro")
                                         }
 
                                         SettingToggleRow {
                                             label: "Clipboard Stash (cliphist)"
                                             subtitle: "Riwayat papan klip teks dan gambar dengan pencarian instan"
                                             iconName: "content_paste"
+                                            iconTint: "#a855f7"
                                             checked: Config.widgets.clipboard
-                                            onToggled: {
-                                                Config.widgets.clipboard = !Config.widgets.clipboard;
-                                                Config.save();
-                                            }
+                                            onToggled: root.toggleWidget("clipboard")
                                         }
 
                                         SettingToggleRow {
                                             label: "Interactive Notification Island"
                                             subtitle: "Tangkap notifikasi sistem dan tampilkan aksi langsung di notch"
                                             iconName: "notifications"
+                                            iconTint: "#ec4899"
                                             checked: Config.widgets.notifications
-                                            onToggled: {
-                                                Config.widgets.notifications = !Config.widgets.notifications;
-                                                Config.save();
-                                            }
+                                            onToggled: root.toggleWidget("notifications")
                                         }
 
                                         SettingToggleRow {
                                             label: "Kontrol Sistem & Monitor Hardware"
                                             subtitle: "Pengatur volume, kecerahan, baterai dan profil daya"
                                             iconName: "tune"
+                                            iconTint: "#10b981"
                                             checked: Config.widgets.controls
-                                            onToggled: {
-                                                Config.widgets.controls = !Config.widgets.controls;
-                                                Config.save();
-                                            }
+                                            onToggled: root.toggleWidget("controls")
                                         }
 
                                         SettingToggleRow {
                                             label: "Mini Kalender & Agenda"
                                             subtitle: "Lihat tanggal dan jadwal harian langsung dari deck"
                                             iconName: "calendar_month"
+                                            iconTint: "#06b6d4"
                                             checked: Config.widgets.calendar
-                                            onToggled: {
-                                                Config.widgets.calendar = !Config.widgets.calendar;
-                                                Config.save();
-                                            }
+                                            onToggled: root.toggleWidget("calendar")
                                         }
 
                                         SettingToggleRow {
                                             label: "Catatan Cepat (Quick Notes)"
                                             subtitle: "Tulis memo cepat tanpa membuka text editor"
                                             iconName: "edit_note"
+                                            iconTint: "#f59e0b"
                                             checked: Config.widgets.notes
-                                            onToggled: {
-                                                Config.widgets.notes = !Config.widgets.notes;
-                                                Config.save();
-                                            }
+                                            onToggled: root.toggleWidget("notes")
                                         }
 
                                         SettingToggleRow {
                                             label: "Wallpaper Switcher"
                                             subtitle: "Ganti wallpaper layar secara instan dari pulau notch"
                                             iconName: "wallpaper"
+                                            iconTint: "#8b5cf6"
                                             checked: Config.widgets.wallpaper
-                                            onToggled: {
-                                                Config.widgets.wallpaper = !Config.widgets.wallpaper;
-                                                Config.save();
-                                            }
+                                            onToggled: root.toggleWidget("wallpaper")
                                         }
 
                                         SettingToggleRow {
                                             label: "Cuaca & Pengingat Minum Air"
                                             subtitle: "Informasi cuaca terkini dan pelacak hidrasi harian"
                                             iconName: "water_drop"
+                                            iconTint: "#0ea5e9"
                                             checked: Config.widgets.weatherWater
-                                            onToggled: {
-                                                Config.widgets.weatherWater = !Config.widgets.weatherWater;
-                                                Config.save();
-                                            }
+                                            onToggled: root.toggleWidget("weatherWater")
                                         }
                                     }
 
@@ -890,6 +1088,18 @@ PopupWindow {
                                             checked: Config.lyrics.showInCollapsed
                                             onToggled: {
                                                 Config.lyrics.showInCollapsed = !Config.lyrics.showInCollapsed;
+                                                Config.save();
+                                            }
+                                        }
+
+                                        SettingToggleRow {
+                                            label: "Filter Mic Idle Discord"
+                                            subtitle: "Cegah titik hijau privasi menyala saat Discord hanya terbuka di background tanpa voice call aktif"
+                                            iconName: "mic_off"
+                                            iconTint: "#a78bfa"
+                                            checked: Config.privacy.filterDiscordIdle
+                                            onToggled: {
+                                                Config.privacy.filterDiscordIdle = !Config.privacy.filterDiscordIdle;
                                                 Config.save();
                                             }
                                         }
