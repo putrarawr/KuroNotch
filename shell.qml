@@ -47,6 +47,7 @@ ShellRoot {
     readonly property int _bootWater: WaterService.count
     readonly property string _bootCalc: CalculatorService.formattedResult
     readonly property string _bootTranslate: TranslateService.targetLang
+    readonly property bool _bootLocation: LocationService.ready
     readonly property string _bootShalat: ShalatService.activeCity
     readonly property int _bootSchedule: ScheduleService.upcoming?.length ?? 0
     readonly property int _bootChat: ChatNotchService.messageCount

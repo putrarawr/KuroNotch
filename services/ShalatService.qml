@@ -4,13 +4,14 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "."
 import "../config"
 import "../lib/shalatHelper.js" as Shalat
 
 Singleton {
     id: root
 
-    property string activeCity: "Jakarta"
+    property string activeCity: LocationService.ready ? LocationService.city : "Jakarta"
     property var todayTimes: ({
         subuh: "--:--",
         terbit: "--:--",
@@ -38,9 +39,23 @@ Singleton {
     }
 
     function refreshTimes(): void {
-        const coords = Shalat.getCityCoordinates(root.activeCity);
+        let lat = -6.2088;
+        let lon = 106.8456;
+        let tz = 7;
+
+        if (LocationService.ready) {
+            lat = LocationService.latitude;
+            lon = LocationService.longitude;
+            tz = Math.round(-new Date().getTimezoneOffset() / 60) || 7;
+        } else {
+            const coords = Shalat.getCityCoordinates(root.activeCity);
+            lat = coords.latitude;
+            lon = coords.longitude;
+            tz = coords.timezone;
+        }
+
         const now = new Date();
-        const times = Shalat.calculatePrayerTimes(now, coords.latitude, coords.longitude, coords.timezone);
+        const times = Shalat.calculatePrayerTimes(now, lat, lon, tz);
         root.todayTimes = times;
         root.nextPrayer = Shalat.getNextPrayer(times, now);
     }
@@ -90,6 +105,22 @@ Singleton {
             const now = new Date();
             root.nextPrayer = Shalat.getNextPrayer(root.todayTimes, now);
             root.checkPrayerReminder();
+        }
+    }
+
+    Connections {
+        target: LocationService
+        function onReadyChanged(): void {
+            if (LocationService.ready && LocationService.city.length > 0) {
+                root.activeCity = LocationService.city;
+            }
+            root.refreshTimes();
+        }
+        function onCityChanged(): void {
+            if (LocationService.city.length > 0) {
+                root.activeCity = LocationService.city;
+            }
+            root.refreshTimes();
         }
     }
 }

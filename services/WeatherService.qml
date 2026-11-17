@@ -165,9 +165,8 @@ try:
         "code": code,
         "hourly": upcoming
     }))
-except Exception:
-    print(json.dumps({"ok": False}))`,
-            root.customCity
+            print(json.dumps({"ok": False}))`,
+            (root.customCity.length > 0 ? root.customCity : LocationService.city)
         ]
 
         stdout: StdioCollector {
@@ -217,6 +216,14 @@ except Exception:
         repeat: true
         running: true
         onTriggered: root.refresh(false)
+    }
+
+    Connections {
+        target: LocationService
+        function onCityChanged(): void {
+            if (root.customCity.length === 0)
+                root.refresh(true);
+        }
     }
 
     Component.onCompleted: {
