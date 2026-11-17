@@ -15,7 +15,7 @@ Singleton {
     property string activePrompt: ""
     property string lastError: ""
     property string currentResponseText: ""
-    property string model: "vikey/openai/gpt-6-luna"
+    property string model: "vikey/deepseek/deepseek-v4.1-flash"
 
     readonly property int messageCount: Array.isArray(messages) ? messages.length : 0
     readonly property string workerPath: "/home/putra/.local/bin/oc-worker"

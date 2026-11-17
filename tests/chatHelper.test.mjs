@@ -48,4 +48,16 @@ describe("chatHelper.js - Chat Notifier & ANSI Parser Helper", () => {
         assert.equal(valid[0].text, "Hai");
         assert.equal(valid[1].text, "Halo juga!");
     });
+
+    it("preserves multiline formatting and indentation in code blocks", () => {
+        const multiline = "```python\ndef hello():\n    print('world')\n```";
+        const msg = formatMessage("assistant", multiline);
+        assert.equal(msg.text, multiline);
+        assert.ok(msg.text.includes("\n    print('world')"));
+
+        const ansiWrapped = "\u001b[34m```bash\necho 'test'\n```\u001b[0m";
+        const cleaned = cleanAnsi(ansiWrapped);
+        assert.equal(cleaned, "```bash\necho 'test'\n```");
+    });
 });
+

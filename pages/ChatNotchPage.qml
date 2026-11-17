@@ -118,6 +118,16 @@ Item {
             onCountChanged: chatList.positionViewAtEnd()
             onHeightChanged: chatList.positionViewAtEnd()
 
+            Connections {
+                target: ChatNotchService
+                function onCurrentResponseTextChanged(): void {
+                    chatList.positionViewAtEnd();
+                }
+                function onMessagesChanged(): void {
+                    chatList.positionViewAtEnd();
+                }
+            }
+
             delegate: Item {
                 id: bubbleCell
 
@@ -288,11 +298,11 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 38
+            Layout.preferredHeight: Math.min(80, Math.max(38, inputField.implicitHeight + 8))
             radius: 10
             color: "#15151e"
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.08)
+            border.color: inputField.activeFocus ? "#818cf8" : Qt.rgba(1, 1, 1, 0.08)
 
             RowLayout {
                 anchors.fill: parent
@@ -300,19 +310,36 @@ Item {
                 anchors.rightMargin: 4
                 spacing: 6
 
-                TextField {
-                    id: inputField
-
+                Flickable {
                     Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
-                    placeholderText: "Ketik pesan ke Kuro..."
-                    placeholderTextColor: "#636370"
-                    color: "#f4f4f6"
-                    font.family: "Rubik"
-                    font.pixelSize: 11
-                    background: null
-                    onAccepted: root.submitInput()
-                    onActiveFocusChanged: root.syncInputFocus()
+                    Layout.fillHeight: true
+                    contentWidth: width
+                    contentHeight: inputField.implicitHeight
+                    clip: true
+
+                    TextArea {
+                        id: inputField
+                        width: parent.width
+                        placeholderText: "Ketik pesan ke Kuro... (Enter kirim, Shift+Enter baris baru)"
+                        placeholderTextColor: "#636370"
+                        color: "#f4f4f6"
+                        font.family: "Rubik"
+                        font.pixelSize: 11
+                        wrapMode: TextArea.Wrap
+                        background: null
+                        selectByMouse: true
+
+                        Keys.onReturnPressed: event => {
+                            if (event.modifiers & Qt.ShiftModifier) {
+                                event.accepted = false;
+                            } else {
+                                event.accepted = true;
+                                root.submitInput();
+                            }
+                        }
+
+                        onActiveFocusChanged: root.syncInputFocus()
+                    }
                 }
 
                 Rectangle {
