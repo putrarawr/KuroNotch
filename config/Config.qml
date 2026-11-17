@@ -88,6 +88,7 @@ Singleton {
     }
 
     property QtObject widgets: QtObject {
+        property int maxActive: 4
         property bool shelf: true
         property bool pomodoro: true
         property bool clipboard: true
@@ -99,6 +100,32 @@ Singleton {
         property bool weatherWater: true
         property bool chat: true
         property bool productivitySuite: true
+        property bool screentime: true
+    }
+
+    function countActiveWidgets(): int {
+        let count = 0;
+        const list = [
+            widgets.shelf,
+            widgets.pomodoro,
+            widgets.clipboard,
+            widgets.notifications,
+            widgets.controls,
+            widgets.calendar,
+            widgets.notes,
+            widgets.wallpaper,
+            widgets.weatherWater,
+            widgets.chat,
+            widgets.productivitySuite
+        ];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i]) count++;
+        }
+        return count;
+    }
+
+    function canActivateMoreWidgets(): bool {
+        return root.countActiveWidgets() < root.widgets.maxActive;
     }
 
     readonly property string wallpaperSchemePath: `${Quickshell.env("HOME")}/.local/state/caelestia/scheme.json`
@@ -191,6 +218,7 @@ Singleton {
                 "filterDiscordIdle": root.privacy.filterDiscordIdle
             },
             "widgets": {
+                "maxActive": root.widgets.maxActive,
                 "shelf": root.widgets.shelf,
                 "pomodoro": root.widgets.pomodoro,
                 "clipboard": root.widgets.clipboard,
@@ -201,7 +229,8 @@ Singleton {
                 "wallpaper": root.widgets.wallpaper,
                 "weatherWater": root.widgets.weatherWater,
                 "chat": root.widgets.chat,
-                "productivitySuite": root.widgets.productivitySuite
+                "productivitySuite": root.widgets.productivitySuite,
+                "screentime": root.widgets.screentime
             }
         };
     }
@@ -279,6 +308,7 @@ Singleton {
         }
 
         if (data.widgets && typeof data.widgets === "object") {
+            if (typeof data.widgets.maxActive === "number" && data.widgets.maxActive > 0) root.widgets.maxActive = data.widgets.maxActive;
             if (typeof data.widgets.shelf === "boolean") root.widgets.shelf = data.widgets.shelf;
             if (typeof data.widgets.pomodoro === "boolean") root.widgets.pomodoro = data.widgets.pomodoro;
             if (typeof data.widgets.clipboard === "boolean") root.widgets.clipboard = data.widgets.clipboard;
@@ -290,6 +320,7 @@ Singleton {
             if (typeof data.widgets.weatherWater === "boolean") root.widgets.weatherWater = data.widgets.weatherWater;
             if (typeof data.widgets.chat === "boolean") root.widgets.chat = data.widgets.chat;
             if (typeof data.widgets.productivitySuite === "boolean") root.widgets.productivitySuite = data.widgets.productivitySuite;
+            if (typeof data.widgets.screentime === "boolean") root.widgets.screentime = data.widgets.screentime;
         }
     }
 
