@@ -41,11 +41,28 @@ PanelWindow {
                     radius: hasLyric ? Math.round(targetHeight / 2) : base.radius
                 };
             }
-            const idleTargetWidth = (PrivacyService.recordingActive || PomodoroService.running || NotchController.agentActive)
-                ? (PrivacyService.recordingActive ? 292 : (NotchController.agentActive ? 288 : 272))
-                : (NotchController.companionVisible
-                    ? ((Config.dnd || PrivacyService.micActive) ? 132 : 116)
-                    : Math.max(base.width, WeatherService.ready ? 314 : 268));
+            let idleTargetWidth = 268;
+            if (PrivacyService.recordingActive) {
+                idleTargetWidth = 292;
+            } else if (NotchController.agentActive) {
+                idleTargetWidth = 288;
+            } else if (PomodoroService.running) {
+                idleTargetWidth = 276;
+            } else if (NotchController.companionVisible) {
+                idleTargetWidth = (Config.dnd || PrivacyService.micActive) ? 140 : 120;
+            } else {
+                let w = 236;
+                if (Config.dnd) w += 26;
+                if (Config.pinned) w += 20;
+                if (PrivacyService.micActive) w += 18;
+                if (Boolean(Config.widgets.shalat) && Boolean(ShalatService.nextPrayer && ShalatService.nextPrayer.name && ShalatService.nextPrayer.name !== "Shalat")) {
+                    w += 84;
+                }
+                if (WeatherService.ready) {
+                    w += 46;
+                }
+                idleTargetWidth = Math.min(384, Math.max(base.width, w));
+            }
             const targetWidth = idleTargetWidth;
             const sw = width > 0 ? width : NotchController.screenWidth;
             return {

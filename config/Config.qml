@@ -83,6 +83,10 @@ Singleton {
         property bool soundEnabled: true
     }
 
+    property QtObject privacy: QtObject {
+        property bool filterDiscordIdle: true
+    }
+
     property QtObject widgets: QtObject {
         property bool shelf: true
         property bool pomodoro: true
@@ -183,6 +187,9 @@ Singleton {
                 "enabled": root.agent.enabled,
                 "soundEnabled": root.agent.soundEnabled
             },
+            "privacy": {
+                "filterDiscordIdle": root.privacy.filterDiscordIdle
+            },
             "widgets": {
                 "shelf": root.widgets.shelf,
                 "pomodoro": root.widgets.pomodoro,
@@ -265,6 +272,10 @@ Singleton {
         if (data.agent && typeof data.agent === "object") {
             if (typeof data.agent.enabled === "boolean") root.agent.enabled = data.agent.enabled;
             if (typeof data.agent.soundEnabled === "boolean") root.agent.soundEnabled = data.agent.soundEnabled;
+        }
+
+        if (data.privacy && typeof data.privacy === "object") {
+            if (typeof data.privacy.filterDiscordIdle === "boolean") root.privacy.filterDiscordIdle = data.privacy.filterDiscordIdle;
         }
 
         if (data.widgets && typeof data.widgets === "object") {

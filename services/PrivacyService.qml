@@ -5,6 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
+import "../config"
 
 Singleton {
     id: root
@@ -60,6 +61,35 @@ Singleton {
             || lower === "pw-top"
             || lower === "qpwgraph"
             || lower === "helvum";
+    }
+
+    function _isDiscordInVoiceCall(sinksText: string): bool {
+        // 1. Check if Discord or Vesktop has an active, uncorked audio sink-input (playback from voice call)
+        if (sinksText && sinksText.length > 0) {
+            const sinkBlocks = sinksText.split(/Sink Input #/);
+            for (let i = 1; i < sinkBlocks.length; i++) {
+                const sb = sinkBlocks[i];
+                if (/corked:\s*yes/i.test(sb) || /mute:\s*yes/i.test(sb))
+                    continue;
+                if (/application\.name\s*=\s*"[^"]*(discord|vesktop)[^"]*"/i.test(sb))
+                    return true;
+            }
+        }
+
+        // 2. Check window titles for voice connection keywords
+        if (typeof HyprContext !== "undefined" && HyprContext.toplevels) {
+            const toplevels = HyprContext.toplevels ?? [];
+            for (let i = 0; i < toplevels.length; i++) {
+                const w = toplevels[i];
+                const cls = (w.cls || "").toLowerCase();
+                if (cls.indexOf("discord") !== -1 || cls.indexOf("vesktop") !== -1) {
+                    const title = (w.title || "").toLowerCase();
+                    if (title.indexOf("voice") !== -1 || title.indexOf("rtc") !== -1 || title.indexOf("connected") !== -1 || title.indexOf("call") !== -1)
+                        return true;
+                }
+            }
+        }
+        return false;
     }
 
     function _updateComputedState(): void {
@@ -191,13 +221,16 @@ Singleton {
         id: pactlProc
 
         running: false
-        command: ["sh", "-c", "pactl list sources short 2>/dev/null; echo '===OUTPUTS==='; pactl list source-outputs 2>/dev/null"]
+        command: ["sh", "-c", "pactl list sources short 2>/dev/null; echo '===OUTPUTS==='; pactl list source-outputs 2>/dev/null; echo '===SINKS==='; pactl list sink-inputs 2>/dev/null"]
 
         stdout: StdioCollector {
             onStreamFinished: {
                 const sections = text.split("===OUTPUTS===");
                 const sourcesText = sections[0] ?? "";
-                const outputsText = sections.length > 1 ? sections[1] : "";
+                const rest = sections.length > 1 ? sections[1] : "";
+                const outAndSinks = rest.split("===SINKS===");
+                const outputsText = outAndSinks[0] ?? "";
+                const sinksText = outAndSinks.length > 1 ? outAndSinks[1] : "";
 
                 const monitorIds = {};
                 const srcLines = sourcesText.split("\n");
@@ -218,6 +251,14 @@ Singleton {
                     if (corkMatch && corkMatch[1].toLowerCase() === "yes")
                         continue;
 
+                    const muteMatch = block.match(/^\s*Mute:\s*(yes|no)/mi);
+                    if (muteMatch && muteMatch[1].toLowerCase() === "yes")
+                        continue;
+
+                    const volZeroMatch = block.match(/^\s*Volume:[^\n]*\b0%/m);
+                    if (volZeroMatch)
+                        continue;
+
                     const srcMatch = block.match(/^\s*Source:\s*(\d+)/m);
                     const srcId = srcMatch ? srcMatch[1] : "";
                     if (srcId.length > 0 && monitorIds[srcId] === true)
@@ -229,6 +270,12 @@ Singleton {
                     const combined = `${appMatch ? appMatch[1] : ""} ${nodeMatch ? nodeMatch[1] : ""} ${mediaMatch ? mediaMatch[1] : ""}`;
                     if (root._isIgnoredAudioName(combined))
                         continue;
+
+                    // Discord idle background stream filter
+                    if (Boolean(Config.privacy?.filterDiscordIdle) && /discord|vesktop/i.test(combined)) {
+                        if (!root._isDiscordInVoiceCall(sinksText))
+                            continue;
+                    }
 
                     activeMic = true;
                     break;

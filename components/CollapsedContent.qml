@@ -1039,9 +1039,10 @@ Item {
     // 5. Default Clock / Status Fallback + Privacy Dots
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 16
-        anchors.rightMargin: 16
-        spacing: 8
+        anchors.leftMargin: 12
+        anchors.rightMargin: 12
+        spacing: 6
+        clip: true
         visible: root.showDefaultStatus
 
         Row {
@@ -1208,7 +1209,7 @@ Item {
             Text {
                 visible: (!root.recordingActive && !NotchController.agentActive) || root.pomodoroText.length > 0
                 anchors.verticalCenter: parent.verticalCenter
-                width: Math.min(implicitWidth, 96)
+                width: Math.min(implicitWidth, (rightChipsRow.hasShalat && Config.dnd) ? 72 : 96)
                 elide: Text.ElideRight
                 text: root.pomodoroText.length > 0 ? root.pomodoroText : root._greetBadge.label
                 font.family: "Rubik"
@@ -1230,8 +1231,12 @@ Item {
         }
 
         Row {
+            id: rightChipsRow
             Layout.alignment: Qt.AlignVCenter
-            spacing: 6
+            spacing: 5
+
+            readonly property bool hasShalat: !root.recordingActive && !NotchController.agentActive && Boolean(Config.widgets.shalat) && Boolean(ShalatService.nextPrayer && ShalatService.nextPrayer.name && ShalatService.nextPrayer.name !== "Shalat")
+            readonly property bool showDate: !root.recordingActive && !NotchController.agentActive && root.dateText.length > 0 && (!hasShalat || root.width >= 360)
 
             Text {
                 visible: Config.pinned
@@ -1253,7 +1258,7 @@ Item {
 
             // Subtle Shalat reminder chip in collapsed notch
             Row {
-                visible: !root.recordingActive && !NotchController.agentActive && Boolean(Config.widgets.shalat) && Boolean(ShalatService.nextPrayer && ShalatService.nextPrayer.name && ShalatService.nextPrayer.name !== "Shalat")
+                visible: rightChipsRow.hasShalat
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 3
 
@@ -1299,7 +1304,7 @@ Item {
             }
 
             Text {
-                visible: !root.recordingActive && !NotchController.agentActive && WeatherService.ready && root.dateText.length > 0
+                visible: rightChipsRow.showDate && WeatherService.ready
                 anchors.verticalCenter: parent.verticalCenter
                 text: "·"
                 font.family: "Rubik"
@@ -1308,7 +1313,7 @@ Item {
             }
 
             Text {
-                visible: !root.recordingActive && !NotchController.agentActive && root.dateText.length > 0
+                visible: rightChipsRow.showDate
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.dateText
                 font.family: "Rubik"
@@ -1318,7 +1323,7 @@ Item {
             }
 
             Text {
-                visible: !root.recordingActive && !NotchController.agentActive && root.dateText.length > 0
+                visible: rightChipsRow.showDate
                 anchors.verticalCenter: parent.verticalCenter
                 text: "·"
                 font.family: "Rubik"
