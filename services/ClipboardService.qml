@@ -4,6 +4,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "../config"
 import "../lib/cliphistParser.js" as CliphistParser
 
 Singleton {
@@ -13,6 +14,8 @@ Singleton {
     property var filteredEntries: []
     property string searchQuery: ""
     property var previewCache: ({})
+    property bool pingRunning: false
+    property string pingResult: ""
 
     property bool _deleting: false
     property var _pendingDeletes: []
@@ -57,6 +60,77 @@ Singleton {
             icon: "content_copy",
             progress: 1
         });
+    }
+
+    function sendToMobile(item): void {
+        if (!item || !item.id)
+            return;
+
+        const cleanId = String(item.id || "").trim();
+        if (!/^[0-9]+$/.test(cleanId))
+            return;
+
+        const ip = (Config.connect?.mobileIp || "192.168.1.10").trim();
+        const port = Config.connect?.port || 8088;
+        const targetUrl = `http://${ip}:${port}/api/clipboard`;
+        const isImage = Boolean(item.isImage);
+        const format = (item.imageFormat || "png").toLowerCase();
+
+        NotchController.triggerPeek("osd", 1, {
+            title: "Mengirim ke HP...",
+            subtitle: isImage ? "Mengirim foto ke itel P55" : "Mengirim teks ke itel P55",
+            icon: "phonelink_ring",
+            progress: 0.5
+        });
+
+        sendMobileProc.command = [
+            "python3", "-c",
+            "import sys, json, urllib.request, subprocess\n" +
+            "clean_id = sys.argv[1]\n" +
+            "is_img = sys.argv[2] == '1'\n" +
+            "img_fmt = sys.argv[3]\n" +
+            "target_url = sys.argv[4]\n" +
+            "try:\n" +
+            "    decode_proc = subprocess.run(['cliphist', 'decode', clean_id], stdout=subprocess.PIPE, check=True)\n" +
+            "    if is_img:\n" +
+            "        import base64\n" +
+            "        b64 = base64.b64encode(decode_proc.stdout).decode('ascii')\n" +
+            "        payload = json.dumps({'type': 'image', 'data': b64, 'format': img_fmt}).encode('utf-8')\n" +
+            "    else:\n" +
+            "        text_content = decode_proc.stdout.decode('utf-8', errors='replace')\n" +
+            "        payload = json.dumps({'type': 'text', 'text': text_content}).encode('utf-8')\n" +
+            "    req = urllib.request.Request(target_url, data=payload, headers={'Content-Type': 'application/json'})\n" +
+            "    with urllib.request.urlopen(req, timeout=4) as response:\n" +
+            "        sys.exit(0 if response.status == 200 else 1)\n" +
+            "except Exception as e:\n" +
+            "    sys.stderr.write(str(e))\n" +
+            "    sys.exit(2)\n",
+            cleanId,
+            isImage ? "1" : "0",
+            format,
+            targetUrl
+        ];
+        sendMobileProc.running = true;
+    }
+
+    function pingMobile(): void {
+        if (root.pingRunning) return;
+        const ip = (Config.connect?.mobileIp || "192.168.1.10").trim();
+        const port = Config.connect?.port || 8088;
+        root.pingRunning = true;
+        root.pingResult = "";
+        pingProc.command = [
+            "python3", "-c",
+            "import sys, urllib.request\n" +
+            "url = sys.argv[1]\n" +
+            "try:\n" +
+            "    with urllib.request.urlopen(url, timeout=2.5) as res:\n" +
+            "        sys.exit(0 if res.status == 200 else 1)\n" +
+            "except Exception:\n" +
+            "    sys.exit(2)\n",
+            `http://${ip}:${port}/ping`
+        ];
+        pingProc.running = true;
     }
 
     function deleteEntry(id: string): void {
@@ -194,6 +268,56 @@ Singleton {
                 const parsed = CliphistParser.parseCliphistOutput(text);
                 root.entries = parsed;
                 root.filteredEntries = CliphistParser.filterClipEntries(parsed, root.searchQuery);
+            }
+        }
+    }
+
+    Process {
+        id: sendMobileProc
+
+        running: false
+
+        onExited: (code, status) => {
+            if (code === 0) {
+                NotchController.triggerPeek("osd", 1, {
+                    title: "Terkirim ke Mobile",
+                    subtitle: "Disalin ke Kuro Island (itel P55)",
+                    icon: "phonelink",
+                    progress: 1
+                });
+            } else {
+                NotchController.triggerPeek("osd", 1, {
+                    title: "Gagal Kirim ke HP",
+                    subtitle: "Periksa IP (" + (Config.connect?.mobileIp || "192.168.1.10") + ") & Wi-Fi",
+                    icon: "phonelink_erase",
+                    progress: 1
+                });
+            }
+        }
+    }
+
+    Process {
+        id: pingProc
+
+        running: false
+
+        onExited: (code, status) => {
+            root.pingRunning = false;
+            root.pingResult = (code === 0) ? "ok" : "failed";
+            if (code === 0) {
+                NotchController.triggerPeek("osd", 1, {
+                    title: "Koneksi Berhasil",
+                    subtitle: "itel P55 terhubung di port " + (Config.connect?.port || 8088),
+                    icon: "check_circle",
+                    progress: 1
+                });
+            } else {
+                NotchController.triggerPeek("osd", 1, {
+                    title: "HP Tidak Merespon",
+                    subtitle: "Pastikan Kuro Island aktif di HP & Wi-Fi sama",
+                    icon: "error",
+                    progress: 1
+                });
             }
         }
     }

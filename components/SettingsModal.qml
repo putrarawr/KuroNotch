@@ -1182,12 +1182,118 @@ PopupWindow {
                                             }
                                         }
 
+                                        // Target IP & Connection Config Card
+                                        Rectangle {
+                                            Layout.fillWidth: true
+                                            height: 110
+                                            radius: 12
+                                            color: "#0c0c14"
+                                            border.width: 1
+                                            border.color: Qt.rgba(1, 1, 1, 0.08)
+
+                                            ColumnLayout {
+                                                anchors.fill: parent
+                                                anchors.margins: 14
+                                                spacing: 8
+
+                                                RowLayout {
+                                                    Layout.fillWidth: true
+                                                    spacing: 8
+
+                                                    ColumnLayout {
+                                                        Layout.fillWidth: true
+                                                        spacing: 2
+                                                        Text {
+                                                            text: "Alamat IP HP (itel P55)"
+                                                            font.family: "Rubik"
+                                                            font.pixelSize: 12
+                                                            font.weight: Font.Medium
+                                                            color: "#ffffff"
+                                                        }
+                                                        Text {
+                                                            text: "Masukkan IP HP di Wi-Fi yang sama (Port default: 8088)"
+                                                            font.family: "Rubik"
+                                                            font.pixelSize: 10
+                                                            color: "#8e8e98"
+                                                        }
+                                                    }
+
+                                                    // Test Ping Button
+                                                    Rectangle {
+                                                        height: 28
+                                                        width: pingBtnText.implicitWidth + 24
+                                                        radius: 6
+                                                        color: pingBtnMouse.containsMouse ? "#242432" : "#181822"
+                                                        border.width: 1
+                                                        border.color: ClipboardService.pingResult === "ok" ? "#22c55e" : (ClipboardService.pingResult === "failed" ? "#ef4444" : Qt.rgba(1, 1, 1, 0.15))
+
+                                                        Row {
+                                                            anchors.centerIn: parent
+                                                            spacing: 6
+                                                            Text {
+                                                                anchors.verticalCenter: parent.verticalCenter
+                                                                text: ClipboardService.pingRunning ? "sync" : (ClipboardService.pingResult === "ok" ? "check_circle" : "wifi_find")
+                                                                font.family: "Material Symbols Rounded"
+                                                                font.pixelSize: 14
+                                                                color: ClipboardService.pingResult === "ok" ? "#22c55e" : (ClipboardService.pingResult === "failed" ? "#ef4444" : "#ffffff")
+                                                            }
+                                                            Text {
+                                                                id: pingBtnText
+                                                                anchors.verticalCenter: parent.verticalCenter
+                                                                text: ClipboardService.pingRunning ? "Mengecek..." : (ClipboardService.pingResult === "ok" ? "Terhubung" : "Test Koneksi")
+                                                                font.family: "Rubik"
+                                                                font.pixelSize: 11
+                                                                font.weight: Font.DemiBold
+                                                                color: ClipboardService.pingResult === "ok" ? "#22c55e" : "#ffffff"
+                                                            }
+                                                        }
+
+                                                        MouseArea {
+                                                            id: pingBtnMouse
+                                                            anchors.fill: parent
+                                                            hoverEnabled: true
+                                                            cursorShape: Qt.PointingHandCursor
+                                                            onClicked: ClipboardService.pingMobile()
+                                                        }
+                                                    }
+                                                }
+
+                                                // IP Input Field
+                                                Rectangle {
+                                                    Layout.fillWidth: true
+                                                    height: 32
+                                                    radius: 6
+                                                    color: "#15151f"
+                                                    border.width: 1
+                                                    border.color: ipField.activeFocus ? Qt.rgba(1, 1, 1, 0.3) : Qt.rgba(1, 1, 1, 0.1)
+
+                                                    TextInput {
+                                                        id: ipField
+                                                        anchors.fill: parent
+                                                        anchors.margins: 6
+                                                        text: Config.connect.mobileIp
+                                                        font.family: "JetBrains Mono"
+                                                        font.pixelSize: 12
+                                                        color: "#ffffff"
+                                                        selectByMouse: true
+                                                        onEditingFinished: {
+                                                            Config.connect.mobileIp = ipField.text.trim();
+                                                            Config.save();
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
                                         SettingToggleRow {
                                             label: "Sinkronisasi Papan Klip Otomatis"
                                             subtitle: "Teks yang disalin di laptop langsung dapat ditempel di itel P55"
                                             iconName: "content_paste_go"
-                                            checked: true
-                                            onToggled: {}
+                                            checked: Config.connect.autoSync
+                                            onToggled: {
+                                                Config.connect.autoSync = !Config.connect.autoSync;
+                                                Config.save();
+                                            }
                                         }
 
                                         SettingToggleRow {

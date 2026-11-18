@@ -87,6 +87,12 @@ Singleton {
         property bool filterDiscordIdle: true
     }
 
+    property QtObject connect: QtObject {
+        property string mobileIp: "192.168.1.10"
+        property int port: 8088
+        property bool autoSync: false
+    }
+
     property QtObject widgets: QtObject {
         property int maxActive: 4
         property bool shelf: true
@@ -217,6 +223,11 @@ Singleton {
             "privacy": {
                 "filterDiscordIdle": root.privacy.filterDiscordIdle
             },
+            "connect": {
+                "mobileIp": root.connect.mobileIp,
+                "port": root.connect.port,
+                "autoSync": root.connect.autoSync
+            },
             "widgets": {
                 "maxActive": root.widgets.maxActive,
                 "shelf": root.widgets.shelf,
@@ -305,6 +316,12 @@ Singleton {
 
         if (data.privacy && typeof data.privacy === "object") {
             if (typeof data.privacy.filterDiscordIdle === "boolean") root.privacy.filterDiscordIdle = data.privacy.filterDiscordIdle;
+        }
+
+        if (data.connect && typeof data.connect === "object") {
+            if (typeof data.connect.mobileIp === "string") root.connect.mobileIp = data.connect.mobileIp;
+            if (typeof data.connect.port === "number") root.connect.port = data.connect.port;
+            if (typeof data.connect.autoSync === "boolean") root.connect.autoSync = data.connect.autoSync;
         }
 
         if (data.widgets && typeof data.widgets === "object") {

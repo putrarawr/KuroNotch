@@ -13,6 +13,7 @@ describe("cliphistParser.js - Cliphist & Shelf Parser", () => {
         parseCliphistOutput,
         filterClipEntries,
         sanitizeShelfItems,
+        formatMobileClipboardPayload,
     } = cliphistParser;
 
     describe("parseCliphistOutput", () => {
@@ -188,6 +189,43 @@ describe("cliphistParser.js - Cliphist & Shelf Parser", () => {
             const items = sanitizeShelfItems(rawJson);
             assert.equal(items.length, 1);
             assert.equal(items[0].name, "file.txt");
+        });
+    });
+
+    describe("formatMobileClipboardPayload", () => {
+        it("formats text entry into a text payload", () => {
+            const entry = {
+                id: "101",
+                preview: "Halo dari Linux Laptop",
+                isImage: false,
+                imageFormat: "",
+            };
+            const result = formatMobileClipboardPayload(entry);
+            assert.deepEqual(result, {
+                type: "text",
+                text: "Halo dari Linux Laptop",
+            });
+        });
+
+        it("formats image entry with base64 data into an image payload", () => {
+            const entry = {
+                id: "102",
+                preview: "[[ binary data 12 KiB png 400x300 ]]",
+                isImage: true,
+                imageFormat: "png",
+            };
+            const base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+            const result = formatMobileClipboardPayload(entry, base64);
+            assert.deepEqual(result, {
+                type: "image",
+                data: base64,
+                format: "png",
+            });
+        });
+
+        it("handles null or missing item safely", () => {
+            assert.deepEqual(formatMobileClipboardPayload(null), { type: "text", text: "" });
+            assert.deepEqual(formatMobileClipboardPayload(undefined), { type: "text", text: "" });
         });
     });
 });

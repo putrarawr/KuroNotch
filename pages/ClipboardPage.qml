@@ -310,6 +310,30 @@ Item {
                         color: "#f4f4f6"
                     }
 
+                    // Send to Mobile Action Button
+                    Rectangle {
+                        width: 24
+                        height: 24
+                        radius: 5
+                        color: sendMobileBtnMouse.containsMouse ? Qt.rgba(0.22, 0.77, 0.37, 0.2) : "transparent"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "phonelink"
+                            font.family: "Material Symbols Rounded"
+                            font.pixelSize: 14
+                            color: sendMobileBtnMouse.containsMouse ? "#22c55e" : "#8e8e98"
+                        }
+
+                        MouseArea {
+                            id: sendMobileBtnMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: ClipboardService.sendToMobile(itemDelegate.modelData)
+                        }
+                    }
+
                     // QR Share Action Button (for text/URL entries)
                     Rectangle {
                         visible: !itemDelegate.modelData.isImage
