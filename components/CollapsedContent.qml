@@ -1040,7 +1040,7 @@ Item {
     RowLayout {
         anchors.fill: parent
         anchors.leftMargin: 12
-        anchors.rightMargin: 12
+        anchors.rightMargin: 14
         spacing: 6
         clip: true
         visible: root.showDefaultStatus
@@ -1209,7 +1209,7 @@ Item {
             Text {
                 visible: (!root.recordingActive && !NotchController.agentActive) || root.pomodoroText.length > 0
                 anchors.verticalCenter: parent.verticalCenter
-                width: Math.min(implicitWidth, (rightChipsRow.hasShalat && Config.dnd) ? 72 : 96)
+                width: Math.min(implicitWidth, root.width < 320 ? 64 : ((rightChipsRow.hasShalat && Config.dnd) ? 72 : 96))
                 elide: Text.ElideRight
                 text: root.pomodoroText.length > 0 ? root.pomodoroText : root._greetBadge.label
                 font.family: "Rubik"
@@ -1236,7 +1236,7 @@ Item {
             spacing: 5
 
             readonly property bool hasShalat: !root.recordingActive && !NotchController.agentActive && Boolean(Config.widgets.shalat) && Boolean(ShalatService.nextPrayer && ShalatService.nextPrayer.name && ShalatService.nextPrayer.name !== "Shalat")
-            readonly property bool showDate: !root.recordingActive && !NotchController.agentActive && root.dateText.length > 0 && (!hasShalat || root.width >= 360)
+            readonly property bool showDate: !root.recordingActive && !NotchController.agentActive && root.dateText.length > 0 && root.width >= 340 && (!hasShalat || root.width >= 370)
 
             Text {
                 visible: Config.pinned

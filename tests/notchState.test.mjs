@@ -17,6 +17,7 @@ describe("notchState.js - Pure State Machine", () => {
         canAutoCollapse,
         shouldShowCompanion,
         computeGeometry,
+        computeIdleWidth,
     } = notchState;
 
     it("1. classifies maximized browser (Super+F) as browser with autoHideActive, but NOT true fullscreen", () => {
@@ -399,5 +400,37 @@ describe("notchState.js - Pure State Machine", () => {
         assert.equal(largeNotifPeekGeo.height, 96);
         assert.equal(largeNotifPeekGeo.radius, 24);
         assert.equal(largeNotifPeekGeo.x, Math.round((1366 - 460) / 2));
+    });
+
+    it("10. computeIdleWidth allocates safe geometry preventing clock text truncation across all chip combinations", () => {
+        // Base idle without chips
+        const baseWidth = 220;
+        const idleBase = computeIdleWidth({ baseWidth, hasMedia: false });
+        assert.ok(idleBase >= 240, `idleBase should be >= 240, got ${idleBase}`);
+
+        // With weather + date
+        const withWeatherDate = computeIdleWidth({ baseWidth, hasMedia: false, hasWeather: true, hasDate: true });
+        assert.ok(withWeatherDate >= 310, `withWeatherDate should be >= 310, got ${withWeatherDate}`);
+
+        // With Shalat + Weather + Date + DND
+        const fullChips = computeIdleWidth({
+            baseWidth,
+            hasMedia: false,
+            hasShalat: true,
+            hasWeather: true,
+            hasDate: true,
+            dnd: true,
+            pinned: true,
+        });
+        assert.ok(fullChips >= 360, `fullChips should be >= 360, got ${fullChips}`);
+        assert.ok(fullChips <= 396, `fullChips should be <= 396, got ${fullChips}`);
+
+        // With Media playing
+        const mediaPlaying = computeIdleWidth({ baseWidth, hasMedia: true, hasLyric: false });
+        assert.equal(mediaPlaying, 320);
+
+        // With Synced Lyrics playing
+        const mediaLyrics = computeIdleWidth({ baseWidth, hasMedia: true, hasLyric: true });
+        assert.equal(mediaLyrics, 376);
     });
 });
