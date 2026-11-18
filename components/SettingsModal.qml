@@ -1182,19 +1182,20 @@ PopupWindow {
                                             }
                                         }
 
-                                        // Target IP & Connection Config Card
+                                        // Target IP & Connection Config Card (Responsive)
                                         Rectangle {
                                             Layout.fillWidth: true
-                                            height: 110
+                                            Layout.preferredHeight: ipCardCol.implicitHeight + 28
                                             radius: 12
                                             color: "#0c0c14"
                                             border.width: 1
                                             border.color: Qt.rgba(1, 1, 1, 0.08)
 
                                             ColumnLayout {
+                                                id: ipCardCol
                                                 anchors.fill: parent
                                                 anchors.margins: 14
-                                                spacing: 8
+                                                spacing: 10
 
                                                 RowLayout {
                                                     Layout.fillWidth: true
@@ -1211,7 +1212,7 @@ PopupWindow {
                                                             color: "#ffffff"
                                                         }
                                                         Text {
-                                                            text: "Masukkan IP HP di Wi-Fi yang sama (Port default: 8088)"
+                                                            text: "Masukkan IP HP yang sama dengan Wi-Fi laptop (Port default: 8088)"
                                                             font.family: "Rubik"
                                                             font.pixelSize: 10
                                                             color: "#8e8e98"
@@ -1253,7 +1254,11 @@ PopupWindow {
                                                             anchors.fill: parent
                                                             hoverEnabled: true
                                                             cursorShape: Qt.PointingHandCursor
-                                                            onClicked: ClipboardService.pingMobile()
+                                                            onClicked: {
+                                                                Config.connect.mobileIp = ipField.text.trim();
+                                                                Config.save();
+                                                                ClipboardService.pingMobile();
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -1261,24 +1266,249 @@ PopupWindow {
                                                 // IP Input Field
                                                 Rectangle {
                                                     Layout.fillWidth: true
-                                                    height: 32
+                                                    height: 34
                                                     radius: 6
                                                     color: "#15151f"
                                                     border.width: 1
                                                     border.color: ipField.activeFocus ? Qt.rgba(1, 1, 1, 0.3) : Qt.rgba(1, 1, 1, 0.1)
 
-                                                    TextInput {
-                                                        id: ipField
+                                                    RowLayout {
                                                         anchors.fill: parent
-                                                        anchors.margins: 6
-                                                        text: Config.connect.mobileIp
-                                                        font.family: "JetBrains Mono"
+                                                        anchors.leftMargin: 8
+                                                        anchors.rightMargin: 8
+                                                        spacing: 6
+
+                                                        Text {
+                                                            text: "lan"
+                                                            font.family: "Material Symbols Rounded"
+                                                            font.pixelSize: 15
+                                                            color: "#71717a"
+                                                        }
+
+                                                        TextInput {
+                                                            id: ipField
+                                                            Layout.fillWidth: true
+                                                            Layout.fillHeight: true
+                                                            verticalAlignment: TextInput.AlignVCenter
+                                                            text: Config.connect.mobileIp || "192.168.1.2"
+                                                            font.family: "JetBrains Mono"
+                                                            font.pixelSize: 12
+                                                            color: "#ffffff"
+                                                            selectByMouse: true
+                                                            onEditingFinished: {
+                                                                Config.connect.mobileIp = ipField.text.trim();
+                                                                Config.save();
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                // Responsive Error / Success Feedback Banner
+                                                Rectangle {
+                                                    visible: ClipboardService.pingRunning || (ClipboardService.pingResult && ClipboardService.pingResult.length > 0)
+                                                    Layout.fillWidth: true
+                                                    Layout.preferredHeight: statusBannerCol.implicitHeight + 16
+                                                    radius: 8
+                                                    color: ClipboardService.pingRunning ? Qt.rgba(0.2, 0.4, 0.8, 0.15) : (ClipboardService.pingResult === "ok" ? Qt.rgba(0.13, 0.77, 0.37, 0.12) : Qt.rgba(0.94, 0.27, 0.27, 0.12))
+                                                    border.width: 1
+                                                    border.color: ClipboardService.pingRunning ? "#38bdf8" : (ClipboardService.pingResult === "ok" ? "#22c55e" : "#ef4444")
+
+                                                    ColumnLayout {
+                                                        id: statusBannerCol
+                                                        anchors.fill: parent
+                                                        anchors.margins: 10
+                                                        spacing: 4
+
+                                                        RowLayout {
+                                                            Layout.fillWidth: true
+                                                            spacing: 6
+                                                            Text {
+                                                                text: ClipboardService.pingRunning ? "sync" : (ClipboardService.pingResult === "ok" ? "check_circle" : "error")
+                                                                font.family: "Material Symbols Rounded"
+                                                                font.pixelSize: 15
+                                                                color: ClipboardService.pingRunning ? "#38bdf8" : (ClipboardService.pingResult === "ok" ? "#22c55e" : "#ef4444")
+                                                            }
+                                                            Text {
+                                                                Layout.fillWidth: true
+                                                                text: ClipboardService.pingRunning ? "MENGHUBUNGI SERVER HP..." : (ClipboardService.pingResult === "ok" ? "TERHUBUNG KE ITEL P55 (PORT 8088)" : "GAGAL TERHUBUNG KE HP")
+                                                                font.family: "Rubik"
+                                                                font.pixelSize: 11
+                                                                font.weight: Font.Bold
+                                                                color: ClipboardService.pingRunning ? "#38bdf8" : (ClipboardService.pingResult === "ok" ? "#22c55e" : "#ef4444")
+                                                            }
+                                                        }
+
+                                                        Text {
+                                                            Layout.fillWidth: true
+                                                            wrapMode: Text.WordWrap
+                                                            font.family: "Rubik"
+                                                            font.pixelSize: 10
+                                                            lineHeight: 1.3
+                                                            color: "#d4d4d8"
+                                                            text: {
+                                                                if (ClipboardService.pingRunning) {
+                                                                    return "Mencoba menghubungi http://" + ipField.text.trim() + ":8088/ping...";
+                                                                }
+                                                                if (ClipboardService.pingResult === "ok") {
+                                                                    return "Server Kuro Connect di HP aktif. Clipboard & foto yang Anda kirim akan langsung memicu animasi Dynamic Island di HP.";
+                                                                }
+                                                                var detail = ClipboardService.pingErrorMessage || "Koneksi ke port 8088 ditolak";
+                                                                return detail + "\n\nPanduan Solusi:\n" +
+                                                                       "1. Buka aplikasi Kuro Island di HP Anda dan pastikan switch 'Aktifkan Kuro Island' menyala.\n" +
+                                                                       "2. Cek kartu 'KURO CONNECT' di layar HP untuk melihat IP lokal HP (misal: 192.168.1.2) lalu samakan di kolom atas.\n" +
+                                                                       "3. Pastikan HP dan laptop terhubung ke jaringan Wi-Fi yang sama.";
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Direct Quick Send & Test Card
+                                        Rectangle {
+                                            Layout.fillWidth: true
+                                            Layout.preferredHeight: directSendCol.implicitHeight + 24
+                                            radius: 12
+                                            color: "#0c0c14"
+                                            border.width: 1
+                                            border.color: Qt.rgba(1, 1, 1, 0.08)
+
+                                            ColumnLayout {
+                                                id: directSendCol
+                                                anchors.fill: parent
+                                                anchors.margins: 12
+                                                spacing: 8
+
+                                                RowLayout {
+                                                    Layout.fillWidth: true
+                                                    spacing: 6
+
+                                                    Text {
+                                                        text: "send_to_mobile"
+                                                        font.family: "Material Symbols Rounded"
+                                                        font.pixelSize: 16
+                                                        color: "#38bdf8"
+                                                    }
+                                                    Text {
+                                                        text: "Kirim Langsung ke HP (Uji Coba Animasi)"
+                                                        font.family: "Rubik"
                                                         font.pixelSize: 12
+                                                        font.weight: Font.DemiBold
                                                         color: "#ffffff"
-                                                        selectByMouse: true
-                                                        onEditingFinished: {
-                                                            Config.connect.mobileIp = ipField.text.trim();
-                                                            Config.save();
+                                                    }
+                                                    Item { Layout.fillWidth: true }
+                                                    Text {
+                                                        text: "Target: " + (Config.connect.mobileIp || "192.168.1.2") + ":8088"
+                                                        font.family: "JetBrains Mono"
+                                                        font.pixelSize: 9
+                                                        color: "#71717a"
+                                                    }
+                                                }
+
+                                                // Quick Text Input Row
+                                                RowLayout {
+                                                    Layout.fillWidth: true
+                                                    spacing: 6
+
+                                                    Rectangle {
+                                                        Layout.fillWidth: true
+                                                        height: 32
+                                                        radius: 6
+                                                        color: "#15151f"
+                                                        border.width: 1
+                                                        border.color: testMsgInput.activeFocus ? Qt.rgba(1, 1, 1, 0.3) : Qt.rgba(1, 1, 1, 0.1)
+
+                                                        TextInput {
+                                                            id: testMsgInput
+                                                            anchors.fill: parent
+                                                            anchors.leftMargin: 8
+                                                            anchors.rightMargin: 8
+                                                            verticalAlignment: TextInput.AlignVCenter
+                                                            text: "Halo dari KuroNotch Laptop!"
+                                                            font.family: "Rubik"
+                                                            font.pixelSize: 11
+                                                            color: "#ffffff"
+                                                            selectByMouse: true
+                                                        }
+                                                    }
+
+                                                    Rectangle {
+                                                        height: 32
+                                                        width: sendMsgBtnText.implicitWidth + 20
+                                                        radius: 6
+                                                        color: sendMsgMouse.containsMouse ? "#242432" : "#181822"
+                                                        border.width: 1
+                                                        border.color: Qt.rgba(1, 1, 1, 0.15)
+
+                                                        Row {
+                                                            anchors.centerIn: parent
+                                                            spacing: 5
+                                                            Text {
+                                                                anchors.verticalCenter: parent.verticalCenter
+                                                                text: "send"
+                                                                font.family: "Material Symbols Rounded"
+                                                                font.pixelSize: 13
+                                                                color: "#38bdf8"
+                                                            }
+                                                            Text {
+                                                                id: sendMsgBtnText
+                                                                anchors.verticalCenter: parent.verticalCenter
+                                                                text: "Kirim Teks"
+                                                                font.family: "Rubik"
+                                                                font.pixelSize: 11
+                                                                font.weight: Font.DemiBold
+                                                                color: "#ffffff"
+                                                            }
+                                                        }
+
+                                                        MouseArea {
+                                                            id: sendMsgMouse
+                                                            anchors.fill: parent
+                                                            hoverEnabled: true
+                                                            cursorShape: Qt.PointingHandCursor
+                                                            onClicked: {
+                                                                ClipboardService.sendDirectText(testMsgInput.text.trim());
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                // 1-Click Clipboard Sync Button
+                                                Rectangle {
+                                                    Layout.fillWidth: true
+                                                    height: 30
+                                                    radius: 6
+                                                    color: syncClipMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : Qt.rgba(1, 1, 1, 0.05)
+                                                    border.width: 1
+                                                    border.color: Qt.rgba(1, 1, 1, 0.12)
+
+                                                    Row {
+                                                        anchors.centerIn: parent
+                                                        spacing: 6
+                                                        Text {
+                                                            anchors.verticalCenter: parent.verticalCenter
+                                                            text: "content_paste_go"
+                                                            font.family: "Material Symbols Rounded"
+                                                            font.pixelSize: 14
+                                                            color: "#10b981"
+                                                        }
+                                                        Text {
+                                                            anchors.verticalCenter: parent.verticalCenter
+                                                            text: "Kirim Clipboard Aktif Laptop Sekarang (1-Klik)"
+                                                            font.family: "Rubik"
+                                                            font.pixelSize: 11
+                                                            font.weight: Font.DemiBold
+                                                            color: "#ffffff"
+                                                        }
+                                                    }
+
+                                                    MouseArea {
+                                                        id: syncClipMouse
+                                                        anchors.fill: parent
+                                                        hoverEnabled: true
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            ClipboardService.sendCurrentClipboardToMobile();
                                                         }
                                                     }
                                                 }

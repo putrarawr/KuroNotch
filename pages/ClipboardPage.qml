@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../services"
+import "../config"
 import "../lib/qrMatrix.js" as QrMatrix
 
 Item {
@@ -13,6 +14,7 @@ Item {
     property string qrText: ""
     property var qrData: null
     readonly property bool qrOpen: root.qrText.length > 0 && Boolean(root.qrData?.ok)
+    property string droppedPhotoPath: ""
 
     function openQr(entryId: string, previewText: string): void {
         const txt = String(previewText || "").trim();
@@ -196,6 +198,315 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: ClipboardService.refresh()
+                }
+            }
+        }
+
+        // Kuro Quick Send Deck (Direct Paste & Photo Drop Zone)
+        Rectangle {
+            id: quickDeck
+            visible: !root.qrOpen
+            Layout.fillWidth: true
+            Layout.preferredHeight: deckCol.implicitHeight + 16
+            radius: 9
+            color: Qt.rgba(0.06, 0.06, 0.09, 0.95)
+            border.width: 1
+            border.color: deckDropArea.containsDrag ? "#38bdf8" : Qt.rgba(1, 1, 1, 0.08)
+
+            DropArea {
+                id: deckDropArea
+                anchors.fill: parent
+                onEntered: drag => {
+                    drag.accept(Qt.CopyAction);
+                }
+                onDropped: drop => {
+                    if (drop.hasUrls && drop.urls.length > 0) {
+                        const urlStr = String(drop.urls[0]);
+                        root.droppedPhotoPath = urlStr.replace(/^file:\/\//, "");
+                        drop.accept();
+                    } else if (drop.hasText) {
+                        quickPasteField.text = drop.text;
+                        drop.accept();
+                    }
+                }
+            }
+
+            ColumnLayout {
+                id: deckCol
+                anchors.fill: parent
+                anchors.margins: 8
+                spacing: 6
+
+                // Deck Header & Status Pill
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Text {
+                        text: "send_to_mobile"
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 14
+                        color: "#38bdf8"
+                    }
+
+                    Text {
+                        text: "Kuro Send Deck · itel P55"
+                        font.family: "Rubik"
+                        font.pixelSize: 11
+                        font.weight: Font.DemiBold
+                        color: "#f4f4f6"
+                    }
+
+                    Rectangle {
+                        height: 16
+                        width: destIpText.implicitWidth + 8
+                        radius: 4
+                        color: "#181824"
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.06)
+
+                        Text {
+                            id: destIpText
+                            anchors.centerIn: parent
+                            text: (Config.connect.mobileIp || "192.168.1.2") + ":8088"
+                            font.family: "JetBrains Mono"
+                            font.pixelSize: 9
+                            color: "#8e8e98"
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    // 1-Click Clipboard Sync Button
+                    Rectangle {
+                        height: 22
+                        width: quickClipSyncBtnText.implicitWidth + 18
+                        radius: 5
+                        color: quickClipSyncMouse.containsMouse ? "#242434" : "#181822"
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.12)
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 4
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "content_paste_go"
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 12
+                                color: "#10b981"
+                            }
+                            Text {
+                                id: quickClipSyncBtnText
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "Kirim Clipboard Aktif"
+                                font.family: "Rubik"
+                                font.pixelSize: 10
+                                font.weight: Font.DemiBold
+                                color: "#f4f4f6"
+                            }
+                        }
+
+                        MouseArea {
+                            id: quickClipSyncMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: ClipboardService.sendCurrentClipboardToMobile()
+                        }
+                    }
+                }
+
+                // Dropped Photo Preview Bar (if a photo is dropped)
+                Rectangle {
+                    visible: root.droppedPhotoPath.length > 0
+                    Layout.fillWidth: true
+                    height: 38
+                    radius: 6
+                    color: "#141420"
+                    border.width: 1
+                    border.color: "#38bdf8"
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        spacing: 8
+
+                        Image {
+                            Layout.preferredWidth: 30
+                            Layout.preferredHeight: 30
+                            fillMode: Image.PreserveAspectCrop
+                            source: root.droppedPhotoPath ? "file://" + root.droppedPhotoPath : ""
+                            sourceSize.width: 60
+                            sourceSize.height: 60
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 1
+                            Text {
+                                text: root.droppedPhotoPath.split("/").pop() || "Foto Siap Kirim"
+                                font.family: "Rubik"
+                                font.pixelSize: 10
+                                font.weight: Font.DemiBold
+                                color: "#ffffff"
+                                elide: Text.ElideMiddle
+                            }
+                            Text {
+                                text: "Siap dikirim ke Dynamic Island HP"
+                                font.family: "Rubik"
+                                font.pixelSize: 9
+                                color: "#38bdf8"
+                            }
+                        }
+
+                        Rectangle {
+                            height: 24
+                            width: sendPhotoBtnText.implicitWidth + 14
+                            radius: 4
+                            color: "#38bdf8"
+
+                            Text {
+                                id: sendPhotoBtnText
+                                anchors.centerIn: parent
+                                text: "Kirim Foto"
+                                font.family: "Rubik"
+                                font.pixelSize: 10
+                                font.weight: Font.Bold
+                                color: "#050507"
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    ClipboardService.sendDirectFile(root.droppedPhotoPath);
+                                    root.droppedPhotoPath = "";
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 24
+                            width: 24
+                            radius: 4
+                            color: "#222230"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "close"
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 13
+                                color: "#8e8e98"
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.droppedPhotoPath = ""
+                            }
+                        }
+                    }
+                }
+
+                // Text / Photo Drop Input Box
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 28
+                        radius: 6
+                        color: "#14141e"
+                        border.width: 1
+                        border.color: quickPasteField.activeFocus ? "#38bdf8" : (deckDropArea.containsDrag ? "#38bdf8" : Qt.rgba(1, 1, 1, 0.08))
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 6
+                            anchors.rightMargin: 6
+                            spacing: 4
+
+                            Text {
+                                text: "add_photo_alternate"
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 13
+                                color: deckDropArea.containsDrag ? "#38bdf8" : "#71717a"
+                            }
+
+                            TextField {
+                                id: quickPasteField
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                verticalAlignment: TextInput.AlignVCenter
+                                placeholderText: deckDropArea.containsDrag ? "Lepaskan file foto di sini..." : "Tempel clipboard (Ctrl+V) atau tarik foto ke sini..."
+                                placeholderTextColor: "#71717a"
+                                font.family: "Rubik"
+                                font.pixelSize: 10
+                                color: "#f4f4f6"
+                                selectByMouse: true
+                                background: null
+                                padding: 0
+
+                                onAccepted: {
+                                    if (quickPasteField.text.trim().length > 0) {
+                                        ClipboardService.sendDirectText(quickPasteField.text.trim());
+                                        quickPasteField.text = "";
+                                    }
+                                }
+
+                                onActiveFocusChanged: {
+                                    NotchController.inputFocused = activeFocus;
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 28
+                        width: quickSendBtnText.implicitWidth + 16
+                        radius: 6
+                        color: quickSendBtnMouse.containsMouse ? "#242436" : "#181824"
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.12)
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 4
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "send"
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 12
+                                color: "#38bdf8"
+                            }
+                            Text {
+                                id: quickSendBtnText
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "Kirim"
+                                font.family: "Rubik"
+                                font.pixelSize: 10
+                                font.weight: Font.DemiBold
+                                color: "#ffffff"
+                            }
+                        }
+
+                        MouseArea {
+                            id: quickSendBtnMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (quickPasteField.text.trim().length > 0) {
+                                    ClipboardService.sendDirectText(quickPasteField.text.trim());
+                                    quickPasteField.text = "";
+                                } else {
+                                    ClipboardService.sendCurrentClipboardToMobile();
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -16,6 +16,7 @@ Singleton {
     property var previewCache: ({})
     property bool pingRunning: false
     property string pingResult: ""
+    property string pingErrorMessage: ""
 
     property bool _deleting: false
     property var _pendingDeletes: []
@@ -113,20 +114,146 @@ Singleton {
         sendMobileProc.running = true;
     }
 
+    function sendDirectText(text: string): void {
+        const raw = String(text || "").trim();
+        if (raw.length === 0) return;
+
+        const ip = (Config.connect?.mobileIp || "192.168.1.10").trim();
+        const port = Config.connect?.port || 8088;
+        const targetUrl = `http://${ip}:${port}/api/clipboard`;
+
+        NotchController.triggerPeek("osd", 1, {
+            title: "Mengirim Teks ke HP...",
+            subtitle: raw.length > 25 ? raw.slice(0, 25) + "..." : raw,
+            icon: "phonelink_ring",
+            progress: 0.5
+        });
+
+        sendDirectProc.command = [
+            "python3", "-c",
+            "import sys, json, urllib.request\n" +
+            "text_content = sys.argv[1]\n" +
+            "target_url = sys.argv[2]\n" +
+            "try:\n" +
+            "    payload = json.dumps({'type': 'text', 'text': text_content}).encode('utf-8')\n" +
+            "    req = urllib.request.Request(target_url, data=payload, headers={'Content-Type': 'application/json'})\n" +
+            "    with urllib.request.urlopen(req, timeout=4) as response:\n" +
+            "        sys.exit(0 if response.status == 200 else 1)\n" +
+            "except Exception as e:\n" +
+            "    sys.stderr.write(str(e))\n" +
+            "    sys.exit(2)\n",
+            raw,
+            targetUrl
+        ];
+        sendDirectProc.running = true;
+    }
+
+    function sendDirectFile(filePath: string): void {
+        let clean = String(filePath || "").trim();
+        if (clean.startsWith("file://")) {
+            clean = clean.replace(/^file:\/\//, "");
+        }
+        if (clean.length === 0) return;
+
+        const ip = (Config.connect?.mobileIp || "192.168.1.10").trim();
+        const port = Config.connect?.port || 8088;
+        const targetUrl = `http://${ip}:${port}/api/clipboard`;
+
+        NotchController.triggerPeek("osd", 1, {
+            title: "Mengirim Foto ke HP...",
+            subtitle: clean.split("/").pop() || "Gambar",
+            icon: "phonelink_ring",
+            progress: 0.5
+        });
+
+        sendDirectProc.command = [
+            "python3", "-c",
+            "import sys, json, base64, urllib.request, os\n" +
+            "file_path = sys.argv[1]\n" +
+            "target_url = sys.argv[2]\n" +
+            "try:\n" +
+            "    ext = os.path.splitext(file_path)[1].lstrip('.').lower() or 'png'\n" +
+            "    with open(file_path, 'rb') as f:\n" +
+            "        b64 = base64.b64encode(f.read()).decode('ascii')\n" +
+            "    payload = json.dumps({'type': 'image', 'data': b64, 'format': ext}).encode('utf-8')\n" +
+            "    req = urllib.request.Request(target_url, data=payload, headers={'Content-Type': 'application/json'})\n" +
+            "    with urllib.request.urlopen(req, timeout=8) as response:\n" +
+            "        sys.exit(0 if response.status == 200 else 1)\n" +
+            "except Exception as e:\n" +
+            "    sys.stderr.write(str(e))\n" +
+            "    sys.exit(2)\n",
+            clean,
+            targetUrl
+        ];
+        sendDirectProc.running = true;
+    }
+
+    function sendCurrentClipboardToMobile(): void {
+        const ip = (Config.connect?.mobileIp || "192.168.1.10").trim();
+        const port = Config.connect?.port || 8088;
+        const targetUrl = `http://${ip}:${port}/api/clipboard`;
+
+        NotchController.triggerPeek("osd", 1, {
+            title: "Mengirim Clipboard...",
+            subtitle: "Mengambil clipboard aktif laptop",
+            icon: "phonelink_ring",
+            progress: 0.5
+        });
+
+        sendDirectProc.command = [
+            "python3", "-c",
+            "import sys, json, subprocess, base64, urllib.request\n" +
+            "target_url = sys.argv[1]\n" +
+            "try:\n" +
+            "    types = subprocess.run(['wl-paste', '-l'], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('utf-8', errors='ignore')\n" +
+            "    if 'image/png' in types or 'image/jpeg' in types:\n" +
+            "        img_bytes = subprocess.run(['wl-paste', '-t', 'image/png'], stdout=subprocess.PIPE, check=True).stdout\n" +
+            "        b64 = base64.b64encode(img_bytes).decode('ascii')\n" +
+            "        payload = json.dumps({'type': 'image', 'data': b64, 'format': 'png'}).encode('utf-8')\n" +
+            "    else:\n" +
+            "        text = subprocess.run(['wl-paste', '-n'], stdout=subprocess.PIPE, check=True).stdout.decode('utf-8', errors='replace')\n" +
+            "        if not text:\n" +
+            "            sys.exit(3)\n" +
+            "        payload = json.dumps({'type': 'text', 'text': text}).encode('utf-8')\n" +
+            "    req = urllib.request.Request(target_url, data=payload, headers={'Content-Type': 'application/json'})\n" +
+            "    with urllib.request.urlopen(req, timeout=5) as response:\n" +
+            "        sys.exit(0 if response.status == 200 else 1)\n" +
+            "except Exception as e:\n" +
+            "    sys.stderr.write(str(e))\n" +
+            "    sys.exit(2)\n",
+            targetUrl
+        ];
+        sendDirectProc.running = true;
+    }
+
     function pingMobile(): void {
         if (root.pingRunning) return;
         const ip = (Config.connect?.mobileIp || "192.168.1.10").trim();
         const port = Config.connect?.port || 8088;
         root.pingRunning = true;
         root.pingResult = "";
+        root.pingErrorMessage = "";
         pingProc.command = [
             "python3", "-c",
             "import sys, urllib.request\n" +
             "url = sys.argv[1]\n" +
             "try:\n" +
             "    with urllib.request.urlopen(url, timeout=2.5) as res:\n" +
-            "        sys.exit(0 if res.status == 200 else 1)\n" +
-            "except Exception:\n" +
+            "        if res.status == 200:\n" +
+            "            sys.exit(0)\n" +
+            "        else:\n" +
+            "            sys.stderr.write('HTTP status ' + str(res.status))\n" +
+            "            sys.exit(1)\n" +
+            "except Exception as e:\n" +
+            "    err = str(e)\n" +
+            "    if 'Connection refused' in err:\n" +
+            "        sys.stderr.write('Koneksi ditolak: Server di HP belum aktif di port 8088')\n" +
+            "    elif 'timed out' in err.lower():\n" +
+            "        sys.stderr.write('Waktu habis: HP tidak terjangkau (pastikan Wi-Fi sama & IP benar)')\n" +
+            "    elif 'No route to host' in err:\n" +
+            "        sys.stderr.write('Tidak ada rute: Laptop & HP berbeda jaringan Wi-Fi')\n" +
+            "    else:\n" +
+            "        sys.stderr.write(err)\n" +
             "    sys.exit(2)\n",
             `http://${ip}:${port}/ping`
         ];
@@ -301,10 +428,19 @@ Singleton {
 
         running: false
 
+        stderr: StdioCollector {
+            onStreamFinished: {
+                if (text && text.trim().length > 0) {
+                    root.pingErrorMessage = text.trim();
+                }
+            }
+        }
+
         onExited: (code, status) => {
             root.pingRunning = false;
             root.pingResult = (code === 0) ? "ok" : "failed";
             if (code === 0) {
+                root.pingErrorMessage = "";
                 NotchController.triggerPeek("osd", 1, {
                     title: "Koneksi Berhasil",
                     subtitle: "itel P55 terhubung di port " + (Config.connect?.port || 8088),
@@ -312,10 +448,37 @@ Singleton {
                     progress: 1
                 });
             } else {
+                if (!root.pingErrorMessage) {
+                    root.pingErrorMessage = "HP tidak merespon (Port 8088 tertutup)";
+                }
                 NotchController.triggerPeek("osd", 1, {
                     title: "HP Tidak Merespon",
-                    subtitle: "Pastikan Kuro Island aktif di HP & Wi-Fi sama",
+                    subtitle: root.pingErrorMessage,
                     icon: "error",
+                    progress: 1
+                });
+            }
+        }
+    }
+
+    Process {
+        id: sendDirectProc
+
+        running: false
+
+        onExited: (code, status) => {
+            if (code === 0) {
+                NotchController.triggerPeek("osd", 1, {
+                    title: "Terkirim ke HP!",
+                    subtitle: "Clipboard diterima oleh itel P55",
+                    icon: "phonelink",
+                    progress: 1
+                });
+            } else {
+                NotchController.triggerPeek("osd", 1, {
+                    title: "Gagal Kirim ke HP",
+                    subtitle: "Pastikan HP aktif di " + (Config.connect?.mobileIp || "192.168.1.10") + ":8088",
+                    icon: "phonelink_erase",
                     progress: 1
                 });
             }
